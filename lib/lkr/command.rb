@@ -40,6 +40,8 @@ module Lkr
       TTY::Command.new(options)
     end
 
+    private
+
     def say_ok(data)
       puts @pastel.green data
     end
@@ -86,8 +88,8 @@ module Lkr
         say_ok "su to user #{@options[:su]}" if @options[:debug]
         @access_token_stack.push(@sdk.access_token)
         begin
-          sdk.access_token = @sdk.login_user(@options[:su]).access_token
-          say_warning "verify authentication: #{@sdk.authenticated?}" if @options[:debug]
+          @sdk.access_token = @sdk.login_user(@options[:su]).access_token
+          #say_warning "verify authentication: #{@sdk.authenticated?}" if @options[:debug]
         rescue LookerSDK::Error => e
           say_error "Unable to su to user #{@options[:su]}" 
           say_error e.message

@@ -18,6 +18,7 @@ module Lkr
     class_option :ssl, type: :boolean, default: true, desc: 'Use ssl to communicate with host'
     class_option :verify_ssl, type: :boolean, default: true, desc: 'Verify the SSL certificate of the host'
     class_option :force, type: :boolean, default: false, desc: 'Overwrite objects on server'
+    class_option :su, type: :string, desc: 'After connecting, change to user_id given'
 
 
     # Error raised by this runner
