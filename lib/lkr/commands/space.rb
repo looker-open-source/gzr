@@ -23,12 +23,18 @@ module Lkr
       desc 'export', 'Command description...'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def export(*)
+      method_option :dir, type: :string, default: '.',
+                           desc: 'Directory to store output tree'
+      method_option :tar, type: :string,
+                           desc: 'Tar file to store output'
+      method_option :tgz, type: :string,
+                           desc: 'TarGZ file to store output'
+      def export(starting_space)
         if options[:help]
           invoke :help, ['export']
         else
           require_relative 'space/export'
-          Lkr::Commands::Space::Export.new(options).execute
+          Lkr::Commands::Space::Export.new(options).execute(starting_space)
         end
       end
 
