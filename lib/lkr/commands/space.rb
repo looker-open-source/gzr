@@ -44,15 +44,17 @@ module Lkr
         end
       end
 
-      desc 'cat', 'Command description...'
+      desc 'cat SPACE_ID', 'Command description...'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def cat(*)
+      method_option :dir,  type: :string,
+                           desc: 'Directory to get output file'
+      def cat(space_id=nil)
         if options[:help]
           invoke :help, ['cat']
         else
           require_relative 'space/cat'
-          Lkr::Commands::Space::Cat.new(options).execute
+          Lkr::Commands::Space::Cat.new(options).execute(space_id)
         end
       end
 
