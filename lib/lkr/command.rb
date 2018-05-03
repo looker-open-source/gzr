@@ -4,9 +4,12 @@ require 'forwardable'
 
 require 'pastel'
 require 'tty-reader'
-
-require 'looker-sdk'
 require 'netrc'
+
+require 'rubygems'
+require 'rubygems/package'
+require 'bundler/setup'
+require 'looker-sdk'
 
 module Lkr
   class Command
@@ -74,8 +77,8 @@ module Lkr
 
       begin
         @sdk = LookerSDK::Client.new(conn_hash)
-        say_ok "check for connectivity: #{@sdk.alive}" if @options[:debug]
-        # say_ok "verify authentication: #{@sdk.authenticated?}" if @options[:debug]
+        say_ok "check for connectivity: #{@sdk.alive?}" if @options[:debug]
+        say_ok "verify authentication: #{@sdk.authenticated?}" if @options[:debug]
       rescue LookerSDK::Unauthorized => e
         say_error "Unauthorized - credentials are not valid"
         raise
@@ -89,7 +92,7 @@ module Lkr
         @access_token_stack.push(@sdk.access_token)
         begin
           @sdk.access_token = @sdk.login_user(@options[:su]).access_token
-          #say_warning "verify authentication: #{@sdk.authenticated?}" if @options[:debug]
+          say_warning "verify authentication: #{@sdk.authenticated?}" if @options[:debug]
         rescue LookerSDK::Error => e
           say_error "Unable to su to user #{@options[:su]}" 
           say_error e.message
