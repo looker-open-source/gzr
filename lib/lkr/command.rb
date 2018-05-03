@@ -137,6 +137,31 @@ module Lkr
       data
     end
 
+    def query_all_users(fields=nil, sorts=nil)
+      req = {
+        :per_page=>128
+      }
+      req[:fields] = fields if fields
+      req[:sorts] = sorts if sorts
+
+      data = Array.new
+      page = 1
+      loop do
+        begin
+          req[:page] = page
+          scratch_data = @sdk.all_users(req)
+        rescue LookerSDK::ClientError => e
+          say_error "Unable to get all_users(#{JSON.pretty_generate(req)})"
+          say_error e.message
+          raise
+        end
+        break if scratch_data.length == 0
+        page += 1
+        data += scratch_data
+      end
+      data
+    end
+
     # The cursor movement
     #
     # @see http://www.rubydoc.info/gems/tty-cursor

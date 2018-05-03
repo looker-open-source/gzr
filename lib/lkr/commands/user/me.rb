@@ -16,7 +16,7 @@ module Lkr
           say_warning(@options) if @options.debug
           begin
             login
-            data = query_me 'id,first_name,last_name,email,home_space_id,personal_space_id'
+            data = query_me(@options[:fields])
             table_hash = Hash.new
             table_hash[:header] = data.to_attrs.keys unless @options[:plain]
             table_hash[:rows] = [data.to_attrs.values]

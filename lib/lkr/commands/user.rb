@@ -11,6 +11,10 @@ module Lkr
       desc 'me', 'Command description...'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
+      method_option :fields, type: :string, default: 'id,email,last_name,first_name',
+                           desc: 'Fields to display'
+      method_option :plain, type: :boolean, default: false,
+                           desc: 'print without any extra formatting'
       def me(*)
         if options[:help]
           invoke :help, ['me']
@@ -23,6 +27,10 @@ module Lkr
       desc 'ls', 'Command description...'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
+      method_option :fields, type: :string, default: 'id,email,last_name,first_name',
+                           desc: 'Fields to display'
+      method_option :plain, type: :boolean, default: false,
+                           desc: 'print without any extra formatting'
       def ls(*)
         if options[:help]
           invoke :help, ['ls']
