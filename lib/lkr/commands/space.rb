@@ -8,6 +8,18 @@ module Lkr
 
       namespace :space
 
+      desc 'top', 'Command description...'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def top(*)
+        if options[:help]
+          invoke :help, ['top']
+        else
+          require_relative 'space/top'
+          Lkr::Commands::Space::Top.new(options).execute
+        end
+      end
+
       desc 'export', 'Command description...'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
