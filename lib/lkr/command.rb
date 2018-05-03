@@ -162,6 +162,179 @@ module Lkr
       data
     end
 
+    def search_spaces(name,fields=nil)
+      data = nil
+      begin
+        req = {:name => name}
+        req[:fields] = fields if fields
+        data = @sdk.search_spaces(req)
+      rescue LookerSDK::Error => e
+        say_error "Error querying search_spaces(#{JSON.pretty_generate(req)})"
+        say_error e.message
+        raise
+      end
+      data
+    end
+
+    def query_space(id,fields=nil)
+      data = nil
+      begin
+        req = {}
+        req[:fields] = fields if fields 
+        data = @sdk.space(id, req)
+      rescue LookerSDK::Error => e
+        say_error "Error querying space(#{id},#{JSON.pretty_generate(req)})"
+        say_error e.message
+        raise
+      end
+      data
+    end
+
+    def process_args(args)
+      space_ids = []
+
+      begin
+        user = query_me("home_space_id")
+        space_ids << user.home_space_id
+      end unless args && args.length > 0 && !(args[0].nil?)
+
+      if args[0] =~ /^[0-9]+$/ then
+        space_ids << args[0].to_i
+      elsif args[0] == "~" then
+        user = query_me("personal_space_id")
+        space_ids << user.personal_space_id
+      elsif args[0] =~ /^~[0-9]+$/ then
+        user = query_user.user(args[0].sub('~',''), "personal_space_id")
+        space_ids << user.personal_space_id
+      else
+        search_results = search_spaces(args[0],"id")
+        space_ids += search_results.map { |r| r.id }
+
+        # The built in Shared space is only availabe by
+        # searching for Home. https://github.com/looker/helltool/issues/34994
+        if args[0] == 'Shared' then
+          search_results = search_spaces('Home',"id,is_shared_root")
+          space_ids += search_results.select { |r| r.is_shared_root }.map { |r| r.id }
+        end
+      end if args && args.length > 0 && !args[0].nil?
+
+      return space_ids
+    end
+
+    def all_spaces(fields=nil)
+      data = nil
+      begin
+        req = {}
+        req[:fields] = fields if fields 
+        data = @sdk.all_spaces(req)
+      rescue LookerSDK::Error => e
+        say_error "Error querying all_spaces(#{JSON.pretty_generate(req)})"
+        say_error e.message
+        raise
+      end
+      data
+    end
+
+    def query_look(look_id)
+      data = nil
+      begin
+        data = @sdk.look(look_id)
+      rescue LookerSDK::Error => e
+          say_error "Error querying look(#{look_id})"
+          say_error e.message
+          raise
+      end
+      data
+    end
+
+    def delete_look(look_id)
+      data = nil
+      begin
+        data = @sdk.delete_look(look_id)
+      rescue LookerSDK::Error => e
+          say_error "Error deleting look(#{look_id})"
+          say_error e.message
+          raise
+      end
+      data
+    end
+
+    def search_looks(title, space_id=nil)
+      data = nil
+      begin
+        req = { :title => title }
+        req[:space_id] = space_id if space_id 
+        data = @sdk.search_looks(req)
+      rescue LookerSDK::Error => e
+        say_error "Error  search_looks(#{JSON.pretty_generate(req)})"
+          say_error e.message
+          raise
+      end
+      data
+    end
+
+    def query_dashboard(dashboard_id)
+      data = nil
+      begin
+        data = @sdk.dashboard(dashboard_id)
+      rescue LookerSDK::Error => e
+          say_error "Error querying dashboard(#{dashboard_id})"
+          say_error e.message
+          raise
+      end
+      data
+    end
+
+    def query_space_children(space_id, fields=nil)
+      data = nil
+      req = {}
+      req[:fields] = fields if fields
+      begin
+        data = @sdk.space_children(space_id, req)
+      rescue LookerSDK::Error => e
+        say_error "Error querying space_children(#{space_id}, #{JSON.pretty_generate(req)})"
+        say_error e.message
+        raise
+      end
+      data
+    end
+
+    def create_query(query)
+      begin
+        data = @sdk.create_query(query)
+      rescue LookerSDK::Error => e
+          say_error "Error creating query"
+          say_error e.message
+          raise
+      end
+      data
+    end
+
+    def create_look(look)
+      begin
+        data = @sdk.create_look(look)
+      rescue LookerSDK::Error => e
+          say_error "Error creating look"
+          say_error e.message
+          raise
+      end
+      data
+    end
+
+    def keys_to_keep(operation)
+      o = @sdk.operations[operation]
+      begin
+        say_error "Operation #{operation} not found"
+        return []
+      end unless o
+
+      parameters = o[:info][:parameters].select { |p| p[:in] == "body" && p[:schema] }
+
+      say_warning "Expecting exactly one body parameter with a schema for operation #{operation}" unless parameters.length == 1
+      schema_ref = parameters[0][:schema][:$ref].split(/\//)
+      return @sdk.swagger[schema_ref[1].to_sym][schema_ref[2].to_sym][:properties].reject { |k,v| v[:readOnly] }.keys
+    end
+    
     # The cursor movement
     #
     # @see http://www.rubydoc.info/gems/tty-cursor

@@ -20,15 +20,15 @@ module Lkr
         end
       end
 
-      desc 'tree', 'Command description...'
+      desc 'tree STARTING_SPACE', 'Command description...'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def tree(*)
+      def tree(starting_space = nil)
         if options[:help]
           invoke :help, ['tree']
         else
           require_relative 'space/tree'
-          Lkr::Commands::Space::Tree.new(options).execute
+          Lkr::Commands::Space::Tree.new(options).execute(starting_space)
         end
       end
 
@@ -44,15 +44,19 @@ module Lkr
         end
       end
 
-      desc 'ls', 'Command description...'
+      desc 'ls FILTER_SPEC', 'Command description...'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def ls(*)
+      method_option :fields, type: :string, default: 'parent_id,id,name,looks(id,title),dashboards(id,title)',
+                           desc: 'Fields to display'
+      method_option :plain, type: :boolean, default: false,
+                           desc: 'print without any extra formatting'
+      def ls(filter_spec=nil)
         if options[:help]
           invoke :help, ['ls']
         else
           require_relative 'space/ls'
-          Lkr::Commands::Space::Ls.new(options).execute
+          Lkr::Commands::Space::Ls.new(options).execute(filter_spec)
         end
       end
     end
