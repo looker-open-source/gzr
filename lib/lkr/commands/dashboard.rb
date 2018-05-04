@@ -8,15 +8,17 @@ module Lkr
 
       namespace :dashboard
 
-      desc 'cat', 'Command description...'
+      desc 'cat DASHBOARD_ID', 'Output the JSON representation of a dashboard to the screen or a file'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def cat(*)
+      method_option :dir,  type: :string,
+                           desc: 'Directory to get output file'
+      def cat(dashboard_id=nil)
         if options[:help]
           invoke :help, ['cat']
         else
           require_relative 'dashboard/cat'
-          Lkr::Commands::Dashboard::Cat.new(options).execute
+          Lkr::Commands::Dashboard::Cat.new(options).execute(dashboard_id)
         end
       end
     end

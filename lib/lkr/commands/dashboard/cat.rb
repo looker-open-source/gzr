@@ -7,12 +7,22 @@ module Lkr
     class Dashboard
       class Cat < Lkr::Command
         def initialize(options)
+          super()
           @options = options
         end
 
-        def execute(input: $stdin, output: $stdout)
-          # Command logic goes here ...
-          output.puts "OK"
+        def execute(*args, input: $stdin, output: $stdout)
+          say_warning("args: #{args.inspect}") if @options.debug
+          say_warning("options: #{@options.inspect}") if @options.debug
+          begin
+            login
+            data = query_dashboard(args[0])
+            write_file(@options.dir ? "Dashboard_#{data.id}_#{data.title}.json" : nil, @options[:dir]) do |f|
+              f.puts JSON.pretty_generate(data.to_attrs)
+            end
+          ensure
+            logout_all
+          end
         end
       end
     end
