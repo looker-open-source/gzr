@@ -34,19 +34,19 @@ module Lkr
           invoke :help, ['export']
         else
           require_relative 'space/export'
-          Lkr::Commands::Space::Export.new(options).execute(starting_space)
+          Lkr::Commands::Space::Export.new(starting_space,options).execute
         end
       end
 
       desc 'tree STARTING_SPACE', 'Display the dashbaords, looks, and subspaces or a space in a tree format'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def tree(starting_space = nil)
+      def tree(starting_space)
         if options[:help]
           invoke :help, ['tree']
         else
           require_relative 'space/tree'
-          Lkr::Commands::Space::Tree.new(options).execute(starting_space)
+          Lkr::Commands::Space::Tree.new(starting_space,options).execute
         end
       end
 
@@ -55,12 +55,12 @@ module Lkr
                            desc: 'Display usage information'
       method_option :dir,  type: :string,
                            desc: 'Directory to get output file'
-      def cat(space_id=nil)
+      def cat(space_id)
         if options[:help]
           invoke :help, ['cat']
         else
           require_relative 'space/cat'
-          Lkr::Commands::Space::Cat.new(options).execute(space_id)
+          Lkr::Commands::Space::Cat.new(space_id,options).execute
         end
       end
 
@@ -76,7 +76,7 @@ module Lkr
           invoke :help, ['ls']
         else
           require_relative 'space/ls'
-          Lkr::Commands::Space::Ls.new(options).execute(filter_spec)
+          Lkr::Commands::Space::Ls.new(filter_spec,options).execute
         end
       end
     end

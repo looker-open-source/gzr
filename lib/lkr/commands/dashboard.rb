@@ -13,12 +13,12 @@ module Lkr
                            desc: 'Display usage information'
       method_option :dir,  type: :string,
                            desc: 'Directory to get output file'
-      def cat(dashboard_id=nil)
+      def cat(dashboard_id)
         if options[:help]
           invoke :help, ['cat']
         else
           require_relative 'dashboard/cat'
-          Lkr::Commands::Dashboard::Cat.new(options).execute(dashboard_id)
+          Lkr::Commands::Dashboard::Cat.new(dashboard_id, options).execute
         end
       end
     end

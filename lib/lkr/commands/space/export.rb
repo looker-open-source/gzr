@@ -7,13 +7,13 @@ module Lkr
   module Commands
     class Space
       class Export < Lkr::Command
-        def initialize(options)
+        def initialize(space_id, options)
           super()
+          @space_id = space_id
           @options = options
         end
 
-        def execute(*args, input: $stdin, output: $stdout)
-          say_warning("args: #{args.inspect}") if @options.debug
+        def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options.debug
           begin
             login
@@ -24,7 +24,7 @@ module Lkr
               tarfile = StringIO.new(String.new,"w")
               begin
                 tw = Gem::Package::TarWriter.new(tarfile)
-                process_space(args[0], tw)
+                process_space(@space_id, tw)
                 tw.flush
                 tarfile.rewind
                 if @options[:tgz]
@@ -39,7 +39,7 @@ module Lkr
                 tarfile.close
               end
             else
-              process_space(args[0], @options[:dir])
+              process_space(@space_id, @options[:dir])
             end
           ensure
             logout_all

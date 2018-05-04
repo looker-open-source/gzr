@@ -6,17 +6,17 @@ module Lkr
   module Commands
     class Dashboard
       class Cat < Lkr::Command
-        def initialize(options)
+        def initialize(dashboard_id,options)
           super()
+          @dashboard_id = dashboard_id
           @options = options
         end
 
         def execute(*args, input: $stdin, output: $stdout)
-          say_warning("args: #{args.inspect}") if @options.debug
           say_warning("options: #{@options.inspect}") if @options.debug
           begin
             login
-            data = query_dashboard(args[0])
+            data = query_dashboard(@dashboard_id)
             write_file(@options.dir ? "Dashboard_#{data.id}_#{data.title}.json" : nil, @options[:dir]) do |f|
               f.puts JSON.pretty_generate(data.to_attrs)
             end

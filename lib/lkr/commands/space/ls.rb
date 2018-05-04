@@ -7,19 +7,19 @@ module Lkr
   module Commands
     class Space
       class Ls < Lkr::Command
-        def initialize(options)
+        def initialize(filter_spec, options)
           super()
+          @filter_spec = filter_spec
           @options = options
         end
 
-        def execute(*args, input: $stdin, output: $stdout)
-          say_warning("args: #{args.inspect}") if @options.debug
+        def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options.debug
           begin
             login
-            space_ids = process_args(args)
+            space_ids = process_args([@filter_spec])
             begin
-              puts "No spaces match #{args[0]}"
+              puts "No spaces match #{@filter_spec}"
               return nil
             end unless space_ids && space_ids.length > 0
 

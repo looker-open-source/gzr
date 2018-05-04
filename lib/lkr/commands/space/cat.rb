@@ -7,17 +7,17 @@ module Lkr
   module Commands
     class Space
       class Cat < Lkr::Command
-        def initialize(options)
+        def initialize(space_id, options)
           super()
+          @space_id = space_id
           @options = options
         end
 
-        def execute(*args, input: $stdin, output: $stdout)
-          say_warning("args: #{args.inspect}") if @options.debug
+        def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options.debug
           begin
             login
-            data = query_space(args[0])
+            data = query_space(@space_id)
             write_file(@options.dir ? "Space_#{data.id}_#{data.name}.json" : nil, @options[:dir]) do |f|
               f.puts JSON.pretty_generate(data.to_attrs)
             end
