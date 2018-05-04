@@ -3,12 +3,15 @@ RSpec.describe "`lkr user ls` command", type: :cli do
     output = `lkr user ls --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr ls
+  lkr user ls
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help]    # Display usage information
+      [--fields=FIELDS]        # Fields to display
+                               # Default: id,email,last_name,first_name
+      [--plain], [--no-plain]  # print without any extra formatting
 
-Command description...
+list all users
     OUT
   end
 end

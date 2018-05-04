@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'json'
 require_relative '../../command'
 
 module Lkr
@@ -13,11 +14,11 @@ module Lkr
         end
 
         def execute(*args, input: $stdin, output: $stdout)
-          say_warning("options: #{@options.inspect}") if @options.debug
+          say_warning("options: #{@options.inspect}") if @options[:debug]
           begin
             login
             data = query_dashboard(@dashboard_id)
-            write_file(@options.dir ? "Dashboard_#{data.id}_#{data.title}.json" : nil, @options[:dir]) do |f|
+            write_file(@options[:dir] ? "Dashboard_#{data.id}_#{data.title}.json" : nil, @options[:dir], nil, output) do |f|
               f.puts JSON.pretty_generate(data.to_attrs)
             end
           ensure

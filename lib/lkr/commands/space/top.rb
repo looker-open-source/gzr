@@ -13,7 +13,7 @@ module Lkr
         end
 
         def execute(input: $stdin, output: $stdout)
-          say_warning("options: #{@options.inspect}") if @options.debug
+          say_warning("options: #{@options.inspect}") if @options[:debug]
           begin
             login
             spaces = all_spaces("id,name,is_shared_root,is_users_root,is_root,is_user_root,is_embed_shared_root,is_embed_users_root")

@@ -14,11 +14,11 @@ module Lkr
         end
 
         def execute(input: $stdin, output: $stdout)
-          say_warning("options: #{@options.inspect}") if @options.debug
+          say_warning("options: #{@options.inspect}") if @options[:debug]
           begin
             login
             data = query_space(@space_id)
-            write_file(@options.dir ? "Space_#{data.id}_#{data.name}.json" : nil, @options[:dir]) do |f|
+            write_file(@options[:dir] ? "Space_#{data.id}_#{data.name}.json" : nil, @options[:dir]) do |f|
               f.puts JSON.pretty_generate(data.to_attrs)
             end
           ensure

@@ -3,12 +3,12 @@ RSpec.describe "`lkr look rm` command", type: :cli do
     output = `lkr look rm --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr rm LOOK_ID
+  lkr look rm LOOK_ID
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
 
-Command description...
+Delete look given by LOOK_ID
     OUT
   end
 end

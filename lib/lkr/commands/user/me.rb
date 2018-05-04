@@ -13,7 +13,7 @@ module Lkr
         end
 
         def execute(input: $stdin, output: $stdout)
-          say_warning(@options) if @options.debug
+          say_warning(@options) if @options[:debug]
           begin
             login
             data = query_me(@options[:fields])
@@ -24,7 +24,7 @@ module Lkr
             alignments = data.to_attrs.keys.map do |k|
               (k =~ /id$/) ? :right : :left
             end
-            puts table.render(if @options.plain then :basic else :ascii end, alignments: alignments) if table
+            output.puts table.render(if @options[:plain] then :basic else :ascii end, alignments: alignments) if table
           ensure
             logout_all
           end

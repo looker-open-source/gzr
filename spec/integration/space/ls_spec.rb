@@ -3,12 +3,15 @@ RSpec.describe "`lkr space ls` command", type: :cli do
     output = `lkr space ls --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr ls
+  lkr space ls FILTER_SPEC
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help]    # Display usage information
+      [--fields=FIELDS]        # Fields to display
+                               # Default: parent_id,id,name,looks(id,title),dashboards(id,title)
+      [--plain], [--no-plain]  # print without any extra formatting
 
-Command description...
+list the contents of a space given by space name, space_id, ~ for the current user's default space, or ~name / ~number for the home space of a user
     OUT
   end
 end

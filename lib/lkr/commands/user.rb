@@ -8,7 +8,7 @@ module Lkr
 
       namespace :user
 
-      desc 'me', 'Show information for the current user'
+      desc 'user me', 'Show information for the current user'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :fields, type: :string, default: 'id,email,last_name,first_name',
@@ -24,7 +24,7 @@ module Lkr
         end
       end
 
-      desc 'ls', 'list all users'
+      desc 'user ls', 'list all users'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :fields, type: :string, default: 'id,email,last_name,first_name',

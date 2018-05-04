@@ -3,12 +3,13 @@ RSpec.describe "`lkr look cat` command", type: :cli do
     output = `lkr look cat --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr cat
+  lkr look cat LOOK_ID
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
+      [--dir=DIR]            # Directory to store output file
 
-Command description...
+Output the JSON representation of a look to the screen or a file
     OUT
   end
 end

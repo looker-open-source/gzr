@@ -3,12 +3,12 @@ RSpec.describe "`lkr space top` command", type: :cli do
     output = `lkr space top --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr top
+  lkr space top
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
 
-Command description...
+Retrieve the top level (or root) spaces
     OUT
   end
 end

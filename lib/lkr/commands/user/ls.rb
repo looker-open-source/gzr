@@ -13,7 +13,7 @@ module Lkr
         end
 
         def execute(input: $stdin, output: $stdout)
-          say_warning(@options) if @options.debug
+          say_warning(@options) if @options[:debug]
           begin
             login
             data = query_all_users(@options[:fields], "id")

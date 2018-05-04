@@ -8,7 +8,7 @@ module Lkr
 
       namespace :look
 
-      desc 'rm LOOK_ID', 'Delete look given by LOOK_ID'
+      desc 'look rm LOOK_ID', 'Delete look given by LOOK_ID'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       def rm(look_id)
@@ -20,7 +20,7 @@ module Lkr
         end
       end
 
-      desc 'import FILE DEST_SPACE_ID', 'Import a look from a file'
+      desc 'look import FILE DEST_SPACE_ID', 'Import a look from a file'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       def import(file,dest_space_id)
@@ -32,11 +32,11 @@ module Lkr
         end
       end
 
-      desc 'cat LOOK_ID', 'Output the JSON representation of a look to the screen or a file'
+      desc 'look cat LOOK_ID', 'Output the JSON representation of a look to the screen or a file'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :dir,  type: :string,
-                           desc: 'Directory to get output file'
+                           desc: 'Directory to store output file'
       def cat(look_id)
         if options[:help]
           invoke :help, ['cat']

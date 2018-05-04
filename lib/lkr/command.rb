@@ -16,6 +16,7 @@ module Lkr
     extend Forwardable
 
     def initialize
+      @sdk = nil
       @access_token_stack = Array.new
       @options = Hash.new
       @pastel = Pastel.new
@@ -76,7 +77,7 @@ module Lkr
       say_ok("connecting to #{conn_hash.each { |k,v| "#{k}=>#{(k == :client_secret) ? '*********' : v}" }}") if @options[:debug]
 
       begin
-        @sdk = LookerSDK::Client.new(conn_hash)
+        @sdk = LookerSDK::Client.new(conn_hash) unless @sdk
         say_ok "check for connectivity: #{@sdk.alive?}" if @options[:debug]
         say_ok "verify authentication: #{@sdk.authenticated?}" if @options[:debug]
       rescue LookerSDK::Unauthorized => e
@@ -335,7 +336,7 @@ module Lkr
       return @sdk.swagger[schema_ref[1].to_sym][schema_ref[2].to_sym][:properties].reject { |k,v| v[:readOnly] }.keys
     end
     
-    def write_file(file_name=nil,base_dir=nil,path=nil)
+    def write_file(file_name=nil,base_dir=nil,path=nil,output=$stdout)
       f = nil
       if base_dir.kind_of? Gem::Package::TarWriter then
         if path then
@@ -364,9 +365,9 @@ module Lkr
         f = File.open(file, "wt") if file
       end if base
 
-      return ( f || $stdout ) unless block_given?
+      return ( f || output ) unless block_given?
       begin
-        yield ( f || $stdout )
+        yield ( f || output )
       ensure
         f.close if f
       end

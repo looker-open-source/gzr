@@ -8,7 +8,7 @@ module Lkr
 
       namespace :space
 
-      desc 'top', 'Retrieve the top level (or root) spaces'
+      desc 'space top', 'Retrieve the top level (or root) spaces'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       def top(*)
@@ -20,7 +20,7 @@ module Lkr
         end
       end
 
-      desc 'export', 'Export a space, including all child looks, dashboards, and spaces.'
+      desc 'space export', 'Export a space, including all child looks, dashboards, and spaces.'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :dir, type: :string, default: '.',
@@ -38,7 +38,7 @@ module Lkr
         end
       end
 
-      desc 'tree STARTING_SPACE', 'Display the dashbaords, looks, and subspaces or a space in a tree format'
+      desc 'space tree STARTING_SPACE', 'Display the dashbaords, looks, and subspaces or a space in a tree format'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       def tree(starting_space)
@@ -50,7 +50,7 @@ module Lkr
         end
       end
 
-      desc 'cat SPACE_ID', 'Output the JSON representation of a space to the screen or a file'
+      desc 'space cat SPACE_ID', 'Output the JSON representation of a space to the screen or a file'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :dir,  type: :string,
@@ -64,7 +64,7 @@ module Lkr
         end
       end
 
-      desc 'ls FILTER_SPEC', 'list the contents of a space given by space name, space_id, ~ for the current user\'s default space, or ~name / ~number for the home space of a user'
+      desc 'space ls FILTER_SPEC', 'list the contents of a space given by space name, space_id, ~ for the current user\'s default space, or ~name / ~number for the home space of a user'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :fields, type: :string, default: 'parent_id,id,name,looks(id,title),dashboards(id,title)',

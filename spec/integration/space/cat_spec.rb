@@ -3,12 +3,13 @@ RSpec.describe "`lkr space cat` command", type: :cli do
     output = `lkr space cat --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr cat
+  lkr space cat SPACE_ID
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
+      [--dir=DIR]            # Directory to get output file
 
-Command description...
+Output the JSON representation of a space to the screen or a file
     OUT
   end
 end

@@ -13,7 +13,7 @@ module Lkr
         end
 
         def execute(input: $stdin, output: $stdout)
-          say_warning("options: #{@options.inspect}") if @options.debug
+          say_warning("options: #{@options.inspect}") if @options[:debug]
           begin
             login
             delete_look(@look_id)

@@ -3,12 +3,12 @@ RSpec.describe "`lkr look import` command", type: :cli do
     output = `lkr look import --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr import FILE
+  lkr look import FILE DEST_SPACE_ID
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
 
-Command description...
+Import a look from a file
     OUT
   end
 end

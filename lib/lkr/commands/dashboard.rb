@@ -8,11 +8,11 @@ module Lkr
 
       namespace :dashboard
 
-      desc 'cat DASHBOARD_ID', 'Output the JSON representation of a dashboard to the screen or a file'
+      desc 'dashboard cat DASHBOARD_ID', 'Output the JSON representation of a dashboard to the screen or a file'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :dir,  type: :string,
-                           desc: 'Directory to get output file'
+                           desc: 'Directory to store output file'
       def cat(dashboard_id)
         if options[:help]
           invoke :help, ['cat']
