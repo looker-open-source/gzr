@@ -18,7 +18,7 @@ module Lkr
           begin
             login
             data = query_space(@space_id)
-            write_file(@options[:dir] ? "Space_#{data.id}_#{data.name}.json" : nil, @options[:dir]) do |f|
+            write_file(@options[:dir] ? "Space_#{data.id}_#{data.name}.json" : nil, @options[:dir], nil, output) do |f|
               f.puts JSON.pretty_generate(data.to_attrs)
             end
           ensure

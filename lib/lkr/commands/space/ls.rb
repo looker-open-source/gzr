@@ -50,7 +50,7 @@ module Lkr
             alignments = data[0].to_attrs.keys.map do |k|
               (k =~ /id\)*$/) ? :right : :left
             end
-            puts table.render(if @options[:plain] then :basic else :ascii end, alignments: alignments) if table
+            output.puts table.render(if @options[:plain] then :basic else :ascii end, alignments: alignments) if table
           ensure
             logout_all
           end
