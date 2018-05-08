@@ -2,7 +2,6 @@
 
 require 'forwardable'
 
-require 'pastel'
 require 'tty-reader'
 require 'netrc'
 
@@ -22,7 +21,6 @@ module Lkr
       @sdk = nil
       @access_token_stack = Array.new
       @options = Hash.new
-      @pastel = Pastel.new
     end
 
     def_delegators :command, :run

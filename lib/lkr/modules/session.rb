@@ -1,18 +1,24 @@
 # frozen_string_literal: true
 
+require 'pastel'
+
 module Lkr
   module Session
 
+    def pastel
+      @pastel ||= Pastel.new
+    end
+
     def say_ok(data)
-      puts @pastel.green data
+      puts pastel.green data
     end
 
     def say_warning(data)
-      puts @pastel.yellow data
+      puts pastel.yellow data
     end
 
     def say_error(data)
-      puts @pastel.red data
+      puts pastel.red data
     end
 
     def login

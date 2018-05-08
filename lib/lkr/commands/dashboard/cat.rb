@@ -2,8 +2,8 @@
 
 require 'json'
 require_relative '../../command'
-require_relative '../../module/dashboard'
-require_relative '../../module/filehelper'
+require_relative '../../modules/dashboard'
+require_relative '../../modules/filehelper'
 
 module Lkr
   module Commands
