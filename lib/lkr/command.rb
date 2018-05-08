@@ -138,6 +138,44 @@ module Lkr
       data
     end
 
+    def query_user(id,fields=nil)
+      data = nil
+      begin
+        data = @sdk.user(id, fields ? {:fields=>fields} : nil )
+      rescue LookerSDK::Error => e
+          say_error "Error querying user(#{id},{:fields=>\"#{fields}\"})"
+          say_error e.message
+          raise
+      end
+      data
+    end
+
+    def search_users(filter, fields=nil, sorts=nil)
+      req = {
+        :per_page=>128
+      }
+      req.merge!(filter)
+      req[:fields] = fields if fields
+      req[:sorts] = sorts if sorts
+
+      data = Array.new
+      page = 1
+      loop do
+        begin
+          req[:page] = page
+          scratch_data = @sdk.search_users(req)
+        rescue LookerSDK::ClientError => e
+          say_error "Unable to get search_users(#{JSON.pretty_generate(req)})"
+          say_error e.message
+          raise
+        end
+        break if scratch_data.length == 0
+        page += 1
+        data += scratch_data
+      end
+      data
+    end
+
     def query_all_users(fields=nil, sorts=nil)
       req = {
         :per_page=>128
@@ -205,8 +243,15 @@ module Lkr
         user = query_me("personal_space_id")
         space_ids << user.personal_space_id
       elsif args[0] =~ /^~[0-9]+$/ then
-        user = query_user.user(args[0].sub('~',''), "personal_space_id")
+        user = query_user(args[0].sub('~',''), "personal_space_id")
         space_ids << user.personal_space_id
+      elsif args[0] =~ /^~.+@.+$/ then
+        search_results = search_users( { :email=>args[0].sub('~','') },"personal_space_id" )
+        space_ids += search_results.map { |r| r.personal_space_id }
+      elsif args[0] =~ /^~.+$/ then
+        first_name, last_name = args[0].sub('~','').split(' ')
+        search_results = search_users( { :first_name=>first_name, :last_name=>last_name },"personal_space_id" )
+        space_ids += search_results.map { |r| r.personal_space_id }
       else
         search_results = search_spaces(args[0],"id")
         space_ids += search_results.map { |r| r.id }

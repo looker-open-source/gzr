@@ -38,6 +38,11 @@ module Lkr
             data.each do |r|
               h = r.to_attrs
               rows << [h[:parent_id],h[:id],h[:name], nil, nil, nil, nil]
+              subspaces = query_space_children(h[:id], "id,name,parent_id")
+              rows += subspaces.map do |r|
+                h = r.to_attrs
+                [h[:parent_id], h[:id], h[:name], nil, nil, nil, nil]
+              end
               h[:looks].each do |r|
                 rows << [h[:parent_id],h[:id],h[:name], r[:id], r[:title], nil, nil]
               end if h[:looks]
