@@ -15,8 +15,7 @@ module Lkr
 
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
-          begin
-            login
+          with_session do
             if @options[:tar] || @options[:tgz] then
               arc_path = Pathname.new(@options[:tgz] || @options[:tar])
               arc_path = Pathname.new(File.expand_path(@options[:dir])) + arc_path unless arc_path.absolute?
@@ -41,8 +40,6 @@ module Lkr
             else
               process_space(@space_id, @options[:dir])
             end
-          ensure
-            logout_all
           end
         end
 

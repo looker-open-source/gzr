@@ -126,6 +126,16 @@ module Lkr
       end
     end
 
+    def with_session
+      return nil unless block_given?
+      begin
+        login
+        yield
+      ensure
+        logout_all
+      end
+    end
+
     def query_me(fields=nil)
       data = nil
       begin

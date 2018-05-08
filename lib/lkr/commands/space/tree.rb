@@ -15,8 +15,7 @@ module Lkr
 
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
-          begin
-            login
+          with_session do
             space_ids = process_args([@filter_spec])
 
             tree_data = Hash.new
@@ -34,8 +33,6 @@ module Lkr
             end
             tree = TTY::Tree.new(tree_data)
             output.puts tree.render
-          ensure
-            logout_all
           end
         end
 

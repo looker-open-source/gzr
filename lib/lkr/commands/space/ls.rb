@@ -15,8 +15,7 @@ module Lkr
 
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
-          begin
-            login
+          with_session do
             space_ids = process_args([@filter_spec])
             begin
               puts "No spaces match #{@filter_spec}"
@@ -56,8 +55,6 @@ module Lkr
               (k =~ /id\)*$/) ? :right : :left
             end
             output.puts table.render(if @options[:plain] then :basic else :ascii end, alignments: alignments) if table
-          ensure
-            logout_all
           end
         end
 

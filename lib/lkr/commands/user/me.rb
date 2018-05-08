@@ -14,8 +14,7 @@ module Lkr
 
         def execute(input: $stdin, output: $stdout)
           say_warning(@options) if @options[:debug]
-          begin
-            login
+          with_session do
             data = query_me(@options[:fields])
             table_hash = Hash.new
             table_hash[:header] = data.to_attrs.keys unless @options[:plain]
@@ -25,8 +24,6 @@ module Lkr
               (k =~ /id$/) ? :right : :left
             end
             output.puts table.render(if @options[:plain] then :basic else :ascii end, alignments: alignments) if table
-          ensure
-            logout_all
           end
         end
       end

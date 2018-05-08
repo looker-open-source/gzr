@@ -15,8 +15,7 @@ module Lkr
 
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
-          begin
-            login
+          with_session do
             read_file(@file) do |data|
               existing_looks = search_looks(data[:title], @dest_space_id)
 
@@ -43,8 +42,6 @@ module Lkr
 
               create_look(new_look).to_attrs
             end
-          ensure
-            logout_all
           end
         end
       end

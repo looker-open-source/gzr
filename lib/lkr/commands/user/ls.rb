@@ -14,8 +14,7 @@ module Lkr
 
         def execute(input: $stdin, output: $stdout)
           say_warning(@options) if @options[:debug]
-          begin
-            login
+          with_session do
             data = query_all_users(@options[:fields], "id")
             begin
               say_ok "No users found"
@@ -32,8 +31,6 @@ module Lkr
               (k =~ /id$/) ? :right : :left
             end
             output.puts table.render(if @options[:plain] then :basic else :ascii end, alignments: alignments) if table
-          ensure
-            logout_all
           end
         end
       end

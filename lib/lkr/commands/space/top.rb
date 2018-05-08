@@ -14,8 +14,7 @@ module Lkr
 
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
-          begin
-            login
+          with_session do
             spaces = all_spaces("id,name,is_shared_root,is_users_root,is_root,is_user_root,is_embed_shared_root,is_embed_users_root")
 
             begin
@@ -32,8 +31,6 @@ module Lkr
               end
             end if spaces[0]
             output.puts table.render(:ascii, alignments: [:right]) if table
-          ensure
-            logout_all
           end
         end
       end

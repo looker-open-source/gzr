@@ -15,10 +15,8 @@ module Lkr
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
           begin
-            login
+            with_session do
             delete_look(@look_id)
-          ensure
-            logout_all
           end
         end
       end
