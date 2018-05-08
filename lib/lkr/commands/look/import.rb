@@ -1,11 +1,17 @@
 # frozen_string_literal: true
 
 require_relative '../../command'
+require_relative '../../modules/look'
+require_relative '../../modules/user'
+require_relative '../../modules/filehelper'
 
 module Lkr
   module Commands
     class Look
       class Import < Lkr::Command
+        include Lkr::Look
+        include Lkr::User
+        include Lkr::FileHelper
         def initialize(file, dest_space_id, options)
           super()
           @file = file

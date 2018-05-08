@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
 require_relative '../../command'
+require_relative '../../modules/look'
 
 module Lkr
   module Commands
     class Look
       class Rm < Lkr::Command
+        include Lkr::Look
         def initialize(look_id, options)
           super()
           @look_id = look_id

@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 
 require_relative '../../command'
+require_relative '../../modules/user'
 require 'tty-table'
 
 module Lkr
   module Commands
     class User
       class Ls < Lkr::Command
+        include Lkr::User
         def initialize(options)
           super()
           @options = options

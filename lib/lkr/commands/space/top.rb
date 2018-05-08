@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 
 require_relative '../../command'
+require_relative '../../modules/space'
 require 'tty-table'
 
 module Lkr
   module Commands
     class Space
       class Top < Lkr::Command
+        include Lkr::Space
         def initialize(options)
           super()
           @options = options

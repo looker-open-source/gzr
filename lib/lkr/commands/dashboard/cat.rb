@@ -2,11 +2,15 @@
 
 require 'json'
 require_relative '../../command'
+require_relative '../../module/dashboard'
+require_relative '../../module/filehelper'
 
 module Lkr
   module Commands
     class Dashboard
       class Cat < Lkr::Command
+        include Lkr::Dashboard
+        include Lkr::FileHelper
         def initialize(dashboard_id,options)
           super()
           @dashboard_id = dashboard_id

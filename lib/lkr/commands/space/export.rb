@@ -1,12 +1,16 @@
 # frozen_string_literal: true
 
 require_relative '../../command'
+require_relative '../../modules/space'
+require_relative '../../modules/filehelper'
 require 'stringio'
 
 module Lkr
   module Commands
     class Space
       class Export < Lkr::Command
+        include Lkr::Space
+        include Lkr::FileHelper
         def initialize(space_id, options)
           super()
           @space_id = space_id

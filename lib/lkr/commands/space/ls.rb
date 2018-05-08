@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 
 require_relative '../../command'
+require_relative '../../modules/space'
 require 'tty-table'
 
 module Lkr
   module Commands
     class Space
       class Ls < Lkr::Command
+        include Lkr::Space
         def initialize(filter_spec, options)
           super()
           @filter_spec = filter_spec
