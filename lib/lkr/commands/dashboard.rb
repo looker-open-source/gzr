@@ -8,7 +8,7 @@ module Lkr
 
       namespace :dashboard
 
-      desc 'dashboard cat DASHBOARD_ID', 'Output the JSON representation of a dashboard to the screen or a file'
+      desc 'cat DASHBOARD_ID', 'Output the JSON representation of a dashboard to the screen or a file'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :dir,  type: :string,
