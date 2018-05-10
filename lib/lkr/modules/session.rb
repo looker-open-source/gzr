@@ -24,7 +24,7 @@ module Lkr
     def login
       conn_hash = Hash.new
       conn_hash[:api_endpoint] = "http#{@options[:ssl] ? "s" : ""}://#{@options[:host]}:#{@options[:port]}/api/#{@options[:api_version]}"
-      conn_hash[:connection_options] = {:ssl => {:verify => @options[:verify_ssl]}} 
+      conn_hash[:connection_options] = {:ssl => {:verify => @options[:verify_ssl]}} if @options[:ssl] 
       if @options[:client_id] then
         conn_hash[:client_id] = @options[:client_id]
         if @options[:client_secret] then

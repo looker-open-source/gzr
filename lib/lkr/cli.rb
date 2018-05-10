@@ -31,6 +31,12 @@ module Lkr
     end
     map %w(--version -v) => :version
 
+    require_relative 'commands/model'
+    register Lkr::Commands::Model, 'model', 'model [SUBCOMMAND]', 'Command description...'
+
+    require_relative 'commands/connection'
+    register Lkr::Commands::Connection, 'connection', 'connection [SUBCOMMAND]', 'Command description...'
+
     require_relative 'commands/user'
     register Lkr::Commands::User, 'user', 'user [SUBCOMMAND]', 'Command description...'
 

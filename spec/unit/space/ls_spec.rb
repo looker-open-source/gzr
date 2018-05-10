@@ -7,6 +7,18 @@ RSpec.describe Lkr::Commands::Space::Ls do
       :id=>1,
       :name=>"foo",
       :parent_id=>0
+      :looks=>[
+        {
+          :id=>2,
+          :title=>"bar"
+        }
+      ],
+      :dashboards=>[
+        {
+          :id=>3,
+          :title=>"baz"
+        }
+      ]
     }
     mock_response = double(Sawyer::Resource, resp_hash)
     allow(mock_response).to receive(:to_attrs).and_return(resp_hash)
@@ -21,13 +33,13 @@ RSpec.describe Lkr::Commands::Space::Ls do
       :parent_id=>1,
       :looks=>[
         {
-          :id=>2,
+          :id=>5,
           :title=>"bar"
         }
       ],
       :dashboards=>[
         {
-          :id=>3,
+          :id=>6,
           :title=>"baz"
         }
       ]
