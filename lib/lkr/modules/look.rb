@@ -33,9 +33,9 @@ module Lkr
         req[:space_id] = space_id if space_id 
         data = @sdk.search_looks(req)
       rescue LookerSDK::Error => e
-        say_error "Error  search_looks(#{JSON.pretty_generate(req)})"
-          say_error e.message
-          raise
+        say_error "Error search_looks(#{JSON.pretty_generate(req)})"
+        say_error e.message
+        raise
       end
       data
     end
