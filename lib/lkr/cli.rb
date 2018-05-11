@@ -14,7 +14,7 @@ module Lkr
     class_option :port, type: :string, default: '19999', desc: 'Looker API Port'
     class_option :client_id, type: :string, desc: 'API3 Client Id'
     class_option :client_secret, type: :string, desc: 'API3 Client Secret'
-    class_option :api_version, type: :string, default: '3.0', desc: 'Looker API Version'
+    class_option :api_version, type: :string, desc: 'Looker API Version'
     class_option :ssl, type: :boolean, default: true, desc: 'Use ssl to communicate with host'
     class_option :verify_ssl, type: :boolean, default: true, desc: 'Verify the SSL certificate of the host'
     class_option :force, type: :boolean, default: false, desc: 'Overwrite objects on server'

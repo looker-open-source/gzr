@@ -21,21 +21,51 @@ module Lkr
       puts pastel.red data
     end
 
-    def login
+    def v3_1_available?
+      @v3_1_available ||= false
+    end
+
+    def build_connection_hash(api_version)
       conn_hash = Hash.new
-      conn_hash[:api_endpoint] = "http#{@options[:ssl] ? "s" : ""}://#{@options[:host]}:#{@options[:port]}/api/#{@options[:api_version]}"
+      conn_hash[:api_endpoint] = "http#{@options[:ssl] ? "s" : ""}://#{@options[:host]}:#{@options[:port]}/api/#{api_version}"
       conn_hash[:connection_options] = {:ssl => {:verify => @options[:verify_ssl]}} if @options[:ssl] 
       if @options[:client_id] then
         conn_hash[:client_id] = @options[:client_id]
         if @options[:client_secret] then
           conn_hash[:client_secret] = @options[:client_secret]
         else
-          conn_hash[:client_secret] = reader.read_line( "Enter your client_secret:", echo: false)
+          @secret ||= reader.read_line("Enter your client_secret:", echo: false)
+          conn_hash[:client_secret] = @secret
         end
       else
         conn_hash[:netrc] = true
         conn_hash[:netrc_file] = "~/.netrc"
       end
+      conn_hash
+    end
+
+    def login(api_version)
+      @secret = nil
+      begin
+        conn_hash = build_connection_hash("3.0")
+        sdk = LookerSDK::Client.new(conn_hash)
+        sdk.versions.supported_versions.each do |v|
+          @v3_1_available = true if v.version == "3.1"
+        end
+        begin
+          sdk.logout
+        rescue LookerSDK::Error => e
+          # eat this error if it occurs
+        end
+      end unless @options[:api_version]
+
+      say_warning "API 3.1 available? #{v3_1_available?}" if @options[:debug]
+
+      raise Lkr::Error, "Operation requires API v3.1, but user specified a different version" if (api_version == "3.1") && @options[:api_version] && !("3.1" == @options[:api_version])
+      raise Lkr::Error, "Operation requires API v3.1, which is not available from this host" if (api_version == "3.1") && !v3_1_available?
+
+      conn_hash = build_connection(@options[:api_version] || api_version)
+      @secret = nil
 
       say_ok("connecting to #{conn_hash.each { |k,v| "#{k}=>#{(k == :client_secret) ? '*********' : v}" }}") if @options[:debug]
 
@@ -51,6 +81,7 @@ module Lkr
         say_error e.message
         raise
       end
+
       if @options[:su] then
         say_ok "su to user #{@options[:su]}" if @options[:debug]
         @access_token_stack.push(@sdk.access_token)
@@ -74,7 +105,7 @@ module Lkr
       rescue LookerSDK::Error => e
         say_error "Unable to logout"
         say_error e.message
-      end
+      end if @sdk
       loop do
         token = @access_token_stack.pop
         break unless token
@@ -89,10 +120,10 @@ module Lkr
       end
     end
 
-    def with_session
+    def with_session(api_version="3.0")
       return nil unless block_given?
       begin
-        login
+        login(api_version)
         yield
       ensure
         logout_all

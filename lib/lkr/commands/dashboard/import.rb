@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative '../../../lkr'
 require_relative '../../command'
 require_relative '../../modules/dashboard'
 require_relative '../../modules/look'
@@ -23,7 +24,7 @@ module Lkr
 
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
-          with_session do
+          with_session("3.1") do
             read_file(@file) do |data|
               existing_dashboards = search_dashboards(data[:title], @dest_space_id)
 
@@ -37,14 +38,9 @@ module Lkr
                 end
               end
 
-              #new_query = data[:query].select do |k,v|
-                #keys_to_keep('create_query').include? k
-              #end
-
               new_dash = data.select do |k,v|
                 keys_to_keep('create_dashboard').include? k
               end
-              #new_dash[:query_id] = create_query(new_query).to_attrs[:id]
               new_dash[:user_id] = query_me("id").to_attrs[:id]
               new_dash[:space_id] = @dest_space_id
               new_dash[:dashboard_filters] = data[:dashboard_filters].map do |filter|

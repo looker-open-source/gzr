@@ -1,5 +1,6 @@
 require "lkr/version"
 
 module Lkr
-  # Your code goes here...
+  class Error < StandardError
+  end
 end
