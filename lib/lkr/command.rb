@@ -41,9 +41,9 @@ module Lkr
       begin
         data = @sdk.create_query(query)
       rescue LookerSDK::Error => e
-          say_error "Error creating query"
-          say_error e.message
-          raise
+        say_error "Error creating query(#{JSON.pretty_generate(query)})"
+        say_error e.message
+        raise
       end
       data
     end
