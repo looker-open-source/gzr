@@ -44,7 +44,18 @@ module Lkr
       begin
         data = @sdk.create_dashboard(dash)
       rescue LookerSDK::Error => e
-          say_error "Error creating dashboard"
+          say_error "Error creating dashboard(#{JSON.pretty_generate(dash)})"
+          say_error e.message
+          raise
+      end
+      data
+    end
+
+    def update_dashboard(dash_id,dash)
+      begin
+        data = @sdk.update_dashboard(dash_id,dash)
+      rescue LookerSDK::Error => e
+        say_error "Error updating dashboard(#{dash_id},#{JSON.pretty_generate(dash)})"
           say_error e.message
           raise
       end
@@ -56,6 +67,28 @@ module Lkr
         data = @sdk.create_dashboard_element(dash_elem)
       rescue LookerSDK::Error => e
         say_error "Error creating dashboard_element(#{JSON.pretty_generate(dash_elem)})"
+        say_error e.message
+        raise
+      end
+      data
+    end
+
+    def update_dashboard_element(id,dash_elem)
+      begin
+        data = @sdk.update_dashboard_element(id,dash_elem)
+      rescue LookerSDK::Error => e
+        say_error "Error updating dashboard_element(#{id},#{JSON.pretty_generate(dash_elem)})"
+        say_error e.message
+        raise
+      end
+      data
+    end
+
+    def delete_dashboard_element(id)
+      begin
+        data = @sdk.delete_dashboard_element(id)
+      rescue LookerSDK::Error => e
+        say_error "Error deleting dashboard_element(#{id})})"
         say_error e.message
         raise
       end
@@ -117,5 +150,26 @@ module Lkr
       data
     end
 
+    def update_dashboard_filter(id,dash_filter)
+      begin
+        data = @sdk.update_dashboard_filter(id,dash_filter)
+      rescue LookerSDK::Error => e
+        say_error "Error updating dashboard_filter(#{id},#{JSON.pretty_generate(dash_filter)})"
+        say_error e.message
+        raise
+      end
+      data
+    end
+
+    def delete_dashboard_filter(id)
+      begin
+        data = @sdk.delete_dashboard_filter(id)
+      rescue LookerSDK::Error => e
+        say_error "Error deleting dashboard_filter(#{id})})"
+        say_error e.message
+        raise
+      end
+      data
+    end
   end
 end

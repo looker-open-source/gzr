@@ -26,75 +26,81 @@ module Lkr
           say_warning("options: #{@options.inspect}") if @options[:debug]
           with_session("3.1") do
             read_file(@file) do |data|
+
+              new_dash_obj = nil
+
               existing_dashboards = search_dashboards(data[:title], @dest_space_id)
 
               if existing_dashboards.length > 0 then
                 if @options[:force] then
-                  say_ok "Deleting and recreating dashboard #{data[:title]} in space #{@dest_space_id}"
-                  delete_dashboard(existing_dashboards.first.id)
+                  say_ok "Modifying existing dashboard #{data[:title]} in space #{@dest_space_id}"
+                  new_dash = data.select do |k,v|
+                    (keys_to_keep('update_dashboard') - [:space_id]).include? k
+                  end
+                  new_dash[:user_id] = query_me("id").to_attrs[:id]
+                  new_dash_obj = update_dashboard(existing_dashboards.first.id,new_dash)
                 else
                   say_error "Dashboard #{data[:title]} already exists in space #{@dest_space_id}"
                   return nil
                 end
+              else
+                new_dash = data.select do |k,v|
+                  keys_to_keep('create_dashboard').include? k
+                end
+                new_dash[:space_id] = @dest_space_id
+                new_dash_obj = create_dashboard(new_dash)
               end
 
-              new_dash = data.select do |k,v|
-                keys_to_keep('create_dashboard').include? k
-              end
-              new_dash[:user_id] = query_me("id").to_attrs[:id]
-              new_dash[:space_id] = @dest_space_id
 
-              new_dash_obj = create_dashboard(new_dash)
-
-              data[:dashboard_filters].each do |filter|
-                new_filter = filter.select do |k,v|
-                  (keys_to_keep('create_dashboard_filter') + [:row]) .include? k
+              data[:dashboard_filters].each_index do |i|
+                new_filter = data[:dashboard_filters][i].select do |k,v|
+                  (keys_to_keep('create_dashboard_filter') + [:row]).include? k
                 end
                 new_filter[:dashboard_id] = new_dash_obj.id
-                create_dashboard_filter(new_filter)
+                new_filter_obj = nil
+                if new_dash_obj.dashboard_filters.length > i then
+                  new_filter_obj = update_dashboard_filter(new_dash_obj.dashboard_filters[i].id,new_filter)
+                else
+                  new_filter_obj = create_dashboard_filter(new_filter)
+                end
+                new_dash_obj.dashboard_filters[i] = new_filter_obj
               end
 
-              elem_table = data[:dashboard_elements].map do |dash_elem|
-                new_dash_elem = dash_elem.select do |k,v|
-                  keys_to_keep('create_dashboard_element').include? k
+              filters_to_delete = new_dash_obj.dashboard_filters.length - data[:dashboard_filters].length
+              if filters_to_delete > 0 then
+                filters_to_delete.times do
+                  f = new_dash_obj.dashboard_filters.pop
+                  delete_dashboard_filter(f.id)
                 end
-                
-                new_dash_elem[:dashboard_id] = new_dash_obj.id
+              end
 
-                if dash_elem[:query] || dash_elem[:look] then
-                  new_query = (dash_elem[:query]||dash_elem[:look][:query]).select do |k,v|
-                    keys_to_keep('create_query').include? k
-                  end 
-                  new_query[:client_id] = nil
-                  new_query_id = create_query(new_query).id
-                end
-
-                if dash_elem[:look] then
-                  existing_looks = search_looks(dash_elem[:look][:title], @dest_space_id)
-
-                  if existing_looks.length > 0 then
-                    if @options[:force] then
-                      say_ok "Deleting and recreating Look #{dash_elem[:look][:title]} in space #{@dest_space_id}"
-                      delete_look(existing_looks.first.id)
-                    else
-                      say_error "Look #{dash_elem[:look][:title]} already exists in space #{@dest_space_id}"
-                      return nil
-                    end
+              elem_table = Array.new
+              data[:dashboard_elements].each_index do |i|
+                dash_elem = data[:dashboard_elements][i]
+                new_dash_elem_obj = nil
+                if new_dash_obj.dashboard_elements.length > i then
+                  new_dash_elem = dash_elem.select do |k,v|
+                    keys_to_keep('update_dashboard_element').include? k
                   end
-
-                  new_look = dash_elem[:look].select do |k,v|
-                    keys_to_keep('create_look').include? k
+                  process_dashboard_element(new_dash_obj, dash_elem, new_dash_elem) 
+                  new_dash_elem_obj = update_dashboard_element(new_dash_obj.dashboard_elements[i].id,new_dash_elem)
+                else
+                  new_dash_elem = dash_elem.select do |k,v|
+                    keys_to_keep('create_dashboard_element').include? k
                   end
-                  new_look[:query_id] = new_query_id
-                  new_look[:user_id] = new_dash[:user_id]
-                  new_look[:space_id] = @dest_space_id
-
-                  new_dash_elem[:look_id] = create_look(new_look).id
-                elsif dash_elem[:query]
-                  new_dash_elem[:query_id] = new_query_id
+                  new_dash_elem[:dashboard_id] = new_dash_obj.id
+                  process_dashboard_element(new_dash_obj, dash_elem, new_dash_elem) 
+                  new_dash_elem_obj = create_dashboard_element(new_dash_elem)
                 end
+                elem_table << [dash_elem[:id], new_dash_elem_obj.id]
+              end
 
-                [dash_elem[:id], create_dashboard_element(new_dash_elem).id]
+              elements_to_delete = new_dash_obj.dashboard_elements.length - data[:dashboard_elements].length
+              if elements_to_delete > 0 then
+                elements_to_delete.times do
+                  e = new_dash_obj.dashboard_elements.pop
+                  delete_dashboard_element(e.id)
+                end
               end
 
               layout_table = data[:dashboard_layouts].map do |layout|
@@ -122,6 +128,47 @@ module Lkr
               end
               delete_dashboard_layout(new_dash_obj.dashboard_layouts.first.id)
             end
+          end
+        end
+
+        def process_dashboard_element(new_dash_obj,dash_elem,new_dash_elem)
+          if dash_elem[:query] || dash_elem[:look] then
+            new_query = (dash_elem[:query]||dash_elem[:look][:query]).select do |k,v|
+              keys_to_keep('create_query').include? k
+            end 
+            new_query[:client_id] = nil
+            new_query_id = create_query(new_query).id
+          end
+
+          if dash_elem[:look] then
+            existing_looks = search_looks(dash_elem[:look][:title], @dest_space_id)
+
+            if existing_looks.length > 0 then
+              if @options[:force] then
+                say_ok "Modifying existing Look #{dash_elem[:look][:title]} in space #{@dest_space_id}"
+                new_look = dash_elem[:look].select do |k,v|
+                  (keys_to_keep('update_look') - [:space_id]).include? k
+                end
+                new_look[:query_id] = new_query_id
+                new_look[:user_id] = new_dash_obj.user_id
+
+                new_dash_elem[:look_id] = update_look(existing_looks.first.id,new_look).id
+              else
+                say_error "Look #{dash_elem[:look][:title]} already exists in space #{@dest_space_id}"
+                return nil
+              end
+            else
+              new_look = dash_elem[:look].select do |k,v|
+                keys_to_keep('create_look').include? k
+              end
+              new_look[:query_id] = new_query_id
+              new_look[:user_id] = new_dash_obj.user_id
+              new_look[:space_id] = @dest_space_id
+
+              new_dash_elem[:look_id] = create_look(new_look).id
+            end
+          elsif dash_elem[:query]
+            new_dash_elem[:query_id] = new_query_id
           end
         end
       end

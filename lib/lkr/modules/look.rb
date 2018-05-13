@@ -14,18 +14,6 @@ module Lkr
       data
     end
 
-    def delete_look(look_id)
-      data = nil
-      begin
-        data = @sdk.delete_look(look_id)
-      rescue LookerSDK::Error => e
-          say_error "Error deleting look(#{look_id})"
-          say_error e.message
-          raise
-      end
-      data
-    end
-
     def search_looks(title, space_id=nil)
       data = nil
       begin
@@ -44,9 +32,32 @@ module Lkr
       begin
         data = @sdk.create_look(look)
       rescue LookerSDK::Error => e
-          say_error "Error creating look"
-          say_error e.message
-          raise
+        say_error "Error creating look(#{JSON.pretty_generate(look)})"
+        say_error e.message
+        raise
+      end
+      data
+    end
+
+    def update_look(id,look)
+      begin
+        data = @sdk.update_look(id,look)
+      rescue LookerSDK::Error => e
+        say_error "Error updating look(#{id},#{JSON.pretty_generate(look)})"
+        say_error e.message
+        raise
+      end
+      data
+    end
+
+    def delete_look(look_id)
+      data = nil
+      begin
+        data = @sdk.delete_look(look_id)
+      rescue LookerSDK::Error => e
+        say_error "Error deleting look(#{look_id})"
+        say_error e.message
+        raise
       end
       data
     end
