@@ -43,13 +43,16 @@ module Lkr
               end
               new_dash[:user_id] = query_me("id").to_attrs[:id]
               new_dash[:space_id] = @dest_space_id
-              new_dash[:dashboard_filters] = data[:dashboard_filters].map do |filter|
-                filter.select do |k,v|
-                  keys_to_keep('create_dashboard_filter').include? k
-                end
-              end
 
               new_dash_obj = create_dashboard(new_dash)
+
+              data[:dashboard_filters].each do |filter|
+                new_filter = filter.select do |k,v|
+                  (keys_to_keep('create_dashboard_filter') + [:row]) .include? k
+                end
+                new_filter[:dashboard_id] = new_dash_obj.id
+                create_dashboard_filter(new_filter)
+              end
 
               elem_table = data[:dashboard_elements].map do |dash_elem|
                 new_dash_elem = dash_elem.select do |k,v|
@@ -118,14 +121,6 @@ module Lkr
                 update_dashboard_layout(new_layout[:id], active: true) if orig_layout[:active]
               end
               delete_dashboard_layout(new_dash_obj.dashboard_layouts.first.id)
-
-              data[:dashboard_filters].each do |filter|
-                new_filter = filter.select do |k,v|
-                  keys_to_keep('create_dashboard_filter').include? k
-                end
-                new_filter[:dashboard_id] = new_dash_obj.id
-                #new_filter = create_dashboard_filter(new_filter)
-              end
             end
           end
         end
