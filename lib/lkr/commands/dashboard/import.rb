@@ -40,8 +40,7 @@ module Lkr
                   new_dash[:user_id] = query_me("id").to_attrs[:id]
                   new_dash_obj = update_dashboard(existing_dashboards.first.id,new_dash)
                 else
-                  say_error "Dashboard #{data[:title]} already exists in space #{@dest_space_id}"
-                  return nil
+                  raise Lkr::Error, "Dashboard #{data[:title]} already exists in space #{@dest_space_id}\nUse --force if you want to overwrite it"
                 end
               else
                 new_dash = data.select do |k,v|
