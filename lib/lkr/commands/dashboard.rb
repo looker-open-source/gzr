@@ -6,7 +6,27 @@ module Lkr
   module Commands
     class Dashboard < Thor
 
+      def self.banner(command, namespace = nil, subcommand = false)
+        "#{basename} #{subcommand_prefix} #{command.usage}"
+      end
+
+      def self.subcommand_prefix
+        self.name.gsub(%r{.*::}, '').gsub(%r{^[A-Z]}) { |match| match[0].downcase }.gsub(%r{[A-Z]}) { |match| "-#{match[0].downcase}" }
+      end
+
       namespace :dashboard
+
+      desc 'rm', 'Command description...'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def rm(*)
+        if options[:help]
+          invoke :help, ['rm']
+        else
+          require_relative 'dashboard/rm'
+          Lkr::Commands::Dashboard::Rm.new(options).execute
+        end
+      end
 
       desc 'import', 'Command description...'
       method_option :help, aliases: '-h', type: :boolean,
@@ -46,12 +66,16 @@ module Lkr
         end
       end
 
-      def self.banner(command, namespace = nil, subcommand = false)
-        "#{basename} #{subcommand_prefix} #{command.usage}"
-      end
-
-      def self.subcommand_prefix
-        self.name.gsub(%r{.*::}, '').gsub(%r{^[A-Z]}) { |match| match[0].downcase }.gsub(%r{[A-Z]}) { |match| "-#{match[0].downcase}" }
+      desc 'rm', 'Command description...'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def rm(id)
+        if options[:help]
+          invoke :help, ['rm']
+        else
+          require_relative 'dashboard/rm'
+          Lkr::Commands::Dashboard::Rm.new(id, options).execute
+        end
       end
     end
   end

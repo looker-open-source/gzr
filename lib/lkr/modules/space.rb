@@ -8,6 +8,19 @@ module Lkr
         include Lkr::User
       end
     end
+
+    def create_space(name, parent_id)
+      data = nil
+      begin
+        req = {:name => name, :parent_id => parent_id}
+        data = @sdk.create_space(req)
+      rescue LookerSDK::Error => e
+        say_error "Error creating space(#{JSON.pretty_generate(req)})"
+        say_error e.message
+        raise
+      end
+    end
+
     def search_spaces(name,fields=nil)
       data = nil
       begin
@@ -102,5 +115,16 @@ module Lkr
       data
     end
 
+    def delete_space(space_id)
+      data = nil
+      begin
+        data = @sdk.delete_space(space_id)
+      rescue LookerSDK::Error => e
+        say_error "Error deleting space #{space_id}"
+        say_error e.message
+        raise
+      end
+      data
+    end
   end
 end

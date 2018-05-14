@@ -7,9 +7,9 @@ module Lkr
       begin
         data = @sdk.dashboard(dashboard_id)
       rescue LookerSDK::Error => e
-          say_error "Error querying dashboard(#{dashboard_id})"
-          say_error e.message
-          raise
+        say_error "Error querying dashboard(#{dashboard_id})"
+        say_error e.message
+        raise
       end
       data
     end
@@ -19,9 +19,9 @@ module Lkr
       begin
         data = @sdk.delete_dashboard(dash)
       rescue LookerSDK::Error => e
-          say_error "Error deleting dashboard(#{dash})"
-          say_error e.message
-          raise
+        say_error "Error deleting dashboard(#{dash})"
+        say_error e.message
+        raise
       end
       data
     end
@@ -44,9 +44,9 @@ module Lkr
       begin
         data = @sdk.create_dashboard(dash)
       rescue LookerSDK::Error => e
-          say_error "Error creating dashboard(#{JSON.pretty_generate(dash)})"
-          say_error e.message
-          raise
+        say_error "Error creating dashboard(#{JSON.pretty_generate(dash)})"
+        say_error e.message
+        raise
       end
       data
     end
@@ -56,8 +56,8 @@ module Lkr
         data = @sdk.update_dashboard(dash_id,dash)
       rescue LookerSDK::Error => e
         say_error "Error updating dashboard(#{dash_id},#{JSON.pretty_generate(dash)})"
-          say_error e.message
-          raise
+        say_error e.message
+        raise
       end
       data
     end

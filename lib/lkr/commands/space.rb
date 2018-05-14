@@ -6,7 +6,27 @@ module Lkr
   module Commands
     class Space < Thor
 
+      def self.banner(command, namespace = nil, subcommand = false)
+        "#{basename} #{subcommand_prefix} #{command.usage}"
+      end
+
+      def self.subcommand_prefix
+        self.name.gsub(%r{.*::}, '').gsub(%r{^[A-Z]}) { |match| match[0].downcase }.gsub(%r{[A-Z]}) { |match| "-#{match[0].downcase}" }
+      end
+
       namespace :space
+
+      desc 'create NAME PARENT_SPACE', 'Command description...'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def create(name, parent_space)
+        if options[:help]
+          invoke :help, ['create']
+        else
+          require_relative 'space/create'
+          Lkr::Commands::Space::Create.new(name, parent_space, options).execute
+        end
+      end
 
       desc 'top', 'Retrieve the top level (or root) spaces'
       method_option :help, aliases: '-h', type: :boolean,
@@ -80,12 +100,16 @@ module Lkr
         end
       end
 
-      def self.banner(command, namespace = nil, subcommand = false)
-        "#{basename} #{subcommand_prefix} #{command.usage}"
-      end
-
-      def self.subcommand_prefix
-        self.name.gsub(%r{.*::}, '').gsub(%r{^[A-Z]}) { |match| match[0].downcase }.gsub(%r{[A-Z]}) { |match| "-#{match[0].downcase}" }
+      desc 'rm', 'Command description...'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def rm(space_id)
+        if options[:help]
+          invoke :help, ['rm']
+        else
+          require_relative 'space/rm'
+          Lkr::Commands::Space::Rm.new(space_id,options).execute
+        end
       end
     end
   end
