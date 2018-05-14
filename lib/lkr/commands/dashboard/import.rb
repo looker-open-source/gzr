@@ -126,7 +126,9 @@ module Lkr
                 end
                 update_dashboard_layout(new_layout[:id], active: true) if orig_layout[:active]
               end
-              delete_dashboard_layout(new_dash_obj.dashboard_layouts.first.id)
+              new_dash_obj.dashboard_layouts.each do |layout|
+                delete_dashboard_layout(layout.id)
+              end
             end
           end
         end
