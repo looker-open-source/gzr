@@ -61,5 +61,38 @@ module Lkr
       end
       data
     end
+
+    def upsert_look(user_id, query_id, space_id, source_look)
+      existing_looks = search_looks(source_look[:title], space_id)
+
+      if existing_looks.length > 0 then
+        if @options[:force] then
+          say_ok "Modifying existing Look #{source_look[:title]} in space #{space_id}"
+          new_look = source_look.select do |k,v|
+            (keys_to_keep('update_look') - [:space_id,:user_id,:query_id]).include? k
+          end
+          new_look[:query_id] = query_id
+          return update_look(existing_looks.first.id,new_look)
+        else
+          raise Lkr::Error, "Look #{source_look[:title]} already exists in space #{space_id}\nUse --force if you want to overwrite it"
+        end
+      else
+        new_look = source_look.select do |k,v|
+          (keys_to_keep('create_look') - [:space_id,:user_id,:query_id]).include? k
+        end
+        new_look[:query_id] = query_id
+        new_look[:user_id] = user_id
+        new_look[:space_id] = space_id
+
+        return create_look(new_look)
+      end
+    end
+
+    def create_fetch_query(source_query)
+      new_query = source_query.select do |k,v|
+        (keys_to_keep('create_query') - [:client_id]).include? k
+      end 
+      return create_query(new_query)
+    end
   end
 end

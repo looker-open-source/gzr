@@ -80,13 +80,13 @@ module Lkr
                 new_dash_elem_obj = nil
                 if new_dash_obj.dashboard_elements.length > i then
                   new_dash_elem = dash_elem.select do |k,v|
-                    keys_to_keep('update_dashboard_element').include? k
+                    (keys_to_keep('update_dashboard_element') - [:dashboard_id, :look_id, :query_id]).include? k
                   end
                   process_dashboard_element(new_dash_obj, dash_elem, new_dash_elem) 
                   new_dash_elem_obj = update_dashboard_element(new_dash_obj.dashboard_elements[i].id,new_dash_elem)
                 else
                   new_dash_elem = dash_elem.select do |k,v|
-                    keys_to_keep('create_dashboard_element').include? k
+                    (keys_to_keep('create_dashboard_element') - [:dashboard_id, :look_id, :query_id]).include? k
                   end
                   new_dash_elem[:dashboard_id] = new_dash_obj.id
                   process_dashboard_element(new_dash_obj, dash_elem, new_dash_elem) 
@@ -134,43 +134,13 @@ module Lkr
         end
 
         def process_dashboard_element(new_dash_obj,dash_elem,new_dash_elem)
-          if dash_elem[:query] || dash_elem[:look] then
-            new_query = (dash_elem[:query]||dash_elem[:look][:query]).select do |k,v|
-              keys_to_keep('create_query').include? k
-            end 
-            new_query[:client_id] = nil
-            new_query_id = create_query(new_query).id
-          end
+          return unless dash_elem[:query] || dash_elem[:look]
+          new_query = create_fetch_query(dash_elem[:query]||dash_elem[:look][:query])
 
           if dash_elem[:look] then
-            existing_looks = search_looks(dash_elem[:look][:title], @dest_space_id)
-
-            if existing_looks.length > 0 then
-              if @options[:force] then
-                say_ok "Modifying existing Look #{dash_elem[:look][:title]} in space #{@dest_space_id}"
-                new_look = dash_elem[:look].select do |k,v|
-                  (keys_to_keep('update_look') - [:space_id]).include? k
-                end
-                new_look[:query_id] = new_query_id
-                new_look[:user_id] = new_dash_obj.user_id
-
-                new_dash_elem[:look_id] = update_look(existing_looks.first.id,new_look).id
-              else
-                say_error "Look #{dash_elem[:look][:title]} already exists in space #{@dest_space_id}"
-                return nil
-              end
-            else
-              new_look = dash_elem[:look].select do |k,v|
-                keys_to_keep('create_look').include? k
-              end
-              new_look[:query_id] = new_query_id
-              new_look[:user_id] = new_dash_obj.user_id
-              new_look[:space_id] = @dest_space_id
-
-              new_dash_elem[:look_id] = create_look(new_look).id
-            end
+            new_dash_elem[:look_id] = upsert_look(new_dash_obj.user_id, new_query.id, @dest_space_id, dash_elem[:look]).id
           elsif dash_elem[:query]
-            new_dash_elem[:query_id] = new_query_id
+            new_dash_elem[:query_id] = new_query.id
           end
         end
       end
