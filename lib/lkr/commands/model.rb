@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'thor'
+require_relative 'subcommandbase'
 
 module Lkr
   module Commands
-    class Model < Thor
+    class Model < SubCommandBase
 
       namespace :model
 
@@ -22,14 +22,6 @@ module Lkr
           require_relative 'model/ls'
           Lkr::Commands::Model::Ls.new(options).execute
         end
-      end
-
-      def self.banner(command, namespace = nil, subcommand = false)
-        "#{basename} #{subcommand_prefix} #{command.usage}"
-      end
-
-      def self.subcommand_prefix
-        self.name.gsub(%r{.*::}, '').gsub(%r{^[A-Z]}) { |match| match[0].downcase }.gsub(%r{[A-Z]}) { |match| "-#{match[0].downcase}" }
       end
     end
   end
