@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'rubygems/package'
+
 module Lkr
   module FileHelper
     def write_file(file_name=nil,base_dir=nil,path=nil,output=$stdout)

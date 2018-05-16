@@ -28,105 +28,128 @@ module Lkr
             read_file(@file) do |data|
 
               new_dash_obj = nil
+              me = query_me("id")
 
-              existing_dashboards = search_dashboards(data[:title], @dest_space_id)
+              existing_dashboard = search_dashboards(data[:title], @dest_space_id).fetch(0,nil)
 
-              if existing_dashboards.length > 0 then
+              if existing_dashboard then
                 if @options[:force] then
-                  say_ok "Modifying existing dashboard #{data[:title]} in space #{@dest_space_id}"
+                  say_ok "Modifying existing dashboard #{existing_dashboard.id} #{data[:title]} in space #{@dest_space_id}"
                   new_dash = data.select do |k,v|
-                    (keys_to_keep('update_dashboard') - [:space_id]).include? k
+                    (keys_to_keep('update_dashboard') - [:space_id,:user_id]).include? k
                   end
-                  new_dash[:user_id] = query_me("id").to_attrs[:id]
-                  new_dash_obj = update_dashboard(existing_dashboards.first.id,new_dash)
+                  new_dash_obj = update_dashboard(existing_dashboard.id,new_dash)
                 else
                   raise Lkr::Error, "Dashboard #{data[:title]} already exists in space #{@dest_space_id}\nUse --force if you want to overwrite it"
                 end
               else
                 new_dash = data.select do |k,v|
-                  keys_to_keep('create_dashboard').include? k
+                  (keys_to_keep('create_dashboard') - [:space_id,:user_id]).include? k
                 end
                 new_dash[:space_id] = @dest_space_id
+                new_dash[:user_id] = me.id
                 new_dash_obj = create_dashboard(new_dash)
               end
 
 
-              data[:dashboard_filters].each_index do |i|
-                new_filter = data[:dashboard_filters][i].select do |k,v|
-                  (keys_to_keep('create_dashboard_filter') + [:row]).include? k
-                end
-                new_filter[:dashboard_id] = new_dash_obj.id
-                new_filter_obj = nil
-                if new_dash_obj.dashboard_filters.length > i then
-                  new_filter_obj = update_dashboard_filter(new_dash_obj.dashboard_filters[i].id,new_filter)
+              filters = Array.new([data[:dashboard_filters].count,new_dash_obj.dashboard_filters.count].max) do |i|
+                [data[:dashboard_filters].fetch(i,nil),new_dash_obj.dashboard_filters.fetch(i,nil)]
+              end
+
+              filters.each do |new_filter,existing_filter|
+                if new_filter then
+                  filter = new_filter.select do |k,v|
+                    (keys_to_keep('create_dashboard_filter') + [:row]).include? k
+                  end
+                  filter[:dashboard_id] = new_dash_obj.id
+                  if existing_filter then
+                    say_warning "Updating filter #{existing_filter.id}" if @options[:debug]
+                    new_filter_obj = update_dashboard_filter(existing_filter.id,filter)
+                  else
+                    say_warning "Creating filter #{filter.inspect}" if @options[:debug]
+                    new_filter_obj = create_dashboard_filter(filter)
+                  end
                 else
-                  new_filter_obj = create_dashboard_filter(new_filter)
-                end
-                new_dash_obj.dashboard_filters[i] = new_filter_obj
-              end
-
-              filters_to_delete = new_dash_obj.dashboard_filters.length - data[:dashboard_filters].length
-              if filters_to_delete > 0 then
-                filters_to_delete.times do
-                  f = new_dash_obj.dashboard_filters.pop
-                  delete_dashboard_filter(f.id)
+                  say_warning "Deleting filter #{existing_filter.id}" if @options[:debug]
+                  delete_dashboard_filter(existing_filter.id)
                 end
               end
 
-              elem_table = Array.new
-              data[:dashboard_elements].each_index do |i|
-                dash_elem = data[:dashboard_elements][i]
-                new_dash_elem_obj = nil
-                if new_dash_obj.dashboard_elements.length > i then
-                  new_dash_elem = dash_elem.select do |k,v|
-                    (keys_to_keep('update_dashboard_element') - [:dashboard_id, :look_id, :query_id]).include? k
+              elements = Array.new([data[:dashboard_elements].count,new_dash_obj.dashboard_elements.count].max) do |i|
+                [data[:dashboard_elements].fetch(i,nil),new_dash_obj.dashboard_elements.fetch(i,nil)]
+              end
+
+              say_warning "Processing #{elements.count} dashboard elements" if @options[:debug]
+
+              elem_table = elements.collect do |new_element,existing_element|
+                if new_element then
+                  if existing_element then
+                    new_dash_elem = new_element.select do |k,v|
+                      (keys_to_keep('update_dashboard_element') - [:dashboard_id, :look_id, :query_id]).include? k
+                    end
+                    process_dashboard_element(new_dash_obj, new_element, new_dash_elem) 
+                    say_warning "Updating dashboard element #{existing_element.id}" if @options[:debug]
+                    new_dash_elem_obj = update_dashboard_element(existing_element.id,new_dash_elem)
+                  else
+                    new_dash_elem = new_element.select do |k,v|
+                      (keys_to_keep('create_dashboard_element') - [:dashboard_id, :look_id, :query_id]).include? k
+                    end
+                    process_dashboard_element(new_dash_obj, new_element, new_dash_elem) 
+                    say_warning "Creating dashboard element #{new_dash_elem.inspect}" if @options[:debug]
+                    new_dash_elem[:dashboard_id] = new_dash_obj.id
+                    new_dash_elem_obj = create_dashboard_element(new_dash_elem)
                   end
-                  process_dashboard_element(new_dash_obj, dash_elem, new_dash_elem) 
-                  new_dash_elem_obj = update_dashboard_element(new_dash_obj.dashboard_elements[i].id,new_dash_elem)
+                  [new_element[:id],new_dash_elem_obj.id]
                 else
-                  new_dash_elem = dash_elem.select do |k,v|
-                    (keys_to_keep('create_dashboard_element') - [:dashboard_id, :look_id, :query_id]).include? k
+                  say_warning "Deleting dashboard element #{existing_element.id}" if @options[:debug]
+                  delete_dashboard_element(existing_element.id)
+                  [nil,existing_element.id]
+                end
+              end
+
+              layouts = Array.new([data[:dashboard_layouts].count,new_dash_obj.dashboard_layouts.count].max) do |i|
+                [data[:dashboard_layouts].fetch(i,nil),new_dash_obj.dashboard_layouts.fetch(i,nil)]
+              end
+
+              layouts.each do |new_layout,existing_layout|
+                if new_layout then
+                  new_layout_obj = nil
+                  if existing_layout then
+                    layout = new_layout.select do |k,v|
+                      (keys_to_keep('update_dashboard_layout') - [:dashboard_id,:active]).include? k
+                    end
+                    layout[:dashboard_id] = new_dash_obj.id 
+                    say_warning "Updating dashboard layout #{existing_layout.id}" if @options[:debug]
+                    new_layout_obj = update_dashboard_layout(existing_layout.id,layout)
+                  else
+                    layout = new_layout.select do |k,v|
+                      (keys_to_keep('create_dashboard_layout') - [:dashboard_id]).include? k
+                    end
+                    layout[:dashboard_id] = new_dash_obj.id 
+                    say_warning "Creating dashboard layout #{layout}" if @options[:debug]
+                    new_layout_obj = create_dashboard_layout(layout)
                   end
-                  new_dash_elem[:dashboard_id] = new_dash_obj.id
-                  process_dashboard_element(new_dash_obj, dash_elem, new_dash_elem) 
-                  new_dash_elem_obj = create_dashboard_element(new_dash_elem)
-                end
-                elem_table << [dash_elem[:id], new_dash_elem_obj.id]
-              end
 
-              elements_to_delete = new_dash_obj.dashboard_elements.length - data[:dashboard_elements].length
-              if elements_to_delete > 0 then
-                elements_to_delete.times do
-                  e = new_dash_obj.dashboard_elements.pop
-                  delete_dashboard_element(e.id)
-                end
-              end
+                  layout_components = new_layout[:dashboard_layout_components].zip(new_layout_obj.dashboard_layout_components)
+                  
+                  layout_components.each do |new_component, existing_component|
+                    component = keys_to_keep('update_dashboard_layout_component').collect do |e|
+                      [e,nil]
+                    end.to_h
+                    component[:dashboard_layout_id] = new_layout_obj.id
 
-              layout_table = data[:dashboard_layouts].map do |layout|
-                new_layout = layout.select do |k,v|
-                  keys_to_keep('create_dashboard_layout').include? k
-                end
+                    component.merge!(new_component.select do |k,v|
+                      (keys_to_keep('update_dashboard_layout_component') - [:id,:dashboard_layout_id]).include? k
+                    end)
 
-                new_layout[:dashboard_id] = new_dash_obj.id 
-
-                [layout,create_dashboard_layout(new_layout).to_attrs]
-              end
-
-              layout_table.each do |orig_layout,new_layout|
-                elem_table.each do |orig_elem_id,new_elem_id|
-                  orig_component = orig_layout[:dashboard_layout_components].select { |c| c[:dashboard_element_id] == orig_elem_id }.first
-                  new_component = new_layout[:dashboard_layout_components].select { |c| c[:dashboard_element_id] == new_elem_id }.first
-                  updated_component = orig_component.select do |k,v|
-                    keys_to_keep('update_dashboard_layout_component').include? k
+                    component[:dashboard_element_id] = elem_table.assoc(new_component[:dashboard_element_id])[1]
+                    say_warning "Updating dashboard layout component #{existing_component.id}" if @options[:debug]
+                    update_dashboard_layout_component(existing_component.id,component)
                   end
-                  updated_component[:dashboard_layout_id] = new_layout[:id]
-                  updated_component[:dashboard_element_id] = new_elem_id
-                  update_dashboard_layout_component(new_component[:id],updated_component)
+                else
+                  say_warning "Deleting dashboard layout #{existing_layout.id}" if @options[:debug]
+                  delete_dashboard_layout(layout.id)
                 end
-                update_dashboard_layout(new_layout[:id], active: true) if orig_layout[:active]
-              end
-              new_dash_obj.dashboard_layouts.each do |layout|
-                delete_dashboard_layout(layout.id)
               end
             end
           end

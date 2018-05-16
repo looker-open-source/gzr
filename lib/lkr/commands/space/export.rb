@@ -2,6 +2,8 @@
 
 require_relative '../../command'
 require_relative '../../modules/space'
+require_relative '../../modules/look'
+require_relative '../../modules/dashboard'
 require_relative '../../modules/filehelper'
 require 'stringio'
 
@@ -10,6 +12,8 @@ module Lkr
     class Space
       class Export < Lkr::Command
         include Lkr::Space
+        include Lkr::Look
+        include Lkr::Dashboard
         include Lkr::FileHelper
         def initialize(space_id, options)
           super()
