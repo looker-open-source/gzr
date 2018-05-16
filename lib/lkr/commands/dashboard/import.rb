@@ -118,13 +118,14 @@ module Lkr
                     layout = new_layout.select do |k,v|
                       (keys_to_keep('update_dashboard_layout') - [:dashboard_id,:active]).include? k
                     end
-                    layout[:dashboard_id] = new_dash_obj.id 
+                    layout[:active] = true if new_layout[:active]
                     say_warning "Updating dashboard layout #{existing_layout.id}" if @options[:debug]
                     new_layout_obj = update_dashboard_layout(existing_layout.id,layout)
                   else
                     layout = new_layout.select do |k,v|
-                      (keys_to_keep('create_dashboard_layout') - [:dashboard_id]).include? k
+                      (keys_to_keep('create_dashboard_layout') - [:dashboard_id,:active]).include? k
                     end
+                    layout[:active] = true if new_layout[:active]
                     layout[:dashboard_id] = new_dash_obj.id 
                     say_warning "Creating dashboard layout #{layout}" if @options[:debug]
                     new_layout_obj = create_dashboard_layout(layout)

@@ -1,7 +1,10 @@
 # frozen_string_literal: true
 
 require 'pastel'
+require 'tty-reader'
+
 require_relative '../../lkr'
+
 module Lkr
   module Session
 
@@ -34,6 +37,7 @@ module Lkr
         if @options[:client_secret] then
           conn_hash[:client_secret] = @options[:client_secret]
         else
+          reader = TTY::Reader.new
           @secret ||= reader.read_line("Enter your client_secret:", echo: false)
           conn_hash[:client_secret] = @secret
         end
