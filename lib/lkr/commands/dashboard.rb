@@ -8,30 +8,6 @@ module Lkr
 
       namespace :dashboard
 
-      desc 'rm', 'Command description...'
-      method_option :help, aliases: '-h', type: :boolean,
-                           desc: 'Display usage information'
-      def rm(*)
-        if options[:help]
-          invoke :help, ['rm']
-        else
-          require_relative 'dashboard/rm'
-          Lkr::Commands::Dashboard::Rm.new(options).execute
-        end
-      end
-
-      desc 'import', 'Command description...'
-      method_option :help, aliases: '-h', type: :boolean,
-                           desc: 'Display usage information'
-      def import(*)
-        if options[:help]
-          invoke :help, ['import']
-        else
-          require_relative 'dashboard/import'
-          Lkr::Commands::Dashboard::Import.new(options).execute
-        end
-      end
-
       desc 'cat DASHBOARD_ID', 'Output the JSON representation of a dashboard to the screen or a file'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
@@ -58,7 +34,7 @@ module Lkr
         end
       end
 
-      desc 'rm', 'Command description...'
+      desc 'rm DASHBOARD_ID', 'Remove or delete the given dashboard'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       def rm(id)

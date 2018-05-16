@@ -32,7 +32,7 @@ module Lkr
         end
       end
 
-      desc 'export', 'Export a space, including all child looks, dashboards, and spaces.'
+      desc 'export SPACE_ID', 'Export a space, including all child looks, dashboards, and spaces.'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :dir, type: :string, default: '.',
@@ -92,7 +92,7 @@ module Lkr
         end
       end
 
-      desc 'rm', 'Command description...'
+      desc 'rm SPACE_ID', 'Delete a space. The space must be empty or the --force flag specified to deleted subspaces, dashboards, and looks.'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       def rm(space_id)

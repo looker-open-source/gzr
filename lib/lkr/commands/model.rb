@@ -8,7 +8,7 @@ module Lkr
 
       namespace :model
 
-      desc 'ls', 'Command description...'
+      desc 'ls', 'List the models in this server.'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :fields, type: :string, default: 'name,label,project_name',
