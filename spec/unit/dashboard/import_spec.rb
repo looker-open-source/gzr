@@ -133,6 +133,6 @@ RSpec.describe Lkr::Commands::Dashboard::Import do
 
     command.execute(output: output)
 
-    expect(output.string).to eq("")
+    expect(output.string).to eq("Imported dashboard 555\n")
   end
 end
