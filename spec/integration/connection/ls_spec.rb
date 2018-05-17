@@ -3,12 +3,15 @@ RSpec.describe "`lkr connection ls` command", type: :cli do
     output = `lkr connection ls --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr ls
+  lkr connection ls
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help]    # Display usage information
+      [--fields=FIELDS]        # Fields to display
+                               # Default: name,dialect(name),host,port,database,schema
+      [--plain], [--no-plain]  # print without any extra formatting
 
-Command description...
+List all available connections
     OUT
   end
 end

@@ -3,7 +3,7 @@ RSpec.describe "`lkr space export` command", type: :cli do
     output = `lkr space export --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr space export
+  lkr space export SPACE_ID
 
 Options:
   -h, [--help], [--no-help]  # Display usage information

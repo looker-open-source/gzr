@@ -3,7 +3,7 @@ RSpec.describe "`lkr space create` command", type: :cli do
     output = `lkr space create --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr create NAME,PARENT_SPACE
+  lkr space create NAME PARENT_SPACE
 
 Options:
   -h, [--help], [--no-help]  # Display usage information

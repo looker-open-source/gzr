@@ -3,12 +3,12 @@ RSpec.describe "`lkr dashboard import` command", type: :cli do
     output = `lkr dashboard import --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr import
+  lkr dashboard import FILE DEST_SPACE_ID
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
 
-Command description...
+Import a dashboard from a file
     OUT
   end
 end

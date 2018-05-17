@@ -43,13 +43,13 @@ module Lkr
     end
 
     def read_file(file_name)
-      f = nil
+      file = nil
       data_hash = nil
       begin
-        f = File.read(file_name)
-        data_hash = JSON.parse(f,{:symbolize_names => true})
+        file = (file_name.kind_of? StringIO) ? file_name : File.open(file_name)
+        data_hash = JSON.parse(file.read,{:symbolize_names => true})
       ensure
-        #f.close if f
+        file.close if file
       end
       return (data_hash || {}) unless block_given?
 

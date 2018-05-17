@@ -3,12 +3,15 @@ RSpec.describe "`lkr connection dialects` command", type: :cli do
     output = `lkr connection dialects --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr dialects
+  lkr connection dialects
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help]    # Display usage information
+      [--fields=FIELDS]        # Fields to display
+                               # Default: name,label
+      [--plain], [--no-plain]  # print without any extra formatting
 
-Command description...
+List all available dialects
     OUT
   end
 end

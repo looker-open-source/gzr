@@ -130,7 +130,7 @@ module Lkr
     def with_session(api_version="3.0")
       return nil unless block_given?
       begin
-        login(api_version)
+        login(api_version) unless @sdk
         yield
       ensure
         logout_all

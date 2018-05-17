@@ -3,12 +3,15 @@ RSpec.describe "`lkr model ls` command", type: :cli do
     output = `lkr model ls --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr ls
+  lkr model ls
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help]    # Display usage information
+      [--fields=FIELDS]        # Fields to display
+                               # Default: name,label,project_name
+      [--plain], [--no-plain]  # print without any extra formatting
 
-Command description...
+List the models in this server.
     OUT
   end
 end

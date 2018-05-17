@@ -3,12 +3,12 @@ RSpec.describe "`lkr space rm` command", type: :cli do
     output = `lkr space rm --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr rm
+  lkr space rm SPACE_ID
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
 
-Command description...
+Delete a space. The space must be empty or the --force flag specified to deleted subspaces, dashboards, and looks.
     OUT
   end
 end

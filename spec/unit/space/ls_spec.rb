@@ -6,7 +6,7 @@ RSpec.describe Lkr::Commands::Space::Ls do
     resp_hash = {
       :id=>1,
       :name=>"foo",
-      :parent_id=>0
+      :parent_id=>0,
       :looks=>[
         {
           :id=>2,
@@ -64,8 +64,8 @@ RSpec.describe Lkr::Commands::Space::Ls do
 +---------+--+----+---------+------------+--------------+-----------------+
 |        0|1 | foo|         |            |              |                 |
 |        1|4 | buz|         |            |              |                 |
-|        1|4 | buz|2        |bar         |              |                 |
-|        1|4 | buz|         |            |3             |baz              |
+|        0|1 | foo|2        |bar         |              |                 |
+|        0|1 | foo|         |            |3             |baz              |
 +---------+--+----+---------+------------+--------------+-----------------+
     OUT
   end
