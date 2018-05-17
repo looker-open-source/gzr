@@ -6,7 +6,7 @@ module Lkr
   module FileHelper
     def write_file(file_name=nil,base_dir=nil,path=nil,output=$stdout)
       f = nil
-      if base_dir.kind_of? Gem::Package::TarWriter then
+      if base_dir.respond_to?(:mkdir)&& base_dir.respond_to?(:add_file) then
         if path then
           @archived_paths ||= Array.new
           base_dir.mkdir(path.to_path, 0755) unless @archived_paths.include?(path.to_path)

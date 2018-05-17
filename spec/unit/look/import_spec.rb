@@ -231,7 +231,7 @@ RSpec.describe Lkr::Commands::Look::Import do
       return mock_query_response
     end
     mock_sdk.define_singleton_method(:create_look) do |req|
-      $stderr.puts JSON.pretty_generate req
+      #$stderr.puts JSON.pretty_generate req
       return mock_look_response
     end
     output = StringIO.new
