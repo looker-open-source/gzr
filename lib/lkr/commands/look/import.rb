@@ -22,9 +22,13 @@ module Lkr
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
           with_session do
+
+            @me ||= query_me("id")
+            
             read_file(@file) do |data|
-              new_query = create_fetch_query(data[:query])
-              upsert_look(query_me("id").id,new_query.id,@dest_space_id,data)
+              look = upsert_look(@me.id,create_fetch_query(data[:query]),@dest_space_id,data)
+              output.puts "Imported look #{look.id}" unless @options[:plain] 
+              output.puts look.id if @options[:plain] 
             end
           end
         end

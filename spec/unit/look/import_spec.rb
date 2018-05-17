@@ -14,6 +14,7 @@ RSpec.describe Lkr::Commands::Look::Import do
     allow(mock_query_response).to receive(:to_attrs).and_return(query_response_doc)
 
     look_response_doc = {
+      :id=>31415,
       :title=>"Daily Profit",
       :description=>"Total profit by day for the last 100 days",
       :query_id=>555,
@@ -422,6 +423,6 @@ RSpec.describe Lkr::Commands::Look::Import do
 
     command.execute(output: output)
 
-    expect(output.string).to eq("")
+    expect(output.string).to eq("Imported look 31415\n")
   end
 end
