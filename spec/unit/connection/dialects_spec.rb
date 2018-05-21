@@ -14,7 +14,7 @@ RSpec.describe Lkr::Commands::Connection::Dialects do
     end
 
     output = StringIO.new
-    options = {}
+    options = { :fields=>'name,label' }
     command = Lkr::Commands::Connection::Dialects.new(options)
 
     command.instance_variable_set(:@sdk, mock_sdk)

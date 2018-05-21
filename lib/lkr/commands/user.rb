@@ -11,7 +11,7 @@ module Lkr
       desc 'me', 'Show information for the current user'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      method_option :fields, type: :string, default: 'id,email,last_name,first_name',
+      method_option :fields, type: :string, default: 'id,email,last_name,first_name,personal_space_id,home_space_id',
                            desc: 'Fields to display'
       method_option :plain, type: :boolean, default: false,
                            desc: 'print without any extra formatting'
@@ -29,7 +29,7 @@ module Lkr
       desc 'ls', 'list all users'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      method_option :fields, type: :string, default: 'id,email,last_name,first_name',
+      method_option :fields, type: :string, default: 'id,email,last_name,first_name,personal_space_id,home_space_id',
                            desc: 'Fields to display'
       method_option :plain, type: :boolean, default: false,
                            desc: 'print without any extra formatting'

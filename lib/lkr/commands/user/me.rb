@@ -20,10 +20,14 @@ module Lkr
           with_session do
             data = query_me(@options[:fields])
             table_hash = Hash.new
-            table_hash[:header] = data.to_attrs.keys unless @options[:plain]
-            table_hash[:rows] = [data.to_attrs.values]
+            fields = field_names(@options[:fields])
+            table_hash[:header] = fields unless @options[:plain]
+            expressions = fields.collect { |fn| field_expression(fn) }
+            table_hash[:rows] = [expressions.collect do |e|
+              eval "data.#{e}"
+            end]
             table = TTY::Table.new(table_hash) if data
-            alignments = data.to_attrs.keys.map do |k|
+            alignments = fields.collect do |k|
               (k =~ /id$/) ? :right : :left
             end
             begin

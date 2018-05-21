@@ -14,7 +14,7 @@ RSpec.describe Lkr::Commands::Model::Ls do
     end
 
     output = StringIO.new
-    options = {}
+    options = { :fields=>'name,label,project_name' }
     command = Lkr::Commands::Model::Ls.new(options)
 
     command.instance_variable_set(:@sdk, mock_sdk)

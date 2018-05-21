@@ -81,5 +81,36 @@ module Lkr
       io.rewind
       io.gets(nil).encode(crlf_newline: true)
     end
+
+    def field_names(opt_fields)
+      fields = []
+      token_stack = []
+      last_token = false
+      tokens = opt_fields.split /(\(|,|\))/
+      tokens << nil
+      tokens.each do |t|
+        if t.nil? then
+          fields << (token_stack + [last_token]).join('.') if last_token
+        elsif t.empty? then
+          next
+        elsif t == ',' then
+          fields << (token_stack + [last_token]).join('.') if last_token
+        elsif t == '(' then
+          token_stack.push(last_token)
+        elsif t == ')' then
+          fields << (token_stack + [last_token]).join('.') if last_token
+          token_stack.pop
+          last_token = false
+        else
+          last_token = t
+        end
+      end
+      fields
+    end
+
+    def field_expression(name)
+      parts = name.split(/\./)
+      parts.join('&.')
+    end
   end
 end

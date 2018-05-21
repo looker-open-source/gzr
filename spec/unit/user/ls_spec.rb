@@ -12,7 +12,7 @@ RSpec.describe Lkr::Commands::User::Ls do
     end
 
     output = StringIO.new
-    options = {}
+    options = { :fields=>'id,last_name,first_name,email' }
     command = Lkr::Commands::User::Ls.new(options)
 
     command.instance_variable_set(:@sdk, mock_sdk)

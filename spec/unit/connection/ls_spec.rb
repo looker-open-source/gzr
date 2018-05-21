@@ -14,7 +14,7 @@ RSpec.describe Lkr::Commands::Connection::Ls do
     end
 
     output = StringIO.new
-    options = {}
+    options = { :fields=>'name,dialect,host,port,database,schema' }
     command = Lkr::Commands::Connection::Ls.new(options)
 
     command.instance_variable_set(:@sdk, mock_sdk)

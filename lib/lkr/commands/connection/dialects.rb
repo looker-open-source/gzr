@@ -24,12 +24,16 @@ module Lkr
             end unless data && data.length > 0
 
             table_hash = Hash.new
+            fields = field_names(@options[:fields])
             table_hash[:header] = data[0].to_attrs.keys unless @options[:plain]
+            expressions = fields.collect { |fn| field_expression(fn) }
             table_hash[:rows] = data.map do |row|
-              row.to_attrs.values
+              expressions.collect do |e|
+                eval "row.#{e}"
+              end
             end
             table = TTY::Table.new(table_hash)
-            alignments = data[0].to_attrs.keys.map do |k|
+            alignments = fields.collect do |k|
               (k =~ /id$/) ? :right : :left
             end
             begin

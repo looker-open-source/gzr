@@ -11,7 +11,7 @@ RSpec.describe Lkr::Commands::User::Me do
       return mock_response
     end
     output = StringIO.new
-    options = {}
+    options = { :fields=>'id,last_name,first_name,email' }
     command = Lkr::Commands::User::Me.new(options)
 
     command.instance_variable_set(:@sdk, mock_sdk)

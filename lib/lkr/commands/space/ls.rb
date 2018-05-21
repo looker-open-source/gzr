@@ -34,6 +34,7 @@ module Lkr
             end unless data && data.length > 0
 
             table_hash = Hash.new
+            fields = field_names(@options[:fields])
             table_hash[:header] = field_names(@options[:fields]) unless @options[:plain]
             rows = []
             data.each do |r|
@@ -53,7 +54,7 @@ module Lkr
             end
             table_hash[:rows] = rows
             table = TTY::Table.new(table_hash) if data[0]
-            alignments = data[0].to_attrs.keys.map do |k|
+            alignments = fields.collect do |k|
               (k =~ /id\)*$/) ? :right : :left
             end
             begin
@@ -64,32 +65,6 @@ module Lkr
               end
             end if table
           end
-        end
-
-        def field_names(opt_fields)
-          # This is embarassingly hacky
-          fields = []
-          current_leader = nil
-          opt_fields.split(',').each do |token|
-            if /^[^\(\)]+$/.match(token)
-              fields << (current_leader ? "#{current_leader}(#{token})" : token)
-            else
-              m = /(.*)\(([^\)]+\))/.match(token)
-              if m then
-                fields << token
-              else
-                m = /(.*)\(([^\)]+)/.match(token)
-                if m then
-                  current_leader = m[1]
-                  fields << token + ")"
-                else
-                  fields << "#{current_leader}(#{token}"
-                  current_leader = nil
-                end
-              end
-            end
-          end
-          fields
         end
       end
     end
