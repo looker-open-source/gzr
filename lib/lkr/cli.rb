@@ -30,6 +30,9 @@ module Lkr
     end
     map %w(--version -v) => :version
 
+    require_relative 'commands/group'
+    register Lkr::Commands::Group, 'group', 'group [SUBCOMMAND]', 'Command description...'
+
     require_relative 'commands/model'
     register Lkr::Commands::Model, 'model', 'model [SUBCOMMAND]', 'Commands pertaining to LookML Models'
 
