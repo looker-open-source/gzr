@@ -10,6 +10,7 @@ Options:
       [--fields=FIELDS]        # Fields to display
                                # Default: name,label,project_name
       [--plain], [--no-plain]  # print without any extra formatting
+      [--csv], [--no-csv]      # output in csv format per RFC4180
 
 List the models in this server.
     OUT

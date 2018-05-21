@@ -35,7 +35,13 @@ module Lkr
             alignments = data[0].to_attrs.keys.map do |k|
               (k =~ /id$/) ? :right : :left
             end
-            output.puts table.render(if @options[:plain] then :basic else :ascii end, alignments: alignments, width: 1024) if table
+            begin
+              if @options[:csv] then
+                output.puts render_csv(table)
+              else
+                output.puts table.render(if @options[:plain] then :basic else :ascii end, alignments: alignments, width: 1024)
+              end
+            end if table
           end
         end
       end

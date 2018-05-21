@@ -63,6 +63,23 @@ module Lkr
       return @sdk.swagger[schema_ref[1].to_sym][schema_ref[2].to_sym][:properties].reject { |k,v| v[:readOnly] }.keys
     end
     
-    
+    def render_csv(t)
+      io = StringIO.new
+      io.puts (
+        t.header.collect do |v|
+          v ? "\"#{v.to_s.gsub(/"/, '""')}\"" : ""
+        end.join(',')
+      ) unless @options[:plain]
+      t.each do |row|
+        next if row === t.header
+        io.puts (
+          row.collect do |v|
+            v ? "\"#{v.to_s.gsub(/"/, '""')}\"" : ""
+          end.join(',')
+        )
+      end
+      io.rewind
+      io.gets(nil).encode(crlf_newline: true)
+    end
   end
 end

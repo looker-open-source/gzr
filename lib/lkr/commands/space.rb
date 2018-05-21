@@ -83,6 +83,8 @@ module Lkr
                            desc: 'Fields to display'
       method_option :plain, type: :boolean, default: false,
                            desc: 'print without any extra formatting'
+      method_option :csv, type: :boolean, default: false,
+                           desc: 'output in csv format per RFC4180'
       def ls(filter_spec=nil)
         if options[:help]
           invoke :help, ['ls']

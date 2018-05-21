@@ -10,6 +10,7 @@ Options:
       [--fields=FIELDS]        # Fields to display
                                # Default: name,label
       [--plain], [--no-plain]  # print without any extra formatting
+      [--csv], [--no-csv]      # output in csv format per RFC4180
 
 List all available dialects
     OUT
