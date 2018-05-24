@@ -62,7 +62,7 @@ module Gzr
               end
               return update_dashboard(existing_dashboard.id,new_dash)
             else
-              raise Gzr::Error, "Dashboard #{source[:title]} already exists in space #{target_space_id}\nUse --force if you want to overwrite it"
+              raise Gzr::CLI::Error, "Dashboard #{source[:title]} already exists in space #{target_space_id}\nUse --force if you want to overwrite it"
             end
           else
             new_dash = source.select do |k,v|

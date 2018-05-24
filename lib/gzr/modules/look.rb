@@ -74,7 +74,7 @@ module Gzr
           new_look[:query_id] = query_id
           return update_look(existing_looks.first.id,new_look)
         else
-          raise Gzr::Error, "Look #{source_look[:title]} already exists in space #{space_id}\nUse --force if you want to overwrite it"
+          raise Gzr::CLI::Error, "Look #{source_look[:title]} already exists in space #{space_id}\nUse --force if you want to overwrite it"
         end
       else
         new_look = source_look.select do |k,v|

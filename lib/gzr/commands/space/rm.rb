@@ -19,7 +19,7 @@ module Gzr
             space = query_space(@space)
             children = query_space_children(@space)
             unless (space.looks.length == 0 && space.dashboards.length == 0 && children.length == 0) || @options[:force] then
-              raise Gzr::Error, "Space '#{space.name}' is not empty. Space cannot be deleted unless --force is specified"
+              raise Gzr::CLI::Error, "Space '#{space.name}' is not empty. Space cannot be deleted unless --force is specified"
             end
             delete_space(@space)
           end

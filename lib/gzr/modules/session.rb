@@ -53,7 +53,7 @@ module Gzr
       begin
         conn_hash = build_connection_hash("3.0")
         sdk = LookerSDK::Client.new(conn_hash)
-        raise Gzr::Error, "Invalid credentials" unless sdk.authenticated?
+        raise Gzr::CLI::Error, "Invalid credentials" unless sdk.authenticated?
         sdk.versions.supported_versions.each do |v|
           @v3_1_available = true if v.version == "3.1"
         end
@@ -66,8 +66,8 @@ module Gzr
 
       say_warning "API 3.1 available? #{v3_1_available?}" if @options[:debug]
 
-      raise Gzr::Error, "Operation requires API v3.1, but user specified a different version" if (api_version == "3.1") && @options[:api_version] && !("3.1" == @options[:api_version])
-      raise Gzr::Error, "Operation requires API v3.1, which is not available from this host" if (api_version == "3.1") && !v3_1_available?
+      raise Gzr::CLI::Error, "Operation requires API v3.1, but user specified a different version" if (api_version == "3.1") && @options[:api_version] && !("3.1" == @options[:api_version])
+      raise Gzr::CLI::Error, "Operation requires API v3.1, which is not available from this host" if (api_version == "3.1") && !v3_1_available?
 
       conn_hash = build_connection_hash(@options[:api_version] || api_version)
       @secret = nil
@@ -86,7 +86,7 @@ module Gzr
         say_error e.message
         raise
       end
-      raise Gzr::Error, "Invalid credentials" unless @sdk.authenticated?
+      raise Gzr::CLI::Error, "Invalid credentials" unless @sdk.authenticated?
 
 
       if @options[:su] then
