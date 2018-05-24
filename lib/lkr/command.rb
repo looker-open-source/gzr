@@ -1,13 +1,8 @@
 # frozen_string_literal: true
 
 require 'forwardable'
-
 require 'tty-reader'
 require 'netrc'
-
-#require 'rubygems'
-#require 'rubygems/package'
-require 'bundler/setup'
 require 'looker-sdk'
 
 require_relative 'modules/session'

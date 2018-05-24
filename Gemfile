@@ -8,7 +8,7 @@ git_source(:github) {|repo_name| "https://github.com/#{repo_name}" }
 
 # Specify your gem's dependencies in lkr.gemspec
 gemspec
-gem 'looker-sdk', :git => 'git@github.com:looker/looker-sdk-ruby.git'
-gem 'tty', :git => 'git@github.com:piotrmurach/tty.git'
-gem 'tty-file', :git => 'git@github.com:piotrmurach/tty-file.git'
+#gem 'looker-sdk', :git => 'git@github.com:looker/looker-sdk-ruby.git'
+#gem 'tty', :git => 'git@github.com:piotrmurach/tty.git'
+#gem 'tty-file', :git => 'git@github.com:piotrmurach/tty-file.git'
 
