@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    lkr (0.1.0)
+    gazer (0.1.0)
       looker-sdk-fork (~> 0.0.6)
       netrc (~> 0.11.0)
       pastel (~> 0.7.2)
@@ -135,7 +135,7 @@ PLATFORMS
 
 DEPENDENCIES
   bundler (~> 1.16)
-  lkr!
+  gazer!
   rake (~> 10.0)
   rspec (~> 3.0)
   tty-fork (~> 0.8)

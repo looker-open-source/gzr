@@ -1,6 +1,6 @@
-require 'lkr/commands/model/ls'
+require 'gzr/commands/model/ls'
 
-RSpec.describe Lkr::Commands::Model::Ls do
+RSpec.describe Gzr::Commands::Model::Ls do
   it "executes `ls` command successfully" do
     require 'sawyer'
     response_doc = { :name=>"foo", :label=>"bar", :project_name=>"baz" }
@@ -15,7 +15,7 @@ RSpec.describe Lkr::Commands::Model::Ls do
 
     output = StringIO.new
     options = { :fields=>'name,label,project_name' }
-    command = Lkr::Commands::Model::Ls.new(options)
+    command = Gzr::Commands::Model::Ls.new(options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
 

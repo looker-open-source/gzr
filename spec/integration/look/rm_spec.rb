@@ -1,9 +1,9 @@
-RSpec.describe "`lkr look rm` command", type: :cli do
+RSpec.describe "`gzr look rm` command", type: :cli do
   it "executes `look rm --help` command successfully" do
-    output = `lkr look rm --help`
+    output = `gzr look rm --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr look rm LOOK_ID
+  gzr look rm LOOK_ID
 
 Options:
   -h, [--help], [--no-help]  # Display usage information

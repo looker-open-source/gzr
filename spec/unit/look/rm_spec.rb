@@ -1,6 +1,6 @@
-require 'lkr/commands/look/rm'
+require 'gzr/commands/look/rm'
 
-RSpec.describe Lkr::Commands::Look::Rm do
+RSpec.describe Gzr::Commands::Look::Rm do
   it "executes `rm` command successfully" do
     mock_sdk = Object.new
     mock_sdk.define_singleton_method(:logout) { }
@@ -11,7 +11,7 @@ RSpec.describe Lkr::Commands::Look::Rm do
     output = StringIO.new
     look_id = nil
     options = {}
-    command = Lkr::Commands::Look::Rm.new(look_id, options)
+    command = Gzr::Commands::Look::Rm.new(look_id, options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
 

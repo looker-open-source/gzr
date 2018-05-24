@@ -1,9 +1,9 @@
-RSpec.describe "`lkr space ls` command", type: :cli do
+RSpec.describe "`gzr space ls` command", type: :cli do
   it "executes `space ls --help` command successfully" do
-    output = `lkr space ls --help`
+    output = `gzr space ls --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr space ls FILTER_SPEC
+  gzr space ls FILTER_SPEC
 
 Options:
   -h, [--help], [--no-help]    # Display usage information

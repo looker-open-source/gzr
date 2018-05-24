@@ -1,6 +1,6 @@
-require 'lkr/commands/space/export'
+require 'gzr/commands/space/export'
 
-RSpec.describe Lkr::Commands::Space::Export do
+RSpec.describe Gzr::Commands::Space::Export do
   require 'sawyer'
   require 'rubygems/package'
 
@@ -91,7 +91,7 @@ RSpec.describe Lkr::Commands::Space::Export do
 
     output = StringIO.new
     options = {}
-    command = Lkr::Commands::Space::Export.new(1,options)
+    command = Gzr::Commands::Space::Export.new(1,options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
 

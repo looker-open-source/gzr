@@ -1,6 +1,6 @@
-require 'lkr/commands/user/ls'
+require 'gzr/commands/user/ls'
 
-RSpec.describe Lkr::Commands::User::Ls do
+RSpec.describe Gzr::Commands::User::Ls do
   it "executes `ls` command successfully" do
     require 'sawyer'
     mock_response = double(Sawyer::Resource, { :id=>1, :last_name=>"foo", :first_name=>"bar", :email=>"fbar@my.company.com" })
@@ -13,7 +13,7 @@ RSpec.describe Lkr::Commands::User::Ls do
 
     output = StringIO.new
     options = { :fields=>'id,last_name,first_name,email' }
-    command = Lkr::Commands::User::Ls.new(options)
+    command = Gzr::Commands::User::Ls.new(options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
 

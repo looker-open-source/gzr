@@ -1,9 +1,9 @@
-RSpec.describe "`lkr group ls` command", type: :cli do
+RSpec.describe "`gzr group ls` command", type: :cli do
   it "executes `group ls --help` command successfully" do
-    output = `lkr group ls --help`
+    output = `gzr group ls --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr group ls
+  gzr group ls
 
 Options:
   -h, [--help], [--no-help]    # Display usage information

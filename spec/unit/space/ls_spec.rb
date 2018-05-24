@@ -1,6 +1,6 @@
-require 'lkr/commands/space/ls'
+require 'gzr/commands/space/ls'
 
-RSpec.describe Lkr::Commands::Space::Ls do
+RSpec.describe Gzr::Commands::Space::Ls do
   it "executes `space ls` command successfully" do
     require 'sawyer'
     resp_hash = {
@@ -52,7 +52,7 @@ RSpec.describe Lkr::Commands::Space::Ls do
 
     output = StringIO.new
     options = { :fields=>'parent_id,id,name,looks(id,title),dashboards(id,title)' }
-    command = Lkr::Commands::Space::Ls.new("1", options)
+    command = Gzr::Commands::Space::Ls.new("1", options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
 

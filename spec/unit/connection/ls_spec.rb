@@ -1,6 +1,6 @@
-require 'lkr/commands/connection/ls'
+require 'gzr/commands/connection/ls'
 
-RSpec.describe Lkr::Commands::Connection::Ls do
+RSpec.describe Gzr::Commands::Connection::Ls do
   it "executes `ls` command successfully" do
     require 'sawyer'
     response_doc = { :name=>"foo", :dialect=>"mysql", :host=>"db.example.com", :port=>3306, :database=>"looker", :schema=>"test" }
@@ -15,7 +15,7 @@ RSpec.describe Lkr::Commands::Connection::Ls do
 
     output = StringIO.new
     options = { :fields=>'name,dialect,host,port,database,schema' }
-    command = Lkr::Commands::Connection::Ls.new(options)
+    command = Gzr::Commands::Connection::Ls.new(options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
 

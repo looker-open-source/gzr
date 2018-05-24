@@ -1,6 +1,6 @@
-require 'lkr/commands/connection/dialects'
+require 'gzr/commands/connection/dialects'
 
-RSpec.describe Lkr::Commands::Connection::Dialects do
+RSpec.describe Gzr::Commands::Connection::Dialects do
   it "executes `dialects` command successfully" do
     require 'sawyer'
     response_doc = { :name=>"foo", :label=>"Foo" }
@@ -15,7 +15,7 @@ RSpec.describe Lkr::Commands::Connection::Dialects do
 
     output = StringIO.new
     options = { :fields=>'name,label' }
-    command = Lkr::Commands::Connection::Dialects.new(options)
+    command = Gzr::Commands::Connection::Dialects.new(options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
 

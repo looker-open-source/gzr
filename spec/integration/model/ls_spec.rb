@@ -1,9 +1,9 @@
-RSpec.describe "`lkr model ls` command", type: :cli do
+RSpec.describe "`gzr model ls` command", type: :cli do
   it "executes `model ls --help` command successfully" do
-    output = `lkr model ls --help`
+    output = `gzr model ls --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr model ls
+  gzr model ls
 
 Options:
   -h, [--help], [--no-help]    # Display usage information

@@ -1,6 +1,6 @@
-require 'lkr/commands/group/member_users'
+require 'gzr/commands/group/member_users'
 
-RSpec.describe Lkr::Commands::Group::MemberUsers do
+RSpec.describe Gzr::Commands::Group::MemberUsers do
   it "executes `member_users` command successfully" do
     require 'sawyer'
     mock_response_doc = { :id=>1, :last_name=>"foo", :first_name=>"bar", :email=>"fbar@my.company.com" }
@@ -14,7 +14,7 @@ RSpec.describe Lkr::Commands::Group::MemberUsers do
 
     output = StringIO.new
     options = { :fields=>'id,last_name,first_name,email' }
-    command = Lkr::Commands::Group::MemberUsers.new(1,options)
+    command = Gzr::Commands::Group::MemberUsers.new(1,options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
 

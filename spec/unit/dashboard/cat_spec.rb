@@ -1,6 +1,6 @@
-require 'lkr/commands/dashboard/cat'
+require 'gzr/commands/dashboard/cat'
 
-RSpec.describe Lkr::Commands::Dashboard::Cat do
+RSpec.describe Gzr::Commands::Dashboard::Cat do
   it "executes `dashboard cat` command successfully" do
     require 'sawyer'
     mock_response = double(Sawyer::Resource, { :id=>1, :title=>"foo" })
@@ -13,7 +13,7 @@ RSpec.describe Lkr::Commands::Dashboard::Cat do
 
     output = StringIO.new
     options = { dir: nil }
-    command = Lkr::Commands::Dashboard::Cat.new(1,options)
+    command = Gzr::Commands::Dashboard::Cat.new(1,options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
 

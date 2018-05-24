@@ -1,6 +1,6 @@
-require 'lkr/commands/space/cat'
+require 'gzr/commands/space/cat'
 
-RSpec.describe Lkr::Commands::Space::Cat do
+RSpec.describe Gzr::Commands::Space::Cat do
   it "executes `cat` command successfully" do
     require 'sawyer'
     resp_hash = {
@@ -30,7 +30,7 @@ RSpec.describe Lkr::Commands::Space::Cat do
 
     output = StringIO.new
     options = {}
-    command = Lkr::Commands::Space::Cat.new("1", options)
+    command = Gzr::Commands::Space::Cat.new("1", options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
 

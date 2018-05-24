@@ -1,6 +1,6 @@
-require 'lkr/commands/space/tree'
+require 'gzr/commands/space/tree'
 
-RSpec.describe Lkr::Commands::Space::Tree do
+RSpec.describe Gzr::Commands::Space::Tree do
   it "executes `tree` command successfully" do
     require 'sawyer'
     mock_spaces = Array.new
@@ -31,7 +31,7 @@ RSpec.describe Lkr::Commands::Space::Tree do
 
     output = StringIO.new
     options = {}
-    command = Lkr::Commands::Space::Tree.new("1",options)
+    command = Gzr::Commands::Space::Tree.new("1",options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
 

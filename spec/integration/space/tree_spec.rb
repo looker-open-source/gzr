@@ -1,9 +1,9 @@
-RSpec.describe "`lkr space tree` command", type: :cli do
+RSpec.describe "`gzr space tree` command", type: :cli do
   it "executes `space tree --help` command successfully" do
-    output = `lkr space tree --help`
+    output = `gzr space tree --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr space tree STARTING_SPACE
+  gzr space tree STARTING_SPACE
 
 Options:
   -h, [--help], [--no-help]  # Display usage information

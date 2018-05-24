@@ -1,6 +1,6 @@
-require 'lkr/commands/look/import'
+require 'gzr/commands/look/import'
 
-RSpec.describe Lkr::Commands::Look::Import do
+RSpec.describe Gzr::Commands::Look::Import do
   it "executes `import` command successfully" do
     require 'sawyer'
     me_response_doc = { :id=>1000, :first_name=>"John", :last_name=>"Jones", :email=>"jjones@example.com" }
@@ -238,7 +238,7 @@ RSpec.describe Lkr::Commands::Look::Import do
     file = nil
     options = {}
 
-    command = Lkr::Commands::Look::Import.new(StringIO.new( <<-LOOK
+    command = Gzr::Commands::Look::Import.new(StringIO.new( <<-LOOK
 {
   "id": 198,
   "content_metadata_id": 1155,

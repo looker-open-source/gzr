@@ -1,6 +1,6 @@
-require 'lkr/commands/space/create'
+require 'gzr/commands/space/create'
 
-RSpec.describe Lkr::Commands::Space::Create do
+RSpec.describe Gzr::Commands::Space::Create do
   it "executes `create` command successfully" do
     mock_sdk = Object.new
     mock_sdk.define_singleton_method(:logout) { }
@@ -10,7 +10,7 @@ RSpec.describe Lkr::Commands::Space::Create do
 
     output = StringIO.new
     options = {}
-    command = Lkr::Commands::Space::Create.new("new space", 1, options)
+    command = Gzr::Commands::Space::Create.new("new space", 1, options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
 

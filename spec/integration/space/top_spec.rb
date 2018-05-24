@@ -1,9 +1,9 @@
-RSpec.describe "`lkr space top` command", type: :cli do
+RSpec.describe "`gzr space top` command", type: :cli do
   it "executes `space top --help` command successfully" do
-    output = `lkr space top --help`
+    output = `gzr space top --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr space top
+  gzr space top
 
 Options:
   -h, [--help], [--no-help]  # Display usage information

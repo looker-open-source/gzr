@@ -1,9 +1,9 @@
-RSpec.describe "`lkr user me` command", type: :cli do
+RSpec.describe "`gzr user me` command", type: :cli do
   it "executes `user me --help` command successfully" do
-    output = `lkr user me --help`
+    output = `gzr user me --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr user me
+  gzr user me
 
 Options:
   -h, [--help], [--no-help]    # Display usage information

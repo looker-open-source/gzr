@@ -1,6 +1,6 @@
-require 'lkr/commands/space/top'
+require 'gzr/commands/space/top'
 
-RSpec.describe Lkr::Commands::Space::Top do
+RSpec.describe Gzr::Commands::Space::Top do
   it "executes `top` command successfully" do
     require 'sawyer'
     mock_spaces = Array.new
@@ -34,7 +34,7 @@ RSpec.describe Lkr::Commands::Space::Top do
 
     output = StringIO.new
     options = {}
-    command = Lkr::Commands::Space::Top.new(options)
+    command = Gzr::Commands::Space::Top.new(options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
 

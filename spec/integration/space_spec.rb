@@ -1,6 +1,6 @@
-RSpec.describe "`lkr space` command", type: :cli do
+RSpec.describe "`gzr space` command", type: :cli do
   it "executes `space --help` command successfully" do
-    output = `lkr space --help`
+    output = `gzr space --help`
     expect(output).to match <<-OUT
 Commands:
     OUT

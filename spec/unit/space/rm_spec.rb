@@ -1,6 +1,6 @@
-require 'lkr/commands/space/rm'
+require 'gzr/commands/space/rm'
 
-RSpec.describe Lkr::Commands::Space::Rm do
+RSpec.describe Gzr::Commands::Space::Rm do
   it "executes `rm` command successfully" do
     require 'sawyer'
     response_doc = { :dashboards=>[], :looks=>[] }
@@ -21,7 +21,7 @@ RSpec.describe Lkr::Commands::Space::Rm do
 
     output = StringIO.new
     options = {}
-    command = Lkr::Commands::Space::Rm.new(1, options)
+    command = Gzr::Commands::Space::Rm.new(1, options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
 

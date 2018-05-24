@@ -1,9 +1,9 @@
-RSpec.describe "`lkr space create` command", type: :cli do
+RSpec.describe "`gzr space create` command", type: :cli do
   it "executes `space create --help` command successfully" do
-    output = `lkr space create --help`
+    output = `gzr space create --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr space create NAME PARENT_SPACE
+  gzr space create NAME PARENT_SPACE
 
 Options:
   -h, [--help], [--no-help]  # Display usage information

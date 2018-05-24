@@ -1,6 +1,6 @@
-require 'lkr/commands/look/cat'
+require 'gzr/commands/look/cat'
 
-RSpec.describe Lkr::Commands::Look::Cat do
+RSpec.describe Gzr::Commands::Look::Cat do
   it "executes `look cat` command successfully" do
     require 'sawyer'
     mock_response = double(Sawyer::Resource, { :id=>1, :title=>"foo" })
@@ -13,7 +13,7 @@ RSpec.describe Lkr::Commands::Look::Cat do
 
     output = StringIO.new
     options = {}
-    command = Lkr::Commands::Look::Cat.new(1,options)
+    command = Gzr::Commands::Look::Cat.new(1,options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
 

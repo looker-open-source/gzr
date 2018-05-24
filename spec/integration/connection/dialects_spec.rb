@@ -1,9 +1,9 @@
-RSpec.describe "`lkr connection dialects` command", type: :cli do
+RSpec.describe "`gzr connection dialects` command", type: :cli do
   it "executes `connection dialects --help` command successfully" do
-    output = `lkr connection dialects --help`
+    output = `gzr connection dialects --help`
     expect(output).to eq <<-OUT
 Usage:
-  lkr connection dialects
+  gzr connection dialects
 
 Options:
   -h, [--help], [--no-help]    # Display usage information

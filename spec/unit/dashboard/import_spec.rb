@@ -1,6 +1,6 @@
-require 'lkr/commands/dashboard/import'
+require 'gzr/commands/dashboard/import'
 
-RSpec.describe Lkr::Commands::Dashboard::Import do
+RSpec.describe Gzr::Commands::Dashboard::Import do
   it "executes `import` command successfully" do
     require 'sawyer'
     me_response_doc = { :id=>1000, :first_name=>"John", :last_name=>"Jones", :email=>"jjones@example.com" }
@@ -127,7 +127,7 @@ RSpec.describe Lkr::Commands::Dashboard::Import do
     end
     output = StringIO.new
     options = {}
-    command = Lkr::Commands::Dashboard::Import.new(StringIO.new('{ "id": "500", "title": "New Dash", "description": "Description of the Dash", "dashboard_filters": [], "dashboard_elements": [], "dashboard_layouts": [] }'), 1, options)
+    command = Gzr::Commands::Dashboard::Import.new(StringIO.new('{ "id": "500", "title": "New Dash", "description": "Description of the Dash", "dashboard_filters": [], "dashboard_elements": [], "dashboard_layouts": [] }'), 1, options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
 
