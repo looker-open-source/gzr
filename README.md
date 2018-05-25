@@ -1,22 +1,27 @@
-# Looker Content Utility
+# Gazer - A Looker Content Utility
 
-The Looker Content Utility can be used to navigate and manges Spaces, Looks, 
+Gazer can be used to navigate and manges Spaces, Looks, 
 and Dashboards via a simple command line tool.
+
+## Status and Support
+
+Gazer is **NOT** supported or warranteed by Looker in any way. Please do not contact Looker support
+for issues with Gazer. Issues can be logged via https://github.com/deangelo-llooker/gzr/issues 
 
 ## Installation
 
-Once this gem is released to rubygems, you can install this gem by simply typing:
+You can install this gem by simply typing:
 
-    $ gem install lkr
+    $ gem install gazer
 
-Prior to that release, you can follow the Development setup below, typing `bundle exec rake install` to install it
+Alternately you can follow the Development setup below, typing `bundle exec rake install` to install it
 locally
 
 ## Usage
 
 Display help information...
 
-    $ lkr help
+    $ gzr help
 
 ### Storing Credentials
 Store login information by creating the file `~/.netrc` in your home directory with the api3 credentials
@@ -31,14 +36,14 @@ Make sure that the `~/.netrc` file has restricted permissions by running `chmod 
 
 ### User Information
 
-The command `lkr user help` will show details about subcommands of the user command.
+The command `gzr user help` will show details about subcommands of the user command.
 
 #### user me
 
-Display information about the current user with the command `lkr user me`.
+Display information about the current user with the command `gzr user me`.
 
 ```
-$ lkr user me --host foo.bar.mycompany.com
+$ gzr user me --host foo.bar.mycompany.com
 +----+----------+---------+--------------------+
 |  id|first_name|last_name|email               |
 +----+----------+---------+--------------------+
@@ -48,10 +53,10 @@ $ lkr user me --host foo.bar.mycompany.com
 
 #### user ls
 
-Display information about all users with the command `lkr user ls`.
+Display information about all users with the command `gzr user ls`.
 
 ```
-$ lkr user ls --host foo.bar.mycompany.com
+$ gzr user ls --host foo.bar.mycompany.com
 +----+----------+---------+---------------------+
 |  id|first_name|last_name|email                |
 +----+----------+---------+---------------------+
@@ -72,7 +77,7 @@ Different fields can be returned using the `--fields` option. For example the op
 The `--su` option can be used with a user id to run the command as another user. For example...
 
 ```
-$ lkr user me --su 1237 --host foo.bar.mycompany.com
+$ gzr user me --su 1237 --host foo.bar.mycompany.com
 +----+----------+---------+---------------------+
 |  id|first_name|last_name|email                |
 +----+----------+---------+---------------------+
@@ -84,18 +89,30 @@ $ lkr user me --su 1237 --host foo.bar.mycompany.com
 The option `--plain` will suppress the table headers and format lines, making it easier to use tools
 like grep, awk, etc. to retrieve values from the output of these commands.
 
+#### CSV Output
+
+The option `--csv` will output tabular data in csv format. When combined with `--plain` the header will also be suppressed.
+
+### Group Information
+
+#### group ls
+
+#### group member_groups
+
+#### group member_users
+
 ### Space Information
 
-The command `lkr space help` will show details about subcommands of the space command.
+The command `gzr space help` will show details about subcommands of the space command.
 
 #### space ls
 
-The command `lkr space ls` will list the contents of a space, including subspaces, looks, and dashboards.
+The command `gzr space ls` will list the contents of a space, including subspaces, looks, and dashboards.
 
 Without any arguments, the command will list the contents of the user's "home" space.
 
 ```
-$ lkr space ls --host foo.bar.mycompany.com
+$ gzr space ls --host foo.bar.mycompany.com
 +---------+---+------+---------+----------------------------+--------------+--------------------------------+
 |parent_id|id |  name|looks(id)|looks(title)                |dashboards(id)|dashboards(title)               |
 +---------+---+------+---------+----------------------------+--------------+--------------------------------+
@@ -114,7 +131,7 @@ $ lkr space ls --host foo.bar.mycompany.com
 With the argument "~" the command will list the content of the calling user's "personal" space.
 
 ```
-$ lkr space ls "~" --host foo.bar.mycompany.com
+$ gzr space ls "~" --host foo.bar.mycompany.com
 +---------+----+----------+---------+-----------------+--------------+-------------------------------------+
 |parent_id|id  |      name|looks(id)|looks(title)     |dashboards(id)|dashboards(title)                    |
 +---------+----+----------+---------+-----------------+--------------+-------------------------------------+
@@ -130,33 +147,33 @@ $ lkr space ls "~" --host foo.bar.mycompany.com
 With a simple numeric argument the command will list the content of the space with the given space id.
 
 ```
-$ lkr space ls 103 --host foo.bar.mycompany.com
+$ gzr space ls 103 --host foo.bar.mycompany.com
 ```
 
 With a tilde plus a simple numeric argument the command will list the content of the personal space
 of the given user id.
 
 ```
-$ lkr space ls "~1237" --host foo.bar.mycompany.com
+$ gzr space ls "~1237" --host foo.bar.mycompany.com
 ```
 
 The user can be identified by name as well.
 
 ```
-$ lkr space ls "~Susan Gibson" --host foo.bar.mycompany.com
+$ gzr space ls "~Susan Gibson" --host foo.bar.mycompany.com
 ```
 Finally, the space can be searched by name.
 
 ```
-$ lkr space ls "Marketing" --host foo.bar.mycompany.com
+$ gzr space ls "Marketing" --host foo.bar.mycompany.com
 ```
 
 #### space tree
 
-The command `lkr space tree` will display the child spaces, dashboards, and looks in a tree format.
+The command `gzr space tree` will display the child spaces, dashboards, and looks in a tree format.
 
 ```
-$ lkr space tree "~" --host foo.bar.mycompany.com
+$ gzr space tree "~" --host foo.bar.mycompany.com
 John Smith
 ├── Trace Data
 │   ├── (l) All-Time Visits
@@ -176,6 +193,10 @@ The `space cat` command is used to output the json that describes the space.
 
 #### space export
 
+#### space rm
+
+#### space create
+
 ### Look Information
 
 #### look cat
@@ -188,6 +209,20 @@ The `space cat` command is used to output the json that describes the space.
 
 #### dashboard cat
 
+#### dashboard rm
+
+#### dashboard import
+
+### Connection Information
+
+#### connection ls
+
+#### connection dialect
+
+### Model Information
+
+#### model ls
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
@@ -196,11 +231,11 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/lkr. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+Bug reports and pull requests are welcome on GitHub at https://github.com/deangelo-llooker/gzr. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## Code of Conduct
 
-Everyone interacting in the Lkr project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/looker/content_util/blob/master/CODE_OF_CONDUCT.md).
+Everyone interacting in the Gazer project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/looker/content_util/blob/master/CODE_OF_CONDUCT.md).
 
 ## Copyright
 
