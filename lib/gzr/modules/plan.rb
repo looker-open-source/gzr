@@ -133,8 +133,13 @@ module Gzr
         end.to_h
 
         plan.merge!( source_plan.select do |k,v|
-          (keys_to_keep('update_scheduled_plan') - [:plan_id,:look_id,:dashboard_id,:user_id,:dashboard_filters,:lookml_dashboard_id]).include? k
+          (keys_to_keep('update_scheduled_plan') - [:plan_id,:look_id,:dashboard_id,:user_id,:dashboard_filters,:lookml_dashboard_id,:scheduled_plan_destination]).include? k
         end)
+        plan[:scheduled_plan_destination] = source_plan[:scheduled_plan_destination].collect do |p|
+          p.reject do |k,v|
+            [:id,:scheduled_plan_id,:looker_recipient,:can].include? k
+          end
+        end
         plan[:user_id] = user_id
         plan[:enabled] = false if plan[:enabled].nil?
         plan[:require_results] = false if plan[:require_results].nil?
@@ -147,8 +152,14 @@ module Gzr
         update_scheduled_plan(matches.first.id,plan)
       else
         plan = source_plan.select do |k,v|
-          (keys_to_keep('create_scheduled_plan') - [:plan_id,:dashboard_id,:user_id,:dashboard_filters,:lookml_dashboard_id]).include? k
+          (keys_to_keep('create_scheduled_plan') - [:plan_id,:dashboard_id,:user_id,:dashboard_filters,:lookml_dashboard_id,:scheduled_plan_destination]).include? k
         end
+        plan[:scheduled_plan_destination] = source_plan[:scheduled_plan_destination].collect do |p|
+          p.reject do |k,v|
+            [:id,:scheduled_plan_id,:looker_recipient,:can].include? k
+          end
+        end
+
         plan[:enabled] = false if plan[:enabled].nil?
         plan[:require_results] = false if plan[:require_results].nil?
         plan[:require_no_results] = false if plan[:require_no_results].nil?
