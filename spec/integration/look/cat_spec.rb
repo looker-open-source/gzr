@@ -6,8 +6,9 @@ Usage:
   gzr look cat LOOK_ID
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
-      [--dir=DIR]            # Directory to store output file
+  -h, [--help], [--no-help]    # Display usage information
+      [--dir=DIR]              # Directory to store output file
+      [--plans], [--no-plans]  # Include scheduled plans
 
 Output the JSON representation of a look to the screen or a file
     OUT

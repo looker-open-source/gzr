@@ -3,12 +3,12 @@ RSpec.describe "`gzr plan rm` command", type: :cli do
     output = `gzr plan help rm`
     expected_output = <<-OUT
 Usage:
-  gzr rm
+  gzr plan rm PLAN_ID
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
 
-Command description...
+Delete a scheduled plan
     OUT
 
     expect(output).to eq(expected_output)

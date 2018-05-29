@@ -3,12 +3,13 @@ RSpec.describe "`gzr plan cat` command", type: :cli do
     output = `gzr plan help cat`
     expected_output = <<-OUT
 Usage:
-  gzr cat
+  gzr plan cat PLAN_ID
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
+      [--dir=DIR]            # Directory to get output file
 
-Command description...
+Output the JSON representation of a scheduled plan to the screen or a file
     OUT
 
     expect(output).to eq(expected_output)

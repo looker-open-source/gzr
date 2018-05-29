@@ -3,12 +3,12 @@ RSpec.describe "`gzr plan import` command", type: :cli do
     output = `gzr plan help import`
     expected_output = <<-OUT
 Usage:
-  gzr import
+  gzr plan import PLAN_FILE OBJ_TYPE OBJ_ID
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
 
-Command description...
+Import a plan from a file
     OUT
 
     expect(output).to eq(expected_output)

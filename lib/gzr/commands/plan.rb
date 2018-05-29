@@ -4,11 +4,11 @@ require_relative 'subcommandbase'
 
 module Gzr
   module Commands
-    class Plans < SubCommandBase
+    class Plan < SubCommandBase
 
-      namespace :plans
+      namespace :plan
 
-      desc 'rm PLAN_ID', 'Command description...'
+      desc 'rm PLAN_ID', 'Delete a scheduled plan'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       def rm(plan_id)

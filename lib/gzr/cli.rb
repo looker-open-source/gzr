@@ -31,7 +31,7 @@ module Gzr
     map %w(--version -v) => :version
 
     require_relative 'commands/plan'
-    register Gzr::Commands::Plans, 'plan', 'plan [SUBCOMMAND]', 'Commands pertaining to plans'
+    register Gzr::Commands::Plan, 'plan', 'plan [SUBCOMMAND]', 'Commands pertaining to plans'
 
     require_relative 'commands/group'
     register Gzr::Commands::Group, 'group', 'group [SUBCOMMAND]', 'Commands pertaining to groups'
