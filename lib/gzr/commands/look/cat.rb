@@ -2,6 +2,7 @@
 
 require_relative '../../command'
 require_relative '../../modules/look'
+require_relative '../../modules/plan'
 require_relative '../../modules/filehelper'
 
 module Gzr
@@ -10,6 +11,7 @@ module Gzr
       class Cat < Gzr::Command
         include Gzr::Look
         include Gzr::FileHelper
+        include Gzr::Plan
         def initialize(look_id,options)
           super()
           @look_id = look_id
@@ -20,6 +22,7 @@ module Gzr
           say_warning("options: #{@options.inspect}") if @options[:debug]
           with_session do
             data = query_look(@look_id)
+            data[:scheduled_plans] = query_scheduled_plans_for_look(@look_id,"all") if @options[:plans]
             write_file(@options[:dir] ? "Look_#{data.id}_#{data.title}.json" : nil, @options[:dir],nil, output) do |f|
               f.puts JSON.pretty_generate(data.to_attrs)
             end

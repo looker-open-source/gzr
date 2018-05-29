@@ -37,6 +37,8 @@ module Gzr
                            desc: 'Display usage information'
       method_option :dir,  type: :string,
                            desc: 'Directory to store output file'
+      method_option :plans,  type: :boolean,
+                           desc: 'Include scheduled plans'
       def cat(look_id)
         if options[:help]
           invoke :help, ['cat']

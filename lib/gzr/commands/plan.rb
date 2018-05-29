@@ -8,6 +8,30 @@ module Gzr
 
       namespace :plans
 
+      desc 'rm PLAN_ID', 'Command description...'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def rm(plan_id)
+        if options[:help]
+          invoke :help, ['rm']
+        else
+          require_relative 'plan/rm'
+          Gzr::Commands::Plan::Rm.new(plan_id, options).execute
+        end
+      end
+
+      desc 'import PLAN_FILE OBJ_TYPE OBJ_ID', 'Import a plan from a file'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def import(plan_file, obj_type, id )
+        if options[:help]
+          invoke :help, ['import']
+        else
+          require_relative 'plan/import'
+          Gzr::Commands::Plan::Import.new(plan_file, obj_type, id, options).execute
+        end
+      end
+
       desc 'cat PLAN_ID', 'Output the JSON representation of a scheduled plan to the screen or a file'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'

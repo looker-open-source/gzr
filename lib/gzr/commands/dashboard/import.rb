@@ -5,6 +5,7 @@ require_relative '../../command'
 require_relative '../../modules/dashboard'
 require_relative '../../modules/look'
 require_relative '../../modules/user'
+require_relative '../../modules/plan'
 require_relative '../../modules/filehelper'
 
 module Gzr
@@ -14,6 +15,7 @@ module Gzr
         include Gzr::Dashboard
         include Gzr::Look
         include Gzr::User
+        include Gzr::Plan
         include Gzr::FileHelper
         def initialize(file, dest_space_id, options)
           super()
@@ -45,6 +47,7 @@ module Gzr
                   sync_dashboard_layout_component(s,t,elem_table)
                 end
               end
+              upsert_plans_for_dashboard(dashboard.id,@me.id,data[:scheduled_plans]) if data[:scheduled_plans]
               output.puts "Imported dashboard #{dashboard.id}" unless @options[:plain] 
               output.puts dashboard.id if @options[:plain] 
             end
