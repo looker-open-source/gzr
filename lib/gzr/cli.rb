@@ -30,8 +30,11 @@ module Gzr
     end
     map %w(--version -v) => :version
 
+    require_relative 'commands/plan'
+    register Gzr::Commands::Plans, 'plan', 'plan [SUBCOMMAND]', 'Commands pertaining to plans'
+
     require_relative 'commands/group'
-    register Gzr::Commands::Group, 'group', 'group [SUBCOMMAND]', 'Command description...'
+    register Gzr::Commands::Group, 'group', 'group [SUBCOMMAND]', 'Commands pertaining to groups'
 
     require_relative 'commands/model'
     register Gzr::Commands::Model, 'model', 'model [SUBCOMMAND]', 'Commands pertaining to LookML Models'
