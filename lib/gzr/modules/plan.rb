@@ -125,7 +125,7 @@ module Gzr
     end
 
     def upsert_plan_for_obj(user_id, source_plan, existing_plans)
-      matches = existing_plans.select { |p| p.name == source_plan[:name] }
+      matches = existing_plans.select { |p| p.name == source_plan[:name] && user_id == p.user_id }
       if matches.length > 0 then
         say_ok "Modifying existing plan #{matches.first.id} #{matches.first.name}"
         plan = keys_to_keep('update_scheduled_plan').collect do |e|
