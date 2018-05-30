@@ -30,8 +30,6 @@ module Gzr
       )
     end
 
-    private
-
     def create_query(query)
       begin
         data = @sdk.create_query(query)
@@ -44,6 +42,21 @@ module Gzr
     end
 
 
+    ##
+    # This method accepts the name of an sdk operation, then finds the parameter for that
+    # operation in the data structures from the swagger.json file. The parameter is a
+    # json object. Some of the attributes of the json object are read-only, and some
+    # are read-write. A few are write-only. The list of read-write and write-only attribute
+    # names are returned as an array. That array can be used to take the json document that
+    # describes an object and strip out the read-only values, creating a document that can
+    # be used to create or update an object.
+    #
+    # The pattern typically looks like this...
+    #
+    #   new_obj_hash = existing_obj_hash.select do |k,v|
+    #     keys_to_keep('create_new_obj').include? k
+    #   end
+    
     def keys_to_keep(operation)
       o = @sdk.operations[operation]
       begin
@@ -57,6 +70,11 @@ module Gzr
       schema_ref = parameters[0][:schema][:$ref].split(/\//)
       return @sdk.swagger[schema_ref[1].to_sym][schema_ref[2].to_sym][:properties].reject { |k,v| v[:readOnly] }.keys
     end
+    
+    ##
+    # The tty-table gem is normally used to output tabular data. This method accepts a Table
+    # object as used by the tty-table gem, and generates CSV output. It returns a string
+    # with crlf encoding
     
     def render_csv(t)
       io = StringIO.new
@@ -76,6 +94,31 @@ module Gzr
       io.rewind
       io.gets(nil).encode(crlf_newline: true)
     end
+
+    ##
+    # This method accepts a string containing a list of fields. The fields can be nested
+    # in a format like...
+    #
+    # 'a,b,c(d,e(f,g)),h'
+    #
+    # representing a structure like
+    #
+    # {
+    #   a: "val",
+    #   b: "val",
+    #   c: {
+    #     d: "val",
+    #     e: {
+    #       f: "val",
+    #       g: "val"
+    #     }
+    #   },
+    #   h: "val"
+    # }
+    #
+    # That string will get parsed and yield an array like
+    # [ a, b, c.d, c.e.f, c.e.g, h ]
+    #
 
     def field_names(opt_fields)
       fields = []
@@ -102,6 +145,11 @@ module Gzr
       end
       fields
     end
+
+    ##
+    # This method will accept a field name in a format like 'c.e.g'
+    # and convert it into 'c&.e&.g', which can be evaluated to get
+    # the value of g, or nil if any intermediate value is nil.
 
     def field_expression(name)
       parts = name.split(/\./)
