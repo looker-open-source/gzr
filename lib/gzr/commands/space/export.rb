@@ -5,6 +5,7 @@ require_relative '../../modules/space'
 require_relative '../../modules/look'
 require_relative '../../modules/dashboard'
 require_relative '../../modules/filehelper'
+require 'pathname'
 require 'stringio'
 
 module Gzr
