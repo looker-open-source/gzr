@@ -155,5 +155,25 @@ module Gzr
       parts = name.split(/\./)
       parts.join('&.')
     end
+
+    ##
+    # This method will accept two arrays, a and b, and create a third array
+    # like [ [a[0],b[0]], [a[1],b[1]], [a[2],b[2]], ...].
+    # If either array is longer than the other, additional pairs 
+    # will be generated with the shorter array padded out with nil values.
+    #
+    # Any additional args will be added to each inner array.
+
+    def pairs(a, b, *args)
+      pair_array = Array.new([a.count,b.count].max) do |i|
+        pair = [a.fetch(i,nil),b.fetch(i,nil)]
+        pair + args if args
+        pair
+      end
+
+      return pair_array unless block_given?
+
+      pair_array.collect { |e| yield(e) }
+    end
   end
 end

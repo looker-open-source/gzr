@@ -34,15 +34,15 @@ module Gzr
 
               dashboard = sync_dashboard(data,@dest_space_id)
 
-              dashboard_filters(data[:dashboard_filters],dashboard) do |id,source,target|
-                sync_dashboard_filter(id,source,target)
+              pairs(data[:dashboard_filters],dashboard.dashboard_filters,dashboard.id) do |source,target,id|
+                sync_dashboard_filter(source,target,id)
               end
 
-              elem_table = dashboard_elements(data[:dashboard_elements],dashboard) do |id,source,target|
-                sync_dashboard_element(id,source,target)
+              elem_table = pairs(data[:dashboard_elements],dashboard.dashboard_elements,dashboard.id) do |source,target,id|
+                sync_dashboard_element(source,target,id)
               end
 
-              dashboard_layouts(data[:dashboard_layouts],dashboard) do |s,t|
+              pairs(data[:dashboard_layouts],dashboard.dashboard_layouts) do |s,t|
                 sync_dashboard_layout(dashboard.id,s,t) do |s,t|
                   sync_dashboard_layout_component(s,t,elem_table)
                 end
@@ -77,17 +77,7 @@ module Gzr
           end
         end
 
-        def dashboard_filters(source,target)
-          filters = Array.new([source.count,target.dashboard_filters.count].max) do |i|
-            [target.id,source.fetch(i,nil),target.dashboard_filters.fetch(i,nil)]
-          end
-
-          return filters unless block_given?
-
-          filters.each { |i,s,t| yield(i,s,t) }
-        end
-
-        def sync_dashboard_filter(dashboard_id,new_filter,existing_filter)
+        def sync_dashboard_filter(new_filter,existing_filter,dashboard_id)
           if new_filter && !existing_filter then
             filter = new_filter.select do |k,v|
               (keys_to_keep('create_dashboard_filter') + [:row]).include? k
@@ -107,20 +97,7 @@ module Gzr
           return delete_dashboard_filter(existing_filter.id)
         end
 
-        def dashboard_elements(source,target)
-          elements = Array.new([source.count,target.dashboard_elements.count].max) do |i|
-            [target.id,source.fetch(i,nil),target.dashboard_elements.fetch(i,nil)]
-          end
-
-          say_warning "Processing #{elements.count} dashboard elements" if @options[:debug]
-
-          return elements unless block_given?
-
-          return elements.collect { |i,s,t| yield(i,s,t) }
-        end
-
-
-        def sync_dashboard_element(dashboard_id,new_element,existing_element)
+        def sync_dashboard_element(new_element,existing_element,dashboard_id)
           if new_element && !existing_element then
             element = new_element.select do |k,v|
               (keys_to_keep('create_dashboard_element') - [:dashboard_id, :look_id, :query_id, :merge_result_id]).include? k
@@ -152,16 +129,6 @@ module Gzr
           return [create_fetch_query(dash_elem[:query]).id, nil] if dash_elem[:query]
           return [nil, upsert_look(@me.id, create_fetch_query(dash_elem[:look][:query]).id, @dest_space_id, dash_elem[:look]).id] if dash_elem[:look]
           [nil,nil]
-        end
-
-        def dashboard_layouts(source,target)
-          layouts = Array.new([source.count,target.dashboard_layouts.count].max) do |i|
-            [source.fetch(i,nil),target.dashboard_layouts.fetch(i,nil)]
-          end
-
-          return layouts unless block_given?
-
-          layouts.each { |s,t| yield(s,t) }
         end
 
         def sync_dashboard_layout(dashboard_id,new_layout,existing_layout)
