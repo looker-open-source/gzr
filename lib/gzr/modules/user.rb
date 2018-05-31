@@ -8,9 +8,9 @@ module Gzr
       begin
         data = @sdk.me(fields ? {:fields=>fields} : nil )
       rescue LookerSDK::Error => e
-          say_error "Error querying me({:fields=>\"#{fields}\"})"
-          say_error e.message
-          raise
+        say_error "Error querying me({:fields=>\"#{fields}\"})"
+        say_error e.message
+        raise
       end
       data
     end
@@ -20,9 +20,9 @@ module Gzr
       begin
         data = @sdk.user(id, fields ? {:fields=>fields} : nil )
       rescue LookerSDK::Error => e
-          say_error "Error querying user(#{id},{:fields=>\"#{fields}\"})"
-          say_error e.message
-          raise
+        say_error "Error querying user(#{id},{:fields=>\"#{fields}\"})"
+        say_error e.message
+        raise
       end
       data
     end
@@ -78,5 +78,16 @@ module Gzr
       data
     end
 
+    def update_user(id,req)
+      data = nil
+      begin
+        data = @sdk.update_user(id,req)
+      rescue LookerSDK::Error => e
+        say_error "Error updating user(#{id},#{JSON.pretty_generate(req)})"
+        say_error e.message
+        raise
+      end
+      data
+    end
   end
 end

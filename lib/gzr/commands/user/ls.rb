@@ -17,7 +17,9 @@ module Gzr
         def execute(input: $stdin, output: $stdout)
           say_warning(@options) if @options[:debug]
           with_session do
-            data = query_all_users(@options[:fields], "id")
+            f = @options[:fields]
+            f += ',credentials_email,credentials_totp,credentials_google,credentials_saml,credentials_oidc' if @options[:"last-login"]
+            data = query_all_users(f, "id")
             begin
               say_ok "No users found"
               return nil
@@ -25,11 +27,19 @@ module Gzr
 
             table_hash = Hash.new
             fields = field_names(@options[:fields])
+            fields.unshift 'last_login' if @options[:"last-login"]
             table_hash[:header] = fields unless @options[:plain]
             expressions = fields.collect { |fn| field_expression(fn) }
             table_hash[:rows] = data.map do |row|
               expressions.collect do |e|
-                eval "row.#{e}"
+                next(eval "row.#{e}") unless (e == 'last_login')
+                [
+                  row.credentials_email()&.logged_in_at(),
+                  (row.credentials_totp()&.logged_in_at()),
+                  (row.credentials_google()&.logged_in_at()),
+                 (row.credentials_saml()&.logged_in_at()),
+                  (row.credentials_oidc()&.logged_in_at())
+                ].compact.max
               end
             end
             table = TTY::Table.new(table_hash)
