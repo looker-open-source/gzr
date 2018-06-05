@@ -6,7 +6,8 @@ Usage:
   gzr dashboard import FILE DEST_SPACE_ID
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help]    # Display usage information
+      [--plain], [--no-plain]  # Provide minimal response information
 
 Import a dashboard from a file
     OUT

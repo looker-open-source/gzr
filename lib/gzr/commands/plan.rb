@@ -23,6 +23,12 @@ module Gzr
       desc 'import PLAN_FILE OBJ_TYPE OBJ_ID', 'Import a plan from a file'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
+      method_option :plain, type: :boolean,
+                           desc: 'Provide minimal response information'
+      method_option :enable, type: :boolean,
+                           desc: 'Enable the plan on import'
+      method_option :disable, type: :boolean,
+                           desc: 'Disable the plan on import'
       def import(plan_file, obj_type, id )
         if options[:help]
           invoke :help, ['import']

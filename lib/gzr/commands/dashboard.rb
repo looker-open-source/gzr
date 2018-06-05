@@ -27,6 +27,8 @@ module Gzr
       desc 'import FILE DEST_SPACE_ID', 'Import a dashboard from a file'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
+      method_option :plain, type: :boolean,
+                           desc: 'Provide minimal response information'
       def import(file,dest_space_id)
         if options[:help]
           invoke :help, ['import']

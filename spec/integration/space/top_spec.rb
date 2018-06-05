@@ -6,7 +6,9 @@ Usage:
   gzr space top
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help]    # Display usage information
+      [--plain], [--no-plain]  # print without any extra formatting
+      [--csv], [--no-csv]      # output in csv format per RFC4180
 
 Retrieve the top level (or root) spaces
     OUT

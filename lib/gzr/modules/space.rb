@@ -19,6 +19,7 @@ module Gzr
         say_error e.message
         raise
       end
+      data
     end
 
     def search_spaces(name,fields=nil)

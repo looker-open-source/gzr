@@ -11,6 +11,8 @@ module Gzr
       desc 'create NAME PARENT_SPACE', 'Command description...'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
+      method_option :plain, type: :boolean,
+                           desc: 'Provide minimal response information'
       def create(name, parent_space)
         if options[:help]
           invoke :help, ['create']
@@ -23,6 +25,10 @@ module Gzr
       desc 'top', 'Retrieve the top level (or root) spaces'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
+      method_option :plain, type: :boolean, default: false,
+                           desc: 'print without any extra formatting'
+      method_option :csv, type: :boolean, default: false,
+                           desc: 'output in csv format per RFC4180'
       def top(*)
         if options[:help]
           invoke :help, ['top']

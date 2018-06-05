@@ -6,7 +6,8 @@ Usage:
   gzr space create NAME PARENT_SPACE
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help]    # Display usage information
+      [--plain], [--no-plain]  # Provide minimal response information
 
 Command description...
     OUT

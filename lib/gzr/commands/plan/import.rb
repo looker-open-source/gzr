@@ -26,15 +26,19 @@ module Gzr
 
             @me ||= query_me("id")
             
+
             read_file(@plan_file) do |data|
+              plan = nil
               case @obj_type
               when /dashboard/i
-                upsert_plan_for_dashboard(@obj_id,@me.id,data)
+                plan = upsert_plan_for_dashboard(@obj_id,@me.id,data)
               when /look/i
-                upsert_plan_for_look(@obj_id,@me.id,data)
+                plan = upsert_plan_for_look(@obj_id,@me.id,data)
               else
                 raise Gzr::CLI::Error, "Invalid type '#{obj_type}', valid types are look and dashboard"
               end
+              output.puts "Imported plan #{plan.id}" unless @options[:plain] 
+              output.puts plan.id if @options[:plain] 
             end
           end
         end

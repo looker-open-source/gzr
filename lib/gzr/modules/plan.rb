@@ -77,6 +77,16 @@ module Gzr
     end
 
     def create_scheduled_plan(plan)
+      plan[:enabled] = true if @options[:enabled]
+      plan[:enabled] = false if @options[:disabled]
+
+      plan[:enabled] = false if plan[:enabled].nil?
+      plan[:require_results] = false if plan[:require_results].nil?
+      plan[:require_no_results] = false if plan[:require_no_results].nil?
+      plan[:require_change] = false if plan[:require_change].nil?
+      plan[:send_all_results] = false if plan[:send_all_results].nil?
+      plan[:run_once] = false if plan[:run_once].nil?
+      plan[:include_links] = false if plan[:include_links].nil?
       begin
         data = @sdk.create_scheduled_plan(plan)
       rescue LookerSDK::Error => e
@@ -119,9 +129,12 @@ module Gzr
     end
     
     def upsert_plans_for_obj(user_id,source_plans,existing_plans, &block)
-      source_plans.each do |source_plan|
-        upsert_plan_for_obj(user_id, source_plan, existing_plans, &block)
+      plans = nil
+      source_plans.collect do |source_plan|
+        plans = upsert_plan_for_obj(user_id, source_plan, existing_plans, &block)
       end
+      return nil unless plans.length > 0
+      plans.first
     end
 
     def upsert_plan_for_obj(user_id, source_plan, existing_plans)
@@ -141,13 +154,6 @@ module Gzr
           end
         end
         plan[:user_id] = user_id
-        plan[:enabled] = false if plan[:enabled].nil?
-        plan[:require_results] = false if plan[:require_results].nil?
-        plan[:require_no_results] = false if plan[:require_no_results].nil?
-        plan[:require_change] = false if plan[:require_change].nil?
-        plan[:send_all_results] = false if plan[:send_all_results].nil?
-        plan[:run_once] = false if plan[:run_once].nil?
-        plan[:include_links] = false if plan[:include_links].nil?
         yield plan
         update_scheduled_plan(matches.first.id,plan)
       else
@@ -160,13 +166,6 @@ module Gzr
           end
         end
 
-        plan[:enabled] = false if plan[:enabled].nil?
-        plan[:require_results] = false if plan[:require_results].nil?
-        plan[:require_no_results] = false if plan[:require_no_results].nil?
-        plan[:require_change] = false if plan[:require_change].nil?
-        plan[:send_all_results] = false if plan[:send_all_results].nil?
-        plan[:run_once] = false if plan[:run_once].nil?
-        plan[:include_links] = false if plan[:include_links].nil?
         yield plan
         create_scheduled_plan(plan)
       end

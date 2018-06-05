@@ -12,6 +12,12 @@ RSpec.describe Gzr::Commands::Plan::Import do
     mock_me_response = double(Sawyer::Resource, me_response_doc)
     allow(mock_me_response).to receive(:to_attrs).and_return(me_response_doc)
 
+    plan_response_doc = {
+      :id=>1
+    }
+    mock_plan_response = double(Sawyer::Resource, plan_response_doc)
+    allow(mock_plan_response).to receive(:to_attrs).and_return(plan_response_doc)
+
     mock_sdk = Object.new
     mock_sdk.define_singleton_method(:authenticated?) { true }
     mock_sdk.define_singleton_method(:logout) { }
@@ -22,7 +28,7 @@ RSpec.describe Gzr::Commands::Plan::Import do
       return []
     end
     mock_sdk.define_singleton_method(:create_scheduled_plan) do |req|
-      return
+      return mock_plan_response
     end
     mock_sdk.define_singleton_method(:operations) do 
       {
@@ -179,6 +185,6 @@ RSpec.describe Gzr::Commands::Plan::Import do
 
     command.execute(output: output)
 
-    expect(output.string).to eq("")
+    expect(output.string).to eq("Imported plan 1\n")
   end
 end

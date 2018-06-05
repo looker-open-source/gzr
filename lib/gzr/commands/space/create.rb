@@ -16,8 +16,11 @@ module Gzr
         end
 
         def execute(input: $stdin, output: $stdout)
+          space = nil
           with_session do
-            create_space(@name, @parent_space)
+            space = create_space(@name, @parent_space)
+            output.puts "Created space #{space.id}" unless @options[:plain] 
+            output.puts space.id if @options[:plain] 
           end
         end
       end
