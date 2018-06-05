@@ -8,6 +8,18 @@ module Gzr
 
       namespace :plan
 
+      desc 'run PLAN_ID', 'Command description...'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def run(plan_id)
+        if options[:help]
+          invoke :help, ['run']
+        else
+          require_relative 'plan/run'
+          Gzr::Commands::Plan::Run.new(plan_id,options).execute
+        end
+      end
+
       desc 'rm PLAN_ID', 'Delete a scheduled plan'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
