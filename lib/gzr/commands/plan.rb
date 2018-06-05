@@ -8,6 +8,30 @@ module Gzr
 
       namespace :plan
 
+      desc 'disable PLAN_ID', 'Disable the specified plan'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def disable(plan_id)
+        if options[:help]
+          invoke :help, ['disable']
+        else
+          require_relative 'plan/disable'
+          Gzr::Commands::Plan::Disable.new(plan_id,options).execute
+        end
+      end
+
+      desc 'enable PLAN_ID', 'Enable the specified plan'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def enable(plan_id)
+        if options[:help]
+          invoke :help, ['enable']
+        else
+          require_relative 'plan/enable'
+          Gzr::Commands::Plan::Enable.new(plan_id,options).execute
+        end
+      end
+
       desc 'rm PLAN_ID', 'Delete a scheduled plan'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'

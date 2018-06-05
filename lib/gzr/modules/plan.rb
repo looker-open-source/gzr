@@ -77,16 +77,6 @@ module Gzr
     end
 
     def create_scheduled_plan(plan)
-      plan[:enabled] = true if @options[:enabled]
-      plan[:enabled] = false if @options[:disabled]
-
-      plan[:enabled] = false if plan[:enabled].nil?
-      plan[:require_results] = false if plan[:require_results].nil?
-      plan[:require_no_results] = false if plan[:require_no_results].nil?
-      plan[:require_change] = false if plan[:require_change].nil?
-      plan[:send_all_results] = false if plan[:send_all_results].nil?
-      plan[:run_once] = false if plan[:run_once].nil?
-      plan[:include_links] = false if plan[:include_links].nil?
       begin
         data = @sdk.create_scheduled_plan(plan)
       rescue LookerSDK::Error => e
@@ -154,6 +144,16 @@ module Gzr
           end
         end
         plan[:user_id] = user_id
+        plan[:enabled] = true if @options[:enabled]
+        plan[:enabled] = false if @options[:disabled]
+
+        plan[:enabled] = false if plan[:enabled].nil?
+        plan[:require_results] = false if plan[:require_results].nil?
+        plan[:require_no_results] = false if plan[:require_no_results].nil?
+        plan[:require_change] = false if plan[:require_change].nil?
+        plan[:send_all_results] = false if plan[:send_all_results].nil?
+        plan[:run_once] = false if plan[:run_once].nil?
+        plan[:include_links] = false if plan[:include_links].nil?
         yield plan
         update_scheduled_plan(matches.first.id,plan)
       else
@@ -167,6 +167,16 @@ module Gzr
         end
 
         yield plan
+        plan[:enabled] = true if @options[:enabled]
+        plan[:enabled] = false if @options[:disabled]
+
+        plan[:enabled] = false if plan[:enabled].nil?
+        plan[:require_results] = false if plan[:require_results].nil?
+        plan[:require_no_results] = false if plan[:require_no_results].nil?
+        plan[:require_change] = false if plan[:require_change].nil?
+        plan[:send_all_results] = false if plan[:send_all_results].nil?
+        plan[:run_once] = false if plan[:run_once].nil?
+        plan[:include_links] = false if plan[:include_links].nil?
         create_scheduled_plan(plan)
       end
     end
