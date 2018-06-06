@@ -6,11 +6,12 @@ Usage:
   gzr plan ls
 
 Options:
-  -h, [--help], [--no-help]    # Display usage information
-      [--fields=FIELDS]        # Fields to display
-                               # Default: id,name,title,user(id,display_name),look_id,dashboard_id,lookml_dashboard_id
-      [--plain], [--no-plain]  # print without any extra formatting
-      [--csv], [--no-csv]      # output in csv format per RFC4180
+  -h, [--help], [--no-help]          # Display usage information
+      [--fields=FIELDS]              # Fields to display
+                                     # Default: id,enabled,name,user(id,display_name),look_id,dashboard_id,lookml_dashboard_id
+      [--disabled], [--no-disabled]  # Retrieve disable plans
+      [--plain], [--no-plain]        # print without any extra formatting
+      [--csv], [--no-csv]            # output in csv format per RFC4180
 
 List the scheduled plans on a server
     OUT

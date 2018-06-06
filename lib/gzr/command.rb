@@ -41,6 +41,17 @@ module Gzr
       data
     end
 
+    def run_inline_query(query)
+      begin
+        data = @sdk.run_inline_query("json",query)
+      rescue LookerSDK::Error => e
+        say_error "Error running inline_query(#{JSON.pretty_generate(query)})"
+        say_error e.message
+        raise
+      end
+      data
+    end
+
 
     ##
     # This method accepts the name of an sdk operation, then finds the parameter for that
@@ -167,7 +178,7 @@ module Gzr
     def pairs(a, b, *args)
       pair_array = Array.new([a.count,b.count].max) do |i|
         pair = [a.fetch(i,nil),b.fetch(i,nil)]
-        pair + args if args
+        pair += args if args
         pair
       end
 

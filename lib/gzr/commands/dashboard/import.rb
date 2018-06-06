@@ -35,6 +35,7 @@ module Gzr
               dashboard = sync_dashboard(data,@dest_space_id)
 
               pairs(data[:dashboard_filters],dashboard.dashboard_filters,dashboard.id) do |source,target,id|
+                say_warning "Synching dashboard filter for dashboard #{id}" if @options[:debug]
                 sync_dashboard_filter(source,target,id)
               end
 
