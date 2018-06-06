@@ -97,6 +97,17 @@ module Gzr
       end
       data
     end
+
+    def run_scheduled_plan(plan)
+      begin
+        data = @sdk.scheduled_plan_run_once(plan)
+      rescue LookerSDK::Error => e
+        say_error "Error executing scheduled_plan_run_once(#{JSON.pretty_generate(plan)})"
+        say_error e.message
+        raise
+      end
+      data
+    end
     
     def upsert_plans_for_look(look_id,user_id,source_plans)
       existing_plans = query_scheduled_plans_for_look(look_id,"all")

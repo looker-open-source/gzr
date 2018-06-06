@@ -8,6 +8,18 @@ module Gzr
 
       namespace :plan
 
+      desc 'runit PLAN_ID', 'Execute a saved plan immediately'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def runit(plan_id)
+        if options[:help]
+          invoke :help, ['runit']
+        else
+          require_relative 'plan/run'
+          Gzr::Commands::Plan::RunIt.new(plan_id,options).execute
+        end
+      end
+
       desc 'disable PLAN_ID', 'Disable the specified plan'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
