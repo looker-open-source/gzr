@@ -1,14 +1,14 @@
-RSpec.describe "`gzr plan run` command", type: :cli do
-  it "executes `gzr plan help run` command successfully" do
-    output = `gzr plan help run`
+RSpec.describe "`gzr plan runit` command", type: :cli do
+  it "executes `gzr plan help runit` command successfully" do
+    output = `gzr plan help runit`
     expected_output = <<-OUT
 Usage:
-  gzr run
+  gzr plan runit PLAN_ID
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
 
-Command description...
+Execute a saved plan immediately
     OUT
 
     expect(output).to eq(expected_output)

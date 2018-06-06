@@ -8,15 +8,15 @@ module Gzr
 
       namespace :plan
 
-      desc 'run PLAN_ID', 'Command description...'
+      desc 'runit PLAN_ID', 'Execute a saved plan immediately'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def run(plan_id)
+      def runit(plan_id)
         if options[:help]
-          invoke :help, ['run']
+          invoke :help, ['runit']
         else
           require_relative 'plan/run'
-          Gzr::Commands::Plan::Run.new(plan_id,options).execute
+          Gzr::Commands::Plan::RunIt.new(plan_id,options).execute
         end
       end
 
