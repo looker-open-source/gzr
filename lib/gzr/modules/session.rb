@@ -84,6 +84,7 @@ module Gzr
       rescue LookerSDK::Error => e
         say_error "Unable to connect"
         say_error e.message
+        say_error e.errors if e.respond_to?(:errors) && e.errors
         raise
       end
       raise Gzr::CLI::Error, "Invalid credentials" unless @sdk.authenticated?
@@ -98,6 +99,7 @@ module Gzr
         rescue LookerSDK::Error => e
           say_error "Unable to su to user #{@options[:su]}" 
           say_error e.message
+          say_error e.errors if e.respond_to?(:errors) && e.errors
           raise
         end
       end
@@ -112,6 +114,7 @@ module Gzr
       rescue LookerSDK::Error => e
         say_error "Unable to logout"
         say_error e.message
+        say_error e.errors if e.respond_to?(:errors) && e.errors
       end if @sdk
       loop do
         token = @access_token_stack.pop
@@ -123,6 +126,7 @@ module Gzr
         rescue LookerSDK::Error => e
           say_error "Unable to logout"
           say_error e.message
+          say_error e.errors if e.respond_to?(:errors) && e.errors
         end
       end
     end
@@ -132,10 +136,13 @@ module Gzr
       begin
         login(api_version) unless @sdk
         yield
+      rescue LookerSDK::Error => e
+        say_error e.errors if e.respond_to?(:errors) && e.errors
+        e.backtrace.each { |b| say_error b } if @options[:debug]
+        raise Gzr::CLI::Error, e.message
       ensure
         logout_all
       end
     end
-
   end
 end
