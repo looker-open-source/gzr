@@ -8,6 +8,18 @@ module Gzr
 
       namespace :user
 
+      desc 'enable USER_ID', 'Enable the user given by user_id'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def enable(user_id)
+        if options[:help]
+          invoke :help, ['enable']
+        else
+          require_relative 'user/enable'
+          Gzr::Commands::User::Enable.new(user_id,options).execute
+        end
+      end
+
       desc 'disable USER_ID', 'Disable the user given by user_id'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
