@@ -33,23 +33,27 @@ module Gzr
               return nil
             end unless data && data.length > 0
 
+            @options[:fields] = 'dashboards(id,title)' if @filter_spec == 'lookml'
             table_hash = Hash.new
             fields = field_names(@options[:fields])
             table_hash[:header] = field_names(@options[:fields]) unless @options[:plain]
             rows = []
             data.each do |r|
               h = r.to_attrs
-              rows << [h[:parent_id],h[:id],h[:name], nil, nil, nil, nil]
-              subspaces = query_space_children(h[:id], "id,name,parent_id")
-              rows += subspaces.map do |r|
-                h1 = r.to_attrs
-                [h1[:parent_id], h1[:id], h1[:name], nil, nil, nil, nil]
+              if @filter_spec != 'lookml' then
+                rows << [h[:parent_id],h[:id],h[:name], nil, nil, nil, nil]
+                subspaces = query_space_children(h[:id], "id,name,parent_id")
+                rows += subspaces.map do |r|
+                  h1 = r.to_attrs
+                  [h1[:parent_id], h1[:id], h1[:name], nil, nil, nil, nil]
+                end
               end
               h[:looks].each do |r|
                 rows << [h[:parent_id],h[:id],h[:name], r[:id], r[:title], nil, nil]
               end if h[:looks]
               h[:dashboards].each do |r|
-                rows << [h[:parent_id],h[:id],h[:name], nil, nil, r[:id], r[:title]]
+                rows << [h[:parent_id],h[:id],h[:name], nil, nil, r[:id], r[:title]] unless @filter_spec == 'lookml'
+                rows << [r[:id], r[:title]] if @filter_spec == 'lookml'
               end if h[:dashboards]
             end
             table_hash[:rows] = rows
