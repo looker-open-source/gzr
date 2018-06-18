@@ -58,7 +58,9 @@ module Gzr
         space_ids << user.home_space_id
       end unless args && args.length > 0 && !(args[0].nil?)
 
-      if args[0] =~ /^[0-9]+$/ then
+      if args[0] == 'lookml'
+        space_ids << 'lookml'
+      elsif args[0] =~ /^[0-9]+$/ then
         space_ids << args[0].to_i
       elsif args[0] == "~" then
         user = query_me("personal_space_id")
