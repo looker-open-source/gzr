@@ -8,6 +8,22 @@ module Gzr
 
       namespace :plan
 
+      desc 'failures', 'Report all plans that failed in their most recent run attempt'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      method_option :plain, type: :boolean, default: false,
+                           desc: 'print without any extra formatting'
+      method_option :csv, type: :boolean, default: false,
+                           desc: 'output in csv format per RFC4180'
+      def failures(*)
+        if options[:help]
+          invoke :help, ['failures']
+        else
+          require_relative 'plan/failures'
+          Gzr::Commands::Plan::Failures.new(options).execute
+        end
+      end
+
       desc 'runit PLAN_ID', 'Execute a saved plan immediately'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
