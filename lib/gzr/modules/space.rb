@@ -42,6 +42,8 @@ module Gzr
         req = {}
         req[:fields] = fields if fields 
         data = @sdk.space(id, req)
+      rescue LookerSDK::NotFound
+        return nil
       rescue LookerSDK::Error => e
         say_error "Error querying space(#{id},#{JSON.pretty_generate(req)})"
         say_error e.message
@@ -110,6 +112,8 @@ module Gzr
       req[:fields] = fields if fields
       begin
         data = @sdk.space_children(space_id, req)
+      rescue LookerSDK::NotFound
+        return nil
       rescue LookerSDK::Error => e
         say_error "Error querying space_children(#{space_id}, #{JSON.pretty_generate(req)})"
         say_error e.message
@@ -122,6 +126,8 @@ module Gzr
       data = nil
       begin
         data = @sdk.delete_space(space_id)
+      rescue LookerSDK::NotFound
+        return nil
       rescue LookerSDK::Error => e
         say_error "Error deleting space #{space_id}"
         say_error e.message

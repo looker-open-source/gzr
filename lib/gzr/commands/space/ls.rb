@@ -26,7 +26,7 @@ module Gzr
 
             data = space_ids.map do |space_id|
               query_space(space_id, @options[:fields])
-            end
+            end.compact
 
             begin
               puts "No data returned for spaces #{space_ids.inspect}"
