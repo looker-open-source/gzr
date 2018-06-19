@@ -51,9 +51,9 @@ module Gzr
             table_hash[:header] = fields unless @options[:plain]
             prior_plan_id = nil
             table_hash[:rows] = data.collect do |row|
-              next if row[:"scheduled_plan.id"] == prior_plan_id
-              prior_plan_id = row[:"scheduled_plan.id"]
-              next if row[:"scheduled_job.status"] == 'success'
+              next if row.send(:"scheduled_plan.id") == prior_plan_id
+              prior_plan_id = row.send(:"scheduled_plan.id")
+              next if row.send(:"scheduled_job.status") == 'success'
               expressions.collect do |e|
                 eval "row.#{e}"
               end
