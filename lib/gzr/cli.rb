@@ -31,7 +31,7 @@ module Gzr
     map %w(--version -v) => :version
 
     require_relative 'commands/role'
-    register Gzr::Commands::Role, 'role', 'role [SUBCOMMAND]', 'Command description...'
+    register Gzr::Commands::Role, 'role', 'role [SUBCOMMAND]', 'Commands pertaining to roles'
 
     require_relative 'commands/plan'
     register Gzr::Commands::Plan, 'plan', 'plan [SUBCOMMAND]', 'Commands pertaining to plans'

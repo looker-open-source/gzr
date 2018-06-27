@@ -56,39 +56,53 @@ module Gzr
         end
       end
 
-      desc 'group_ls', 'Command description...'
+      desc 'group_ls ROLE_ID', 'List the groups assigned to a role'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def group_ls(*)
+      method_option :fields, type: :string, default: 'id,name,external_group_id',
+                           desc: 'Fields to display'
+      method_option :plain, type: :boolean, default: false,
+                           desc: 'print without any extra formatting'
+      method_option :csv, type: :boolean, default: false,
+                           desc: 'output in csv format per RFC4180'
+      def group_ls(role_id)
         if options[:help]
           invoke :help, ['group_ls']
         else
           require_relative 'role/group_ls'
-          Gzr::Commands::Role::GroupLs.new(options).execute
+          Gzr::Commands::Role::GroupLs.new(role_id,options).execute
         end
       end
 
-      desc 'user_ls', 'Command description...'
+      desc 'user_ls ROLE_ID', 'List the users assigned to a role'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def user_ls(*)
+      method_option :fields, type: :string, default: 'id,first_name,last_name,email',
+                           desc: 'Fields to display'
+      method_option :plain, type: :boolean, default: false,
+                           desc: 'print without any extra formatting'
+      method_option :csv, type: :boolean, default: false,
+                           desc: 'output in csv format per RFC4180'
+      method_option :all_users, type: :boolean, default: false,
+                           desc: 'Show users with this role through a group membership'
+      def user_ls(role_id)
         if options[:help]
           invoke :help, ['user_ls']
         else
           require_relative 'role/user_ls'
-          Gzr::Commands::Role::UserLs.new(options).execute
+          Gzr::Commands::Role::UserLs.new(role_id,options).execute
         end
       end
 
-      desc 'rm', 'Command description...'
+      desc 'rm ROLE_ID', 'Delete a role'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def rm(*)
+      def rm(role_id)
         if options[:help]
           invoke :help, ['rm']
         else
           require_relative 'role/rm'
-          Gzr::Commands::Role::Rm.new(options).execute
+          Gzr::Commands::Role::Rm.new(role_id,options).execute
         end
       end
 
