@@ -8,51 +8,51 @@ module Gzr
 
       namespace :role
 
-      desc 'group_rm', 'Command description...'
+      desc 'group_rm ROLE_ID GROUP_ID GROUP_ID GROUP_ID ...', 'Remove indicated groups from role'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def group_rm(*)
+      def group_rm(role_id, *groups)
         if options[:help]
           invoke :help, ['group_rm']
         else
           require_relative 'role/group_rm'
-          Gzr::Commands::Role::GroupRm.new(options).execute
+          Gzr::Commands::Role::GroupRm.new(role_id, groups, options).execute
         end
       end
 
-      desc 'user_rm', 'Command description...'
+      desc 'user_rm ROLE_ID USER_ID USER_ID USER_ID ...', 'Remove indicated users from role'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def user_rm(*)
+      def user_rm(role_id,*users)
         if options[:help]
           invoke :help, ['user_rm']
         else
           require_relative 'role/user_rm'
-          Gzr::Commands::Role::UserRm.new(options).execute
+          Gzr::Commands::Role::UserRm.new(role_id,users,options).execute
         end
       end
 
-      desc 'group_add', 'Command description...'
+      desc 'group_add ROLE_ID GROUP_ID GROUP_ID GROUP_ID ...', 'Add indicated groups to role'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def group_add(*)
+      def group_add(role_id,*groups)
         if options[:help]
           invoke :help, ['group_add']
         else
           require_relative 'role/group_add'
-          Gzr::Commands::Role::GroupAdd.new(options).execute
+          Gzr::Commands::Role::GroupAdd.new(role_id, groups, options).execute
         end
       end
 
-      desc 'user_add', 'Command description...'
+      desc 'user_add ROLE_ID USER_ID USER_ID USER_ID ...', 'Add indicated users to role'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def user_add(*)
+      def user_add(role_id,*users)
         if options[:help]
           invoke :help, ['user_add']
         else
           require_relative 'role/user_add'
-          Gzr::Commands::Role::UserAdd.new(options).execute
+          Gzr::Commands::Role::UserAdd.new(role_id,users,options).execute
         end
       end
 
