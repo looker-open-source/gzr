@@ -18,5 +18,19 @@ module Gzr
       end
       data
     end
+    def query_role(role_id)
+      data = nil
+      begin
+        data = @sdk.role(role_id)
+      rescue LookerSDK::NotFound => e
+        # do nothing
+      rescue LookerSDK::ClientError => e
+        say_error "Unable to get role(#{role_id})"
+        say_error e.message
+        say_error e.errors if e.errors
+        raise
+      end
+      data
+    end
   end
 end

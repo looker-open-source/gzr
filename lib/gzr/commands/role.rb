@@ -92,19 +92,21 @@ module Gzr
         end
       end
 
-      desc 'cat', 'Command description...'
+      desc 'cat ROLE_ID', 'Output the JSON representation of a role to the screen or a file'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def cat(*)
+      method_option :dir,  type: :string,
+                           desc: 'Directory to get output file'
+      def cat(role_id)
         if options[:help]
           invoke :help, ['cat']
         else
           require_relative 'role/cat'
-          Gzr::Commands::Role::Cat.new(options).execute
+          Gzr::Commands::Role::Cat.new(role_id,options).execute
         end
       end
 
-      desc 'ls', 'Command description...'
+      desc 'ls', 'Display all roles'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :fields, type: :string, default: 'id,name,permission_set(id,name,permissions),model_set(id,name,models)',
