@@ -151,7 +151,7 @@ module Gzr
             say_warning "Updating dashboard layout #{existing_layout.id}" if @options[:debug]
             layout_obj = update_dashboard_layout(existing_layout.id,layout)
           end
-          if !new_layout && exisiting_layout then
+          if !new_layout && existing_layout then
             say_warning "Deleting dashboard layout #{existing_layout.id}" if @options[:debug]
             delete_dashboard_layout(existing_layout.id)
           end
