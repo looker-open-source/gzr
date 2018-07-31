@@ -3,12 +3,16 @@ RSpec.describe "`gzr role group_ls` command", type: :cli do
     output = `gzr role help group_ls`
     expected_output = <<-OUT
 Usage:
-  gzr group_ls
+  gzr role group_ls ROLE_ID
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help]    # Display usage information
+      [--fields=FIELDS]        # Fields to display
+                               # Default: id,name,external_group_id
+      [--plain], [--no-plain]  # print without any extra formatting
+      [--csv], [--no-csv]      # output in csv format per RFC4180
 
-Command description...
+List the groups assigned to a role
     OUT
 
     expect(output).to eq(expected_output)

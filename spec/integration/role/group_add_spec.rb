@@ -3,12 +3,12 @@ RSpec.describe "`gzr role group_add` command", type: :cli do
     output = `gzr role help group_add`
     expected_output = <<-OUT
 Usage:
-  gzr group_add
+  gzr role group_add ROLE_ID GROUP_ID GROUP_ID GROUP_ID ...
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
 
-Command description...
+Add indicated groups to role
     OUT
 
     expect(output).to eq(expected_output)

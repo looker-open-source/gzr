@@ -3,12 +3,12 @@ RSpec.describe "`gzr role rm` command", type: :cli do
     output = `gzr role help rm`
     expected_output = <<-OUT
 Usage:
-  gzr rm
+  gzr role rm ROLE_ID
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
 
-Command description...
+Delete a role
     OUT
 
     expect(output).to eq(expected_output)

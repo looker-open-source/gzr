@@ -3,12 +3,12 @@ RSpec.describe "`gzr role group_rm` command", type: :cli do
     output = `gzr role help group_rm`
     expected_output = <<-OUT
 Usage:
-  gzr group_rm
+  gzr role group_rm ROLE_ID GROUP_ID GROUP_ID GROUP_ID ...
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
 
-Command description...
+Remove indicated groups from role
     OUT
 
     expect(output).to eq(expected_output)

@@ -3,12 +3,12 @@ RSpec.describe "`gzr role user_add` command", type: :cli do
     output = `gzr role help user_add`
     expected_output = <<-OUT
 Usage:
-  gzr user_add
+  gzr role user_add ROLE_ID USER_ID USER_ID USER_ID ...
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
 
-Command description...
+Add indicated users to role
     OUT
 
     expect(output).to eq(expected_output)

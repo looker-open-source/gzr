@@ -3,12 +3,12 @@ RSpec.describe "`gzr role user_rm` command", type: :cli do
     output = `gzr role help user_rm`
     expected_output = <<-OUT
 Usage:
-  gzr user_rm
+  gzr role user_rm ROLE_ID USER_ID USER_ID USER_ID ...
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
 
-Command description...
+Remove indicated users from role
     OUT
 
     expect(output).to eq(expected_output)

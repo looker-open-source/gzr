@@ -3,12 +3,16 @@ RSpec.describe "`gzr role ls` command", type: :cli do
     output = `gzr role help ls`
     expected_output = <<-OUT
 Usage:
-  gzr ls
+  gzr role ls
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help]    # Display usage information
+      [--fields=FIELDS]        # Fields to display
+                               # Default: id,name,permission_set(id,name,permissions),model_set(id,name,models)
+      [--plain], [--no-plain]  # print without any extra formatting
+      [--csv], [--no-csv]      # output in csv format per RFC4180
 
-Command description...
+Display all roles
     OUT
 
     expect(output).to eq(expected_output)

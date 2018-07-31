@@ -3,12 +3,13 @@ RSpec.describe "`gzr role cat` command", type: :cli do
     output = `gzr role help cat`
     expected_output = <<-OUT
 Usage:
-  gzr cat
+  gzr role cat ROLE_ID
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
+      [--dir=DIR]            # Directory to get output file
 
-Command description...
+Output the JSON representation of a role to the screen or a file
     OUT
 
     expect(output).to eq(expected_output)
