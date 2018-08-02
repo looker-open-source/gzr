@@ -54,7 +54,7 @@ module Gzr
 
         def process_space(space_id, base, rel_path = nil)
           space = query_space(space_id)
-          path = Pathname.new(space.name)
+          path = Pathname.new(space.name.gsub('/',"\u{2215}"))
           path = rel_path + path if rel_path
 
           write_file("Space_#{space.id}_#{space.name}.json", base, path) do |f|

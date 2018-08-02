@@ -13,7 +13,7 @@ module Gzr
           base_dir.mkdir(path.to_path, 0755) unless @archived_paths.include?(path.to_path)
           @archived_paths << path.to_path
         end
-        fn = Pathname.new(file_name)
+        fn = Pathname.new(file_name.gsub('/',"\u{2215}"))
         fn = path + fn if path
         base_dir.add_file(fn.to_path, 0644) do |tf|
           yield tf
@@ -28,7 +28,7 @@ module Gzr
           test_dir = base + Pathname.new(path_part)
           Dir.mkdir(test_dir) unless (test_dir.exist? && test_dir.directory?)
         end if p
-        file = Pathname.new(file_name) if file_name
+        file = Pathname.new(file_name.gsub('/',"\u{2215}")) if file_name
         file = p + file if p
         file = base + file if base
         f = File.open(file, "wt") if file
