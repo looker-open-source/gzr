@@ -69,7 +69,7 @@ module Gzr
         if @options[:force] then
           say_ok "Modifying existing Look #{source_look[:title]} in space #{space_id}"
           new_look = source_look.select do |k,v|
-            (keys_to_keep('update_look') - [:space_id,:user_id,:query_id]).include? k
+            (keys_to_keep('update_look') - [:space_id,:user_id,:query_id,:slug]).include? k
           end
           new_look[:query_id] = query_id
           return update_look(existing_looks.first.id,new_look)
@@ -78,7 +78,7 @@ module Gzr
         end
       else
         new_look = source_look.select do |k,v|
-          (keys_to_keep('create_look') - [:space_id,:user_id,:query_id]).include? k
+          (keys_to_keep('create_look') - [:space_id,:user_id,:query_id,:slug]).include? k
         end
         new_look[:query_id] = query_id
         new_look[:user_id] = user_id
