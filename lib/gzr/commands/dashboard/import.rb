@@ -56,7 +56,20 @@ module Gzr
         end
 
         def sync_dashboard(source,target_space_id)
-          existing_dashboard = search_dashboards(source[:title], target_space_id).fetch(0,nil)
+          existing_dashboard = search_dashboards_by_title(source[:title], target_space_id).fetch(0,nil)
+          slug_used = search_dashboards_by_slug(source[:slug]).fetch(0,nil) if source[:slug]
+
+          if slug_used then
+            if existing_dashboard then
+              if !(existing_dashboard.space_id == slug_used.space_id && existing_dashboard.title == slug_used.title) then
+                say_warning "slug #{slug_used.slug} already used for dashboard #{slug_used.title} in space #{slug_used.space_id}"
+                say_warning "dashboard will be imported with new slug"
+              end
+            else
+              say_warning "slug #{slug_used.slug} already used for dashboard #{slug_used.title} in space #{slug_used.space_id}"
+              say_warning "dashboard will be imported with new slug"
+            end
+          end
 
           if existing_dashboard then
             if @options[:force] then
@@ -64,6 +77,7 @@ module Gzr
               new_dash = source.select do |k,v|
                 (keys_to_keep('update_dashboard') - [:space_id,:user_id,:title,:slug]).include? k
               end
+              new_dash[:slug] = source[:slug] unless slug_used
               return update_dashboard(existing_dashboard.id,new_dash)
             else
               raise Gzr::CLI::Error, "Dashboard #{source[:title]} already exists in space #{target_space_id}\nUse --force if you want to overwrite it"
@@ -72,6 +86,7 @@ module Gzr
             new_dash = source.select do |k,v|
               (keys_to_keep('create_dashboard') - [:space_id,:user_id,:slug]).include? k
             end
+            new_dash[:slug] = source[:slug] unless slug_used
             new_dash[:space_id] = target_space_id
             new_dash[:user_id] = @me.id
             return create_dashboard(new_dash)

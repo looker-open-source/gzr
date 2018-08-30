@@ -26,14 +26,28 @@ module Gzr
       data
     end
 
-    def search_dashboards(title, space_id=nil)
+    def search_dashboards_by_slug(slug, space_id=nil)
+      data = nil
+      begin
+        req = { :slug => slug }
+        req[:space_id] = space_id if space_id 
+        data = @sdk.search_dashboards(req)
+      rescue LookerSDK::Error => e
+        say_error "Error search_dashboards_by_slug(#{JSON.pretty_generate(req)})"
+        say_error e.message
+        raise
+      end
+      data
+    end
+
+    def search_dashboards_by_title(title, space_id=nil)
       data = nil
       begin
         req = { :title => title }
         req[:space_id] = space_id if space_id 
         data = @sdk.search_dashboards(req)
       rescue LookerSDK::Error => e
-        say_error "Error search_dashboards(#{JSON.pretty_generate(req)})"
+        say_error "Error search_dashboards_by_title(#{JSON.pretty_generate(req)})"
         say_error e.message
         raise
       end
