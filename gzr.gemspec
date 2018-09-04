@@ -1,4 +1,3 @@
-
 lib = File.expand_path("../lib", __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require "gzr/version"
@@ -36,7 +35,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "pastel", "~> 0.7.2"
   spec.add_dependency "thor", "~> 0.20.0"
   spec.add_dependency 'netrc', "~> 0.11.0"
-  spec.add_dependency 'looker-sdk-fork', "~> 0.0.6"
+  spec.add_dependency 'looker-sdk', "~> 0.0.6"
 
   spec.add_development_dependency "bundler", "~> 1.16"
   spec.add_development_dependency "rake", "~> 10.0"
