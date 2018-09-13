@@ -31,7 +31,7 @@ module Gzr
     map %w(--version -v) => :version
 
     require_relative 'commands/query'
-    register Gzr::Commands::Query, 'query', 'query [SUBCOMMAND]', 'Command description...'
+    register Gzr::Commands::Query, 'query', 'query [SUBCOMMAND]', 'Commands to retrieve and run queries'
 
     require_relative 'commands/role'
     register Gzr::Commands::Role, 'role', 'role [SUBCOMMAND]', 'Commands pertaining to roles'

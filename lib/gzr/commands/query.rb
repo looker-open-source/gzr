@@ -19,7 +19,7 @@ module Gzr
         if options[:help]
           invoke :help, ['runquery']
         else
-          require_relative 'query/run'
+          require_relative 'query/runquery'
           Gzr::Commands::Query::RunQuery.new(query_def,options).execute
         end
       end
