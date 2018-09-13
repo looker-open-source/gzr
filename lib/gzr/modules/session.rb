@@ -32,6 +32,7 @@ module Gzr
       conn_hash = Hash.new
       conn_hash[:api_endpoint] = "http#{@options[:ssl] ? "s" : ""}://#{@options[:host]}:#{@options[:port]}/api/#{api_version}"
       conn_hash[:connection_options] = {:ssl => {:verify => @options[:verify_ssl]}} if @options[:ssl] 
+      conn_hash[:connection_options][:ssl][:verify_mode] == OpenSSL::SSL::VERIFY_PEER | OpenSSL::SSL::VERIFY_FAIL_IF_NO_PEER_CERT
       if @options[:client_id] then
         conn_hash[:client_id] = @options[:client_id]
         if @options[:client_secret] then
@@ -53,6 +54,13 @@ module Gzr
       begin
         conn_hash = build_connection_hash("3.0")
         sdk = LookerSDK::Client.new(conn_hash)
+        begin 
+          sdk.get "/"
+        rescue Faraday::SSLError => e
+          raise Gzr::CLI::Error, "SSL Certificate could not be verified\nDo you need the --no-verify-ssl option or the --no-ssl option?"
+        rescue LookerSDK::NotFound => nf
+          #ignore this
+        end
         raise Gzr::CLI::Error, "Invalid credentials" unless sdk.authenticated?
         sdk.versions.supported_versions.each do |v|
           @v3_1_available = true if v.version == "3.1"
