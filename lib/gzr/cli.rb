@@ -30,6 +30,9 @@ module Gzr
     end
     map %w(--version -v) => :version
 
+    require_relative 'commands/query'
+    register Gzr::Commands::Query, 'query', 'query [SUBCOMMAND]', 'Command description...'
+
     require_relative 'commands/role'
     register Gzr::Commands::Role, 'role', 'role [SUBCOMMAND]', 'Commands pertaining to roles'
 
