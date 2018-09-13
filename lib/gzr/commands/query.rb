@@ -8,7 +8,7 @@ module Gzr
 
       namespace :query
 
-      desc 'runquery QUERY_DEF', 'Run query_id or run json_query_desc'
+      desc 'runquery QUERY_DEF', 'Run query_id, query_slug, or json_query_desc'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :file, type: :string,

@@ -15,7 +15,7 @@ module Gzr
 
         def execute(input: $stdin, output: $stdout)
           unless @query_def
-            raise Gzr::CLI::Error, "No query specified. Either a query id or a query in json formation must be specified."
+            raise Gzr::CLI::Error, "No query specified. A query id, query slug, or a query in json formation must be specified."
           end
 
           case @options[:format]
@@ -27,21 +27,34 @@ module Gzr
             raise Gzr::CLI::Error, "'--format=#{@options[:format]}' not understood. The format must be one of json,json_detail,csv,txt,html,md,xlsx,sql,png,jpg"
           end
 
-          query_id = @query_def.to_i if /^[0-9]+$/ =~ @query_def
-          begin
-            query_hash = JSON.parse(@query_def,{:symbolize_names => true})
-          rescue JSON::ParserError => e
-                raise Gzr::CLI::Error, "The query specification is not a valid json document"
-          end unless query_id
+          case @query_def
+          when /^[0-9]+$/
+            query_id = @query_def.to_i
+          when /^[A-Za-z0-9]+$/
+            query_slug = @query_def
+          else
+            begin
+              query_hash = JSON.parse(@query_def,{:symbolize_names => true})
+            rescue JSON::ParserError => e
+              raise Gzr::CLI::Error, "The query specification is not a valid id, slug, or json document"
+            end
+          end
 
           f = File.open(@options[:file], "w") if @options[:file]
           with_session do
-            if query_id then
+            if query_id || query_slug then
               begin
                 @sdk.query(query_id)
               rescue LookerSDK::NotFound => e
                 raise Gzr::CLI::Error, "Query with the id #{query_id} not found"
-              end
+              end if query_id
+
+              begin
+                query_id = @sdk.query_for_slug(query_slug, { :fields => 'id' }).id.to_i
+              rescue LookerSDK::NotFound => e
+                raise Gzr::CLI::Error, "Query with the slug #{query_slug} not found"
+              end if query_slug
+
               begin
                 @sdk.run_query(query_id,@options[:format]) { |data,progress| (f || output).write(data) }
               rescue LookerSDK::Error => e
