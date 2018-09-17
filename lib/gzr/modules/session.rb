@@ -31,8 +31,22 @@ module Gzr
     def build_connection_hash(api_version)
       conn_hash = Hash.new
       conn_hash[:api_endpoint] = "http#{@options[:ssl] ? "s" : ""}://#{@options[:host]}:#{@options[:port]}/api/#{api_version}"
-      conn_hash[:connection_options] = {:ssl => {:verify => @options[:verify_ssl]}} if @options[:ssl] 
-      conn_hash[:connection_options][:ssl][:verify_mode] == OpenSSL::SSL::VERIFY_PEER | OpenSSL::SSL::VERIFY_FAIL_IF_NO_PEER_CERT
+      if @options[:ssl]
+        if @options[:verify_ssl] then
+          conn_hash[:connection_options] = {
+              :ssl => {
+                :verify => true,
+                :verify_mode => (OpenSSL::SSL::VERIFY_PEER | OpenSSL::SSL::VERIFY_FAIL_IF_NO_PEER_CERT)
+              }
+          }
+        else
+          conn_hash[:connection_options] = {
+              :ssl => {
+                :verify => false
+              }
+          }
+        end
+      end
       conn_hash[:user_agent] = "Gazer #{Gzr::VERSION}"
       if @options[:client_id] then
         conn_hash[:client_id] = @options[:client_id]
