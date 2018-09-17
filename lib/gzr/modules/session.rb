@@ -33,6 +33,7 @@ module Gzr
       conn_hash[:api_endpoint] = "http#{@options[:ssl] ? "s" : ""}://#{@options[:host]}:#{@options[:port]}/api/#{api_version}"
       conn_hash[:connection_options] = {:ssl => {:verify => @options[:verify_ssl]}} if @options[:ssl] 
       conn_hash[:connection_options][:ssl][:verify_mode] == OpenSSL::SSL::VERIFY_PEER | OpenSSL::SSL::VERIFY_FAIL_IF_NO_PEER_CERT
+      conn_hash[:user_agent] = "Gazer #{Gzr::VERSION}"
       if @options[:client_id] then
         conn_hash[:client_id] = @options[:client_id]
         if @options[:client_secret] then
