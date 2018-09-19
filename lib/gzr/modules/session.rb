@@ -73,6 +73,8 @@ module Gzr
           sdk.get "/"
         rescue Faraday::SSLError => e
           raise Gzr::CLI::Error, "SSL Certificate could not be verified\nDo you need the --no-verify-ssl option or the --no-ssl option?"
+        rescue Faraday::ConnectionFailed => cf
+          raise Gzr::CLI::Error, "Connection Failed.\nDid you specify the --no-ssl option for an ssl secured server?"
         rescue LookerSDK::NotFound => nf
           #ignore this
         end
