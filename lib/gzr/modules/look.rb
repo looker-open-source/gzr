@@ -123,5 +123,19 @@ module Gzr
       end 
       return create_query(new_query)
     end
+
+    def create_merge_result(merge_result)
+      new_merge_result = merge_result.select do |k,v|
+        (keys_to_keep('create_merge_query') - [:client_id,:source_queries]).include? k
+      end 
+      new_merge_result[:source_queries] = merge_result[:source_queries].map do |query|
+        new_query = {}
+        new_query[:query_id] = create_fetch_query(query[:query]).id
+        new_query[:name] = query[:name]
+        new_query[:merge_fields] = query[:merge_fields]
+        new_query
+      end
+      return create_merge_query(new_merge_result)
+    end
   end
 end

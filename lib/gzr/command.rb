@@ -30,11 +30,46 @@ module Gzr
       )
     end
 
+    def query(query_id)
+      data = nil
+      begin
+        data = @sdk.query(query_id)
+      rescue LookerSDK::Error => e
+        say_error "Error querying query(#{query_id})"
+        say_error e.message
+        raise
+      end
+      data
+    end
+
     def create_query(query)
       begin
         data = @sdk.create_query(query)
       rescue LookerSDK::Error => e
         say_error "Error creating query(#{JSON.pretty_generate(query)})"
+        say_error e.message
+        raise
+      end
+      data
+    end
+
+    def merge_query(merge_result_id)
+      data = nil
+      begin
+        data = @sdk.merge_query(merge_result_id)
+      rescue LookerSDK::Error => e
+        say_error "Error querying merge_query(#{merge_result_id})"
+        say_error e.message
+        raise
+      end
+      data
+    end
+
+    def create_merge_query(merge_query)
+      begin
+        data = @sdk.create_merge_query(merge_query)
+      rescue LookerSDK::Error => e
+        say_error "Error creating merge_query(#{JSON.pretty_generate(merge_query)})"
         say_error e.message
         raise
       end
