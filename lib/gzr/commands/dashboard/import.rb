@@ -113,6 +113,19 @@ module Gzr
           return delete_dashboard_filter(existing_filter.id)
         end
 
+        def copy_result_maker_filterables(new_element)
+          if new_element.fetch(:result_maker,{}).fetch(:filterables,[]).length > 0
+            result_maker = { :filterables => [] }
+            new_element[:result_maker][:filterables].each do |filterable|
+              result_maker[:filterables] << filterable.select do |k,v|
+                true unless [:can].include? k
+              end
+            end
+            return result_maker
+          end
+          nil
+        end
+
         def sync_dashboard_element(new_element,existing_element,dashboard_id)
           if new_element && !existing_element then
             element = new_element.select do |k,v|
@@ -121,6 +134,8 @@ module Gzr
             (element[:query_id],element[:look_id]) = process_dashboard_element(new_element) 
             say_warning "Creating dashboard element #{element.inspect}" if @options[:debug]
             element[:dashboard_id] = dashboard_id
+            result_maker = copy_result_maker_filterables(new_element)
+            element[:result_maker] = result_maker if result_maker
             return [new_element[:id], create_dashboard_element(element).id]
           end
           if existing_element && new_element then
@@ -134,6 +149,8 @@ module Gzr
             )
             (element[:query_id],element[:look_id]) = process_dashboard_element(new_element) 
             say_warning "Updating dashboard element #{existing_element.id}" if @options[:debug]
+            result_maker = copy_result_maker_filterables(new_element)
+            element[:result_maker] = result_maker if result_maker
             return [new_element[:id], update_dashboard_element(existing_element.id,element).id]
           end
           say_warning "Deleting dashboard element #{existing_element.id}" if @options[:debug]
