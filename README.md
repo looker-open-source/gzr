@@ -520,7 +520,7 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/deange
 
 ## Code of Conduct
 
-Everyone interacting in the Gazer project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/looker/content_util/blob/master/CODE_OF_CONDUCT.md).
+Everyone interacting in the Gazer project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/deangelo-llooker/gzr/blob/master/CODE_OF_CONDUCT.md).
 
 ## Copyright
 
