@@ -24,7 +24,7 @@ module Gzr
 
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
-          with_session do
+          with_session("3.1") do
             if @options[:tar] || @options[:tgz] then
               arc_path = Pathname.new(@options[:tgz] || @options[:tar])
               arc_path = Pathname.new(File.expand_path(@options[:dir])) + arc_path unless arc_path.absolute?

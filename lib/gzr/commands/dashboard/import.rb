@@ -114,7 +114,8 @@ module Gzr
         end
 
         def copy_result_maker_filterables(new_element)
-          if new_element.fetch(:result_maker,{}).fetch(:filterables,[]).length > 0
+          return nil unless new_element[:result_maker]
+          if new_element[:result_maker].fetch(:filterables,[]).length > 0
             result_maker = { :filterables => [] }
             new_element[:result_maker][:filterables].each do |filterable|
               result_maker[:filterables] << filterable.select do |k,v|

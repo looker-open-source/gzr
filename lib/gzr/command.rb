@@ -57,6 +57,8 @@ module Gzr
       data = nil
       begin
         data = @sdk.merge_query(merge_result_id)
+      rescue NoMethodError => nme
+        say_error "The api endpoint merge_query(#{merge_result_id}) is not implemented on this Looker instance"
       rescue LookerSDK::Error => e
         say_error "Error querying merge_query(#{merge_result_id})"
         say_error e.message
@@ -68,6 +70,9 @@ module Gzr
     def create_merge_query(merge_query)
       begin
         data = @sdk.create_merge_query(merge_query)
+      rescue NoMethodError => nme
+        say_error "The api endpoint create_merge_query() is not implemented on this Looker instance"
+        raise
       rescue LookerSDK::Error => e
         say_error "Error creating merge_query(#{JSON.pretty_generate(merge_query)})"
         say_error e.message
