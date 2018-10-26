@@ -31,19 +31,22 @@ module Gzr
     def build_connection_hash(api_version)
       conn_hash = Hash.new
       conn_hash[:api_endpoint] = "http#{@options[:ssl] ? "s" : ""}://#{@options[:host]}:#{@options[:port]}/api/#{api_version}"
+      if @options[:http_proxy]
+        conn_hash[:connection_options] ||= {}
+        conn_hash[:connection_options][:proxy] = {
+          :uri => @options[:http_proxy]
+        }
+      end
       if @options[:ssl]
+        conn_hash[:connection_options] ||= {}
         if @options[:verify_ssl] then
-          conn_hash[:connection_options] = {
-              :ssl => {
-                :verify => true,
-                :verify_mode => (OpenSSL::SSL::VERIFY_PEER | OpenSSL::SSL::VERIFY_FAIL_IF_NO_PEER_CERT)
-              }
+          conn_hash[:connection_options][:ssl] = {
+            :verify => true,
+            :verify_mode => (OpenSSL::SSL::VERIFY_PEER | OpenSSL::SSL::VERIFY_FAIL_IF_NO_PEER_CERT)
           }
         else
-          conn_hash[:connection_options] = {
-              :ssl => {
-                :verify => false
-              }
+          conn_hash[:connection_options][:ssl] = {
+            :verify => false
           }
         end
       end
