@@ -43,12 +43,16 @@ RSpec.describe Gzr::Commands::Space::Export do
       {
         :id=>3,
         :title=>"bar",
-        :dashboard_elements=>[]
+        :dashboard_elements=>[],
+        :dashboard_layouts=>[],
+        :dashboard_filters=>[]
       },
       {
         :id=>6,
         :title=>"bar",
-        :dashboard_elements=>[]
+        :dashboard_elements=>[],
+        :dashboard_layouts=>[],
+        :dashboard_filters=>[]
       }
     ]
     mock_dashboard_responses = dashboard_response_docs.collect { |d| double(Sawyer::Resource, d) }

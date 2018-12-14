@@ -27,6 +27,8 @@ module Gzr
       data = nil
       begin
         data = @sdk.dashboard(dashboard_id)
+        data&.dashboard_filters&.sort! { |a,b| a.row <=> b.row }
+        data&.dashboard_layouts&.sort_by! { |v| (v.active ? 0 : 1) }
       rescue LookerSDK::Error => e
         say_error "Error querying dashboard(#{dashboard_id})"
         say_error e.message
@@ -78,6 +80,8 @@ module Gzr
     def create_dashboard(dash)
       begin
         data = @sdk.create_dashboard(dash)
+        data&.dashboard_filters&.sort! { |a,b| a.row <=> b.row }
+        data&.dashboard_layouts&.sort_by! { |v| (v.active ? 0 : 1) }
       rescue LookerSDK::Error => e
         say_error "Error creating dashboard(#{JSON.pretty_generate(dash)})"
         say_error e.message
@@ -89,6 +93,7 @@ module Gzr
     def update_dashboard(dash_id,dash)
       begin
         data = @sdk.update_dashboard(dash_id,dash)
+        data&.dashboard_filters&.sort! { |a,b| a.row <=> b.row }
       rescue LookerSDK::Error => e
         say_error "Error updating dashboard(#{dash_id},#{JSON.pretty_generate(dash)})"
         say_error e.message

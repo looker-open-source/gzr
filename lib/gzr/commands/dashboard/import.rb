@@ -55,7 +55,18 @@ module Gzr
 
               dashboard = sync_dashboard(data,@dest_space_id)
 
-              pairs(data[:dashboard_filters],dashboard.dashboard_filters,dashboard.id) do |source,target,id|
+              source_filters = data[:dashboard_filters].sort { |a,b| a[:row] <=> b[:row] }
+              existing_filters = dashboard.dashboard_filters.sort { |a,b| a.row <=> b.row }
+              existing_filters.collect! do |e|
+                matches_by_name_title = source_filters.select { |s| s[:row] != e.row && (s[:title] == e.title || s[:name] == e.name) }
+                if matches_by_name_title.length > 0
+                  delete_dashboard_filter(e.id)
+                  nil
+                else
+                  e
+                end
+              end
+              pairs(source_filters,existing_filters,dashboard.id) do |source,target,id|
                 say_warning "Synching dashboard filter for dashboard #{id}" if @options[:debug]
                 sync_dashboard_filter(source,target,id)
               end
@@ -64,7 +75,9 @@ module Gzr
                 sync_dashboard_element(source,target,id)
               end
 
-              pairs(data[:dashboard_layouts],dashboard.dashboard_layouts) do |s,t|
+              source_dashboard_layouts = data[:dashboard_layouts].sort_by { |v| (v[:active] ? 0 : 1) }
+              existing_dashboard_layouts = dashboard.dashboard_layouts.sort_by { |v| (v.active ? 0 : 1) }
+              pairs(source_dashboard_layouts,existing_dashboard_layouts) do |s,t|
                 sync_dashboard_layout(dashboard.id,s,t) do |s,t|
                   sync_dashboard_layout_component(s,t,elem_table)
                 end
@@ -191,18 +204,16 @@ module Gzr
           layout_obj = nil
           if new_layout && !existing_layout then
             layout = new_layout.select do |k,v|
-              (keys_to_keep('create_dashboard_layout') - [:dashboard_id,:active]).include? k
+              (keys_to_keep('create_dashboard_layout') - [:dashboard_id]).include? k
             end
-            layout[:active] = true if new_layout[:active]
             layout[:dashboard_id] = dashboard_id
             say_warning "Creating dashboard layout #{layout}" if @options[:debug]
             layout_obj = create_dashboard_layout(layout)
           end
           if new_layout && existing_layout then
             layout = new_layout.select do |k,v|
-              (keys_to_keep('update_dashboard_layout') - [:dashboard_id,:active]).include? k
+              (keys_to_keep('update_dashboard_layout') - [:dashboard_id]).include? k
             end
-            layout[:active] = true if new_layout[:active]
             say_warning "Updating dashboard layout #{existing_layout.id}" if @options[:debug]
             layout_obj = update_dashboard_layout(existing_layout.id,layout)
           end
@@ -212,6 +223,12 @@ module Gzr
           end
 
           return unless layout_obj
+
+          #say_warning "new_layout[:active] is #{new_layout&.fetch(:active)} for #{layout_obj.id}"
+          #if layout_obj && new_layout&.fetch(:active,false)
+          #  say_warning "Setting layout #{layout_obj.id} active"
+          #  update_dashboard_layout(layout_obj.id, { :active => true })
+          #end
 
           layout_components = new_layout[:dashboard_layout_components].zip(layout_obj.dashboard_layout_components)
           return layout_components unless block_given?

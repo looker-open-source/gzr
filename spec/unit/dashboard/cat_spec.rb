@@ -24,7 +24,7 @@ require 'gzr/commands/dashboard/cat'
 RSpec.describe Gzr::Commands::Dashboard::Cat do
   it "executes `dashboard cat` command successfully" do
     require 'sawyer'
-    dashboard = { :id=>1, :title=>"foo", :dashboard_elements=>[] }
+    dashboard = { :id=>1, :title=>"foo", :dashboard_elements=>[], :dashboard_layouts=>[] , :dashboard_filters=>[] }
     mock_response = double(Sawyer::Resource, dashboard)
     allow(mock_response).to receive(:to_attrs).and_return(dashboard)
     mock_sdk = Object.new
@@ -46,6 +46,12 @@ RSpec.describe Gzr::Commands::Dashboard::Cat do
   "id": 1,
   "title": "foo",
   "dashboard_elements": [
+
+  ],
+  "dashboard_layouts": [
+
+  ],
+  "dashboard_filters": [
 
   ]
 }
