@@ -71,6 +71,12 @@ module Gzr
           }
         end
       end
+      if @options[:timeout]
+        conn_hash[:connection_options] ||= {}
+        conn_hash[:connection_options][:request] = {
+          :timeout => @options[:timeout]
+        }
+      end
       conn_hash[:user_agent] = "Gazer #{Gzr::VERSION}"
       if @options[:client_id] then
         conn_hash[:client_id] = @options[:client_id]
