@@ -53,6 +53,18 @@ module Gzr
         end
       end
 
+      desc 'delete USER_ID', 'Delete the user given by user_id'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def delete(user_id)
+        if options[:help]
+          invoke :help, ['delete']
+        else
+          require_relative 'user/delete'
+          Gzr::Commands::User::Delete.new(user_id,options).execute
+        end
+      end
+
       desc 'cat USER_ID', 'Output json information about a user to screen or file'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'

@@ -110,5 +110,18 @@ module Gzr
       end
       data
     end
+    
+    def delete_user(id)
+      data = nil
+       req = id
+      begin
+        data = @sdk.delete_user(req)
+      rescue LookerSDK::Error => e
+        say_error "Error deleting user(#{id},#{JSON.pretty_generate(req)})"
+        say_error e.message
+        raise
+      end
+      data
+    end
   end
 end
