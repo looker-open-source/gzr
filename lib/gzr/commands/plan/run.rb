@@ -47,6 +47,7 @@ module Gzr
             # as known in the server and if they are identical apart from
             # the secret, the api will effectively include to secret in order
             # execute the plan.
+            plan.delete(:id)
             run_scheduled_plan(plan)
             output.puts "Executed plan #{@plan_id}" unless @options[:plain] 
           end

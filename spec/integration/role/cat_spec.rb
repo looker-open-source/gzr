@@ -30,7 +30,7 @@ Options:
   -h, [--help], [--no-help]  # Display usage information
       [--dir=DIR]            # Directory to get output file
 
-Output the JSON representation of a role to the screen or a file
+Output the JSON representation of a role to screen/file
     OUT
 
     expect(output).to eq(expected_output)

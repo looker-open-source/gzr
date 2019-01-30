@@ -127,7 +127,7 @@ module Gzr
         end
       end
 
-      desc 'cat ROLE_ID', 'Output the JSON representation of a role to the screen or a file'
+      desc 'cat ROLE_ID', 'Output the JSON representation of a role to screen/file'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :dir,  type: :string,
