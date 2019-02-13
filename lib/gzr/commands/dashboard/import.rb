@@ -94,7 +94,7 @@ module Gzr
           title_used = search_dashboards_by_title(source[:title], target_space_id).fetch(0,nil)
           existing_dashboard = search_dashboards_by_slug(source[:slug], target_space_id).fetch(0,nil) if source[:slug]
           if existing_dashboard then
-            title_used = false if title_used.id == existing_dashboard.id
+            title_used = false if title_used && title_used.id == existing_dashboard.id
           else
             existing_dashboard = title_used
             title_used = false
