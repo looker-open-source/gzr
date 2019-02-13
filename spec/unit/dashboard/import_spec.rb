@@ -38,6 +38,7 @@ RSpec.describe Gzr::Commands::Dashboard::Import do
     }
     mock_dash_response = double(Sawyer::Resource, dash_response_doc)
     allow(mock_dash_response).to receive(:to_attrs).and_return(dash_response_doc)
+    allow(mock_dash_response).to receive(:id).and_return(dash_response_doc[:id])
 
     mock_sdk = Object.new
     mock_sdk.define_singleton_method(:authenticated?) { true }

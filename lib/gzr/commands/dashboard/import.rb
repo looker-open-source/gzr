@@ -90,26 +90,30 @@ module Gzr
         end
 
         def sync_dashboard(source,target_space_id)
-          existing_dashboard = search_dashboards_by_title(source[:title], target_space_id).fetch(0,nil)
           slug_used = search_dashboards_by_slug(source[:slug]).fetch(0,nil) if source[:slug]
+          title_used = search_dashboards_by_title(source[:title], target_space_id).fetch(0,nil)
+          existing_dashboard = search_dashboards_by_slug(source[:slug], target_space_id).fetch(0,nil) if source[:slug]
+          if existing_dashboard then
+            title_used = false if title_used.id == existing_dashboard.id
+          else
+            existing_dashboard = title_used
+            title_used = false
+          end
+          slug_used = false if existing_dashboard && slug_used && slug_used.id == existing_dashboard.id
 
           if slug_used then
-            if existing_dashboard then
-              if !(existing_dashboard.space_id == slug_used.space_id && existing_dashboard.title == slug_used.title) then
-                say_warning "slug #{slug_used.slug} already used for dashboard #{slug_used.title} in space #{slug_used.space_id}"
-                say_warning "dashboard will be imported with new slug"
-              end
-            else
-              say_warning "slug #{slug_used.slug} already used for dashboard #{slug_used.title} in space #{slug_used.space_id}"
-              say_warning "dashboard will be imported with new slug"
-            end
+            say_warning "slug #{slug_used.slug} already used for dashboard #{slug_used.title} in space #{slug_used.space_id}"
+            say_warning "dashboard will be imported with new slug"
           end
 
           if existing_dashboard then
+            if title_used then
+              raise Gzr::CLI::Error, "Dashboard #{source[:title]} already exists in space #{target_space_id}\nDelete it before trying to upate another dashboard to have that title."
+            end
             if @options[:force] then
               say_ok "Modifying existing dashboard #{existing_dashboard.id} #{existing_dashboard[:title]} in space #{target_space_id}"
               new_dash = source.select do |k,v|
-                (keys_to_keep('update_dashboard') - [:space_id,:user_id,:title,:slug]).include? k
+                (keys_to_keep('update_dashboard') - [:space_id,:user_id,:slug]).include? k
               end
               new_dash[:slug] = source[:slug] unless slug_used
               return update_dashboard(existing_dashboard.id,new_dash)
