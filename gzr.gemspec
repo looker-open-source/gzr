@@ -32,7 +32,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = %q{Command line tool to manage the content of a Looker instance.}
   spec.description   = %q{Command line tool to manage the content of a Looker instance.}
-  spec.homepage      = "https://github.com/deangelo-llooker/gzr"
+  spec.homepage      = "https://github.com/looker-open-source/gzr"
 
   spec.required_ruby_version = '>= 2.3.0'
 

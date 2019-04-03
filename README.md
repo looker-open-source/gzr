@@ -6,7 +6,7 @@ and Dashboards via a simple command line tool.
 ## Status and Support
 
 Gazer is **NOT** supported or warranteed by Looker in any way. Please do not contact Looker support
-for issues with Gazer. Issues can be logged via https://github.com/deangelo-llooker/gzr/issues 
+for issues with Gazer. Issues can be logged via https://github.com/looker-open-source/gzr/issues 
 
 ## Installation
 
@@ -516,11 +516,11 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/deangelo-llooker/gzr. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+Bug reports and pull requests are welcome on GitHub at https://github.com/looker-open-source/gzr. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## Code of Conduct
 
-Everyone interacting in the Gazer project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/deangelo-llooker/gzr/blob/master/CODE_OF_CONDUCT.md).
+Everyone interacting in the Gazer project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/looker-open-source/gzr/blob/master/CODE_OF_CONDUCT.md).
 
 ## Copyright
 
