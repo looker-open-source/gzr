@@ -182,6 +182,8 @@ module Gzr
               [e,nil]
             end.to_h
 
+            element[:dashboard_id] = dashboard_id
+
             element.merge!( new_element.select do |k,v|
               (keys_to_keep('update_dashboard_element') - [:dashboard_id, :look_id, :query_id, :merge_result_id]).include? k
             end
