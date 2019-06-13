@@ -66,6 +66,9 @@ module Gzr
     def create_query(query)
       begin
         data = @sdk.create_query(query)
+        if !(data.respond_to?(:id))
+          raise Gzr::CLI::Error, "create_query(#{JSON.pretty_generate(query)}) returned #{data.inspect}"
+        end
       rescue LookerSDK::Error => e
         say_error "Error creating query(#{JSON.pretty_generate(query)})"
         say_error e.message
