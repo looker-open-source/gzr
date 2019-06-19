@@ -129,7 +129,7 @@ gzr  group ls  --host foo.bar.mycompany.com
 
 #### group member_groups
 
-The command `gzr group member_group GROUP_ID` will list the group that have been added as
+The command `gzr group member_group GROUP_ID` will list the groups that have been added
 as members of the given group id.
 
 ```
@@ -143,7 +143,7 @@ $ gzr  group member_group 24  --host foo.bar.mycompany.com
 
 #### group member_users
 
-The command `gzr group member_users GROUP_ID` will list the users that have been added as
+The command `gzr group member_users GROUP_ID` will list the users that have been added
 as members of the given group id.
 
 ```
@@ -239,7 +239,7 @@ John Smith
 └── (d) Indicator Dashboard 2011
 ```
 
-The same arguments are accepted as by `space ls`.
+The same arguments are accepted as the `space ls` command.
 
 #### space cat
 
@@ -302,9 +302,9 @@ Looks and Dashboards will be located in the space directories in files named lik
 $ gzr space export 758 --host foo.bar.mycompany.com --dir .
 ```
 
-One interesting use of exporting a space into a directory tree is that it can be placed under version control
-using a tool like git. In that way user defined content changes can be tracked over time, and older versions
-of content can be restored if desired.
+One interesting consequence of exporting a space into a directory tree is that you can then place its
+contents under version control using a tool like git. In this way user defined content changes can be
+tracked over time, and older versions of content can be restored if desired.
 
 Alternately, the space can be exported into a `tar` style archive file with the switch `--tar FILENAME`.
 
@@ -366,8 +366,8 @@ $ gzr look rm 758 --host foo.bar.mycompany.com
 The `look import LOOK_FILE SPACE_ID` command is used to import a look from a file. If a look by the same
 name exists in that space then the `--force` switch must be used.
 
-Gazer will attempt to update the existing look of the same name, rather than create a new look. In
-that way the look id, schedules, permissions, etc. will be preserved.
+Gazer will attempt to update an existing look of the same name, rather than create a new look. In
+this way the look id, share URLs, schedules, permissions, etc. will be preserved.
 
 ```
 $ gzr look import Path/To/Look_123_My\ Look.json 123 --host foo.bar.mycompany.com --force
@@ -389,6 +389,82 @@ JSON data for dashboard
 The output document can be very long. Usually one will use the switch `--dir DIRECTORY` to
 save to a file. The file will be named `Dashboard_{DASHBOARD_ID}_{DASHBOARD_TITLE}.json`.
 
+The `--transform FILE` switch can be used to update the output document. This is useful to automatically
+perform tasks when promoting dashboards to upper environments, such as adding header or footer
+text tiles, replacing model or explore names, or updating filter expressions. The `FILE` parameter
+accepts a fully-qualified path to a JSON file describing the transformations to apply.
+
+```
+$ gzr dashboard cat 192 --host foo.bar.mycompany.com --transform path/to/transforms.json
+JSON data for dashboard modified by any transformations expressed in the transform file
+```
+
+The transform file uses a familiar JSON syntax. Within the file, you can define any number
+of `dashboard_elements` to append to your existing dashboard. Elements must be placed in either
+the top row or the bottom row of the existing dashboard, specified by the `position` attribute.
+You must also specify the `width` and `height` of your new elements.
+
+You can also define any number of `replacements`, which perform a simple find and replace
+within the JSON output based on the key-value pairs listed. This can be used to automatically
+replace model names or update filters for existing elements. You must escape double-quotes.
+
+Example JSON transform file:
+```
+{
+  "dashboard_elements": [
+    {
+      "position": "top",
+      "width": 12,
+      "height": 2,
+      "body_text": "Production Version of Dashboard (deployed 2019-06-18)",
+      "body_text_as_html": "<p>Production Version of Dashboard (deployed 2019-06-18)</p>",
+      "note_display": null,
+      "note_state": null,
+      "note_text": null,
+      "note_text_as_html": null,
+      "subtitle_text": "",
+      "title": null,
+      "title_hidden": false,
+      "title_text": "",
+      "type": "text"
+    },
+    {
+      "position": "bottom",
+      "width": 6,
+      "height": 2,
+      "body_text": "Please contact the Business Intelligence Help Desk for any issues with this dashboard",
+      "body_text_as_html": "<p>Please contact the Business Intelligence Help Desk for any issues with this dashboard</p>",
+      "note_display": null,
+      "note_state": null,
+      "note_text": null,
+      "note_text_as_html": null,
+      "subtitle_text": "",
+      "title": null,
+      "title_hidden": false,
+      "title_text": "",
+      "type": "text"
+    }
+  ],
+  "replacements": [
+    {
+      "\"model\": \"staging\",": "\"model\": \"production\","
+    },
+    {
+      "\"filter_expression\": \"not(is_null(${view.allowed_user}))\": "\"filter_expression\": \"${view.allowed_user} = _user_attributes['username']\","
+    }
+  ]
+}
+```
+| WARNING: You will not be able to overwrite dashboards that have been transformed! |
+| --- |
+
+In other words, you can&rsquo;t use the `--force` switch to replace a previously-transformed dashboard. Instead,
+you&rsquo;ll need to delete and recreate the dashboard. If you have stable content URLs enabled on your
+instance, the `slug` parameter ensures the URL for your dashboard won&rsquo;t change.
+
+This is because it is impossible to know the element IDs for elements that were added by the `--transform` operation,
+which makes it impossible to synchronize these elements in the future.
+
 #### dashboard rm
 
 The `dashboard rm DASHBOARD_ID` command is used to delete a dashboard.
@@ -399,13 +475,13 @@ $ gzr dashboard rm 192 --host foo.bar.mycompany.com
 
 #### dashboard import
 
-The `dashboard import DASHBAORD_FILE SPACE_ID` command is used to import a dashboard and
-its associated looks from a file. If a dashbaord or look by the same
+The `dashboard import DASHBOARD_FILE SPACE_ID` command is used to import a dashboard and
+its associated looks from a file. If a dashboard or look by the same
 name exists in that space then the `--force` switch must be used.
 
-Gazer will attempt to update the existing dashboard or look of the same name, rather than 
-create a new dashboard or look. In
-that way the id, schedules, permissions, etc. will be preserved.
+Gazer will attempt to update an existing dashboard or look of the same name,
+rather than create a new dashboard or look. In this way the id, share URLs,
+schedules, permissions, etc. will be preserved.
 
 ```
 $ gzr dashboard import Path/To/Dashboard_123_My\ Dash.json 123 --host foo.bar.mycompany.com --force
@@ -417,7 +493,7 @@ The command `gzr connection help` will show details about subcommands of the con
 
 #### connection ls
 
-The command `gzr connection ls` will list the connections that have been defined in the Looker instance.
+The command `gzr connection ls` will list the connections that exist in the Looker instance.
 
 ```
 $ gzr connection ls --host foo.bar.mycompany.com
@@ -492,7 +568,7 @@ The command `gzr model help` will show details about subcommands of the model co
 
 #### model ls
 
-The command `gzr model ls` will list the models that have been defined in the Looker instance.
+The command `gzr model ls` will list the models that exist in the Looker instance.
 
 ```
 $ gzr model ls --host foo.bar.mycompany.com

@@ -36,6 +36,8 @@ module Gzr
                            desc: 'Directory to store output file'
       method_option :plans,  type: :boolean,
                            desc: 'Include scheduled plans'
+      method_option :transform,  type: :string,
+                           desc: 'Fully-qualified path to a JSON file describing the transformations to apply'
       def cat(dashboard_id)
         if options[:help]
           invoke :help, ['cat']
