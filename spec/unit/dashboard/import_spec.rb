@@ -174,6 +174,8 @@ RSpec.describe Gzr::Commands::Dashboard::Import do
     mock_sdk = Object.new
     mock_sdk.define_singleton_method(:authenticated?) { true }
     mock_sdk.define_singleton_method(:logout) { }
+    mock_sdk.define_singleton_method(:operations) { operations }
+    mock_sdk.define_singleton_method(:swagger) { swagger }
     mock_sdk.define_singleton_method(:me) do |req|
       HashResponse.new(me_response_doc)
     end
@@ -210,12 +212,6 @@ RSpec.describe Gzr::Commands::Dashboard::Import do
       else
         []
       end
-    end
-    mock_sdk.define_singleton_method(:operations) do 
-      operations
-    end
-    mock_sdk.define_singleton_method(:swagger) do 
-      swagger
     end
     mock_sdk
   end
@@ -260,7 +256,7 @@ RSpec.describe Gzr::Commands::Dashboard::Import do
     command.instance_variable_set(:@sdk, mock_sdk)
 
     command.execute(output: output)
-    expect(output.string).to eq("Imported dashboard 500\n")
+    expect(output.string).to end_with("Imported dashboard 500\n")
   end
 
   it "executes `import` and succeeds when there is a duplicate slug" do
@@ -275,7 +271,7 @@ RSpec.describe Gzr::Commands::Dashboard::Import do
     command.instance_variable_set(:@sdk, mock_sdk(block_hash))
 
     command.execute(output: output)
-    expect(output.string).to eq("Imported dashboard 501\n")
+    expect(output.string).to end_with("Imported dashboard 501\n")
   end
 
   it "executes `import` and succeeds with force when there is another dashboard of same name" do
@@ -286,6 +282,6 @@ RSpec.describe Gzr::Commands::Dashboard::Import do
     command.instance_variable_set(:@sdk, mock_sdk)
 
     command.execute(output: output)
-    expect(output.string).to eq("Imported dashboard 500\n")
+    expect(output.string).to end_with("Imported dashboard 500\n")
   end
 end
