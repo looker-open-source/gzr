@@ -54,6 +54,7 @@ RSpec.describe Gzr::Commands::Dashboard::Import do
       :description=> "Description of the Dash",
       :slug=> "123xyz",
       :space_id=> 1,
+      :deleted=> false,
       :dashboard_filters=>[],
       :dashboard_elements=>[],
       :dashboard_layouts=>[]
@@ -201,6 +202,13 @@ RSpec.describe Gzr::Commands::Dashboard::Import do
         [HashResponse.new(dash_response_doc)]
       elsif req&.fetch(:slug,nil) == dash_response_doc[:slug] && !req.has_key?(:space_id)
         [HashResponse.new(dash_response_doc)]
+      elsif "DeletedSlug".eql?(req&.fetch(:slug,nil)) && req[:deleted]
+        doc = dash_response_doc.dup
+        doc[:id] = 201
+        doc[:space_id] = 2
+        doc[:slug] = "DeletedSlug"
+        doc[:deleted] = true
+        [HashResponse.new(doc)]
       elsif "dupe".eql?(req&.fetch(:slug,nil)) && !req.has_key?(:space_id)
         doc = dash_response_doc.dup
         doc[:id] = 201
@@ -238,6 +246,16 @@ RSpec.describe Gzr::Commands::Dashboard::Import do
     expect { command.execute(output: output) }.to raise_error(/Use --force/)
   end
 
+  it "executes `import` and gets exception when there is a deleted dashboard of different name but same slug" do
+    output = StringIO.new
+    options = {}
+    command = Gzr::Commands::Dashboard::Import.new(StringIO.new('{ "id": "101", "title": "New Dash", "slug": "DeletedSlug", "description": "Description of the Dash", "dashboard_filters": [], "dashboard_elements": [], "dashboard_layouts": [] }'), 1, options)
+
+    command.instance_variable_set(:@sdk, mock_sdk)
+
+    expect { command.execute(output: output) }.to raise_error(/Use --force/)
+  end
+
   it "executes `import` and gets exception when there is another dashboard of same name" do
     output = StringIO.new
     options = {}
@@ -259,6 +277,23 @@ RSpec.describe Gzr::Commands::Dashboard::Import do
     expect(output.string).to end_with("Imported dashboard 500\n")
   end
 
+  it "executes `import` and succeeds with force when there is a deleted dashboard of different name but same slug" do
+    output = StringIO.new
+    options = {:force=>true}
+    command = Gzr::Commands::Dashboard::Import.new(StringIO.new('{ "id": "101", "title": "New Dash", "slug": "DeletedSlug", "description": "Description of the Dash", "dashboard_filters": [], "dashboard_elements": [], "dashboard_layouts": [] }'), 1, options)
+
+    block_hash = {:update_dashboard =>
+      Proc.new do |id,req|
+        expect(req).not_to include(:deleted => true)
+      end
+    }
+    command.instance_variable_set(:@sdk, mock_sdk(block_hash))
+
+    command.execute(output: output)
+    expect(output.string).to end_with("Imported dashboard 201\n")
+  end
+
+
   it "executes `import` and succeeds when there is a duplicate slug" do
     output = StringIO.new
     options = {}
@@ -266,6 +301,7 @@ RSpec.describe Gzr::Commands::Dashboard::Import do
     block_hash = {:create_dashboard =>
       Proc.new do |req|
         expect(req).not_to include(:slug => "dupe")
+        expect(req).not_to include(:deleted => true)
       end
     }
     command.instance_variable_set(:@sdk, mock_sdk(block_hash))

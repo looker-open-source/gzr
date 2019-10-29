@@ -93,7 +93,7 @@ module Gzr
           # try to find dashboard by slug in target space
           existing_dashboard = search_dashboards_by_slug(source[:slug], target_space_id).fetch(0,nil) if source[:slug]
           # check for dash of same title in target space
-          title_used = search_dashboards_by_title(source[:title], target_space_id).fetch(0,nil)
+          title_used = search_dashboards_by_title(source[:title], target_space_id).select {|d| !d[:deleted] }.fetch(0,nil)
 
           # If there is no match by slug in target space or no slug given, then we match by title
           existing_dashboard ||= title_used
@@ -111,6 +111,7 @@ module Gzr
 
           if slug_used && !same_slug then
             say_warning "slug #{slug_used.slug} already used for dashboard #{slug_used.title} in space #{slug_used.space_id}", output: output
+            say_warning("That dashboard is in the 'Trash' but not fully deleted yet", output: output) if slug_used.deleted
             say_warning "dashboard will be imported with new slug", output: output
           end
 
@@ -118,16 +119,15 @@ module Gzr
             if title_used && !same_title then
               raise Gzr::CLI::Error, "Dashboard #{source[:title]} already exists in space #{target_space_id}\nDelete it before trying to upate another dashboard to have that title."
             end
-            if @options[:force] then
-              say_ok "Modifying existing dashboard #{existing_dashboard.id} #{existing_dashboard[:title]} in space #{target_space_id}", output: output
-              new_dash = source.select do |k,v|
-                (keys_to_keep('update_dashboard') - [:space_id,:user_id,:slug]).include? k
-              end
-              new_dash[:slug] = source[:slug] unless slug_used && !same_slug
-              return update_dashboard(existing_dashboard.id,new_dash)
-            else
-              raise Gzr::CLI::Error, "Dashboard #{existing_dashboard[:title]} with slug #{existing_dashboard[:slug]} already exists in space #{target_space_id}\nUse --force if you want to overwrite it"
+            raise Gzr::CLI::Error, "Dashboard #{existing_dashboard[:title]} with slug #{existing_dashboard[:slug]} already exists in space #{target_space_id}\nUse --force if you want to overwrite it" unless @options[:force]
+
+            say_ok "Modifying existing dashboard #{existing_dashboard.id} #{existing_dashboard[:title]} in space #{target_space_id}", output: output
+            new_dash = source.select do |k,v|
+              (keys_to_keep('update_dashboard') - [:space_id,:user_id,:slug]).include? k
             end
+            new_dash[:slug] = source[:slug] unless slug_used
+            new_dash[:deleted] = false if existing_dashboard[:deleted]
+            return update_dashboard(existing_dashboard.id,new_dash)
           else
             new_dash = source.select do |k,v|
               (keys_to_keep('create_dashboard') - [:space_id,:user_id,:slug]).include? k

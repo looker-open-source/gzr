@@ -50,11 +50,13 @@ module Gzr
     end
 
     def search_dashboards_by_slug(slug, space_id=nil)
-      data = nil
+      data = []
       begin
         req = { :slug => slug }
         req[:space_id] = space_id if space_id 
         data = @sdk.search_dashboards(req)
+        req[:deleted] = true
+        data = @sdk.search_dashboards(req) if data.empty?
       rescue LookerSDK::Error => e
         say_error "Error search_dashboards_by_slug(#{JSON.pretty_generate(req)})"
         say_error e.message
@@ -64,11 +66,13 @@ module Gzr
     end
 
     def search_dashboards_by_title(title, space_id=nil)
-      data = nil
+      data = []
       begin
         req = { :title => title }
         req[:space_id] = space_id if space_id 
         data = @sdk.search_dashboards(req)
+        req[:deleted] = true
+        data = @sdk.search_dashboards(req) if data.empty?
       rescue LookerSDK::Error => e
         say_error "Error search_dashboards_by_title(#{JSON.pretty_generate(req)})"
         say_error e.message
