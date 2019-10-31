@@ -136,7 +136,7 @@ module Gzr
         new_look = source.select do |k,v|
           (keys_to_keep('update_look') - [:space_id,:folder_id,:user_id,:query_id,:slug]).include? k
         end
-          new_look[:slug] = source[:slug] unless slug_used
+        new_look[:slug] = source[:slug] if source[:slug] && !slug_used 
           new_look[:deleted] = false if existing_look[:deleted]
           new_look[:query_id] = query_id
           return update_look(existing_look.id,new_look)

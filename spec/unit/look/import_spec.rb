@@ -460,4 +460,56 @@ RSpec.describe Gzr::Commands::Look::Import do
 
     expect { command.execute(output: output) }.to raise_error(/Use --force/)
   end
+
+  it "executes `import` command with conflicting name and succeeds with force flag" do
+    output = StringIO.new
+    file = nil
+    options = {:force=>true}
+
+    command = Gzr::Commands::Look::Import.new(StringIO.new( <<-LOOK
+      {
+        "id": 198,
+        "query_id": 90961,
+        "title": "Daily Profit",
+        "space_id": "1",
+        "query": {
+          "id": 90961,
+          "view": "order_items",
+          "fields": [
+            "orders.created_date",
+            "orders.total_profit"
+          ],
+          "sorts": [
+            "orders.created_date desc"
+          ],
+          "limit": "500",
+          "column_limit": "50",
+          "total": null,
+          "row_total": null,
+          "model": "ecommerce"
+        },
+        "model": {
+          "id": "ecommerce",
+          "label": "Ecommerce"
+        },
+        "deleted": false,
+        "public": null
+      }
+    LOOK
+    ), 1, options)
+
+    block_hash = {:update_look =>
+      Proc.new do |i,req|
+        expect(i).to eq(31415)
+        expect(req).not_to include(:deleted => true)
+        expect(req).not_to include(:folder_id)
+        expect(req).not_to include(:slug)
+      end
+    }
+    command.instance_variable_set(:@sdk, mock_sdk(block_hash))
+
+    command.execute(output: output)
+
+    expect(output.string).to end_with("Imported look 31415\n")
+  end
 end
