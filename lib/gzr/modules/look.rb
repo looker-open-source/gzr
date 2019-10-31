@@ -36,11 +36,13 @@ module Gzr
     end
 
     def search_looks_by_slug(slug, space_id=nil)
-      data = nil
+      data = []
       begin
         req = { :slug => slug }
         req[:space_id] = space_id if space_id 
         data = @sdk.search_looks(req)
+        req[:deleted] = true
+        data = @sdk.search_looks(req) if data.empty?
       rescue LookerSDK::Error => e
         say_error "Error search_looks_by_slug(#{JSON.pretty_generate(req)})"
         say_error e.message
@@ -50,11 +52,13 @@ module Gzr
     end
 
     def search_looks_by_title(title, space_id=nil)
-      data = nil
+      data = []
       begin
         req = { :title => title }
         req[:space_id] = space_id if space_id 
         data = @sdk.search_looks(req)
+        req[:deleted] = true
+        data = @sdk.search_looks(req) if data.empty?
       rescue LookerSDK::Error => e
         say_error "Error search_looks_by_title(#{JSON.pretty_generate(req)})"
         say_error e.message
@@ -97,44 +101,55 @@ module Gzr
       data
     end
 
-    def upsert_look(user_id, query_id, space_id, source_look)
-      existing_look = search_looks_by_title(source_look[:title], space_id).fetch(0,nil)
-      slug_used = search_looks_by_slug(source_look[:slug]).fetch(0,nil) if source_look[:slug]
+    def upsert_look(user_id, query_id, space_id, source, output: $stdout)
+      # try to find look by slug in target space
+      existing_look = search_looks_by_slug(source[:slug], space_id).fetch(0,nil) if source[:slug]
+      # check for look of same title in target space
+      title_used = search_looks_by_title(source[:title], space_id).fetch(0,nil)
 
-      if slug_used then
-        if existing_look then
-          if !(existing_look.space_id == slug_used.space_id && existing_look.title == slug_used.title) then
-            say_warning "slug #{slug_used.slug} already used for look #{slug_used.title} in space #{slug_used.space_id}"
-            say_warning "look will be imported with new slug"
-          end
-        else
-          say_warning "slug #{slug_used.slug} already used for look #{slug_used.title} in space #{slug_used.space_id}"
-          say_warning "look will be imported with new slug"
-        end
+      # If there is no match by slug in target space or no slug given, then we match by title
+      existing_look ||= title_used
+
+      # same_title is now a flag indicating that there is already a look in the same space with
+      # that title, and it is the one we are updating.
+      same_title = (title_used&.fetch(:id,nil) == existing_look&.fetch(:id,nil))
+
+      # check if the slug is used by any look
+      slug_used = search_looks_by_slug(source[:slug]).fetch(0,nil) if source[:slug]
+
+      # same_slug is now a flag indicating that there is already a look with
+      # that slug, but it is the one we are updating.
+      same_slug = (slug_used&.fetch(:id,nil) == existing_look&.fetch(:id,nil))
+
+      if slug_used && !same_slug then
+        say_warning "slug #{slug_used.slug} already used for look #{slug_used.title} in space #{slug_used.space_id}", output: output
+        say_warning("That look is in the 'Trash' but not fully deleted yet", output: output) if slug_used.deleted
+        say_warning "look will be imported with new slug", output: output
       end
 
       if existing_look then
-        if @options[:force] then
-          say_ok "Modifying existing Look #{source_look[:title]} in space #{space_id}"
-          new_look = source_look.select do |k,v|
-            (keys_to_keep('update_look') - [:space_id,:user_id,:query_id,:slug]).include? k
-          end
-          new_look[:slug] = source_look[:slug] unless slug_used
+        if title_used && !same_title then
+          raise Gzr::CLI::Error, "Look #{source[:title]} already exists in space #{space_id}\nDelete it before trying to upate another Look to have that title."
+        end
+        raise Gzr::CLI::Error, "Look #{existing_look[:title]} with slug #{existing_look[:slug]} already exists in space #{space_id}\nUse --force if you want to overwrite it" unless @options[:force]
+        say_ok "Modifying existing Look #{existing_look.id} #{existing_look.title} in space #{space_id}", output: output
+        new_look = source.select do |k,v|
+          (keys_to_keep('update_look') - [:space_id,:folder_id,:user_id,:query_id,:slug]).include? k
+        end
+          new_look[:slug] = source[:slug] unless slug_used
+          new_look[:deleted] = false if existing_look[:deleted]
           new_look[:query_id] = query_id
           return update_look(existing_look.id,new_look)
         else
-          raise Gzr::CLI::Error, "Look #{source_look[:title]} already exists in space #{space_id}\nUse --force if you want to overwrite it"
-        end
-      else
-        new_look = source_look.select do |k,v|
-          (keys_to_keep('create_look') - [:space_id,:user_id,:query_id,:slug]).include? k
-        end
-        new_look[:slug] = source_look[:slug] unless slug_used
-        new_look[:query_id] = query_id
-        new_look[:user_id] = user_id
-        new_look[:space_id] = space_id
+          new_look = source.select do |k,v|
+            (keys_to_keep('create_look') - [:space_id,:folder_id,:user_id,:query_id,:slug]).include? k
+          end
+          new_look[:slug] = source[:slug] unless slug_used
+          new_look[:query_id] = query_id
+          new_look[:user_id] = user_id
+          new_look[:space_id] = space_id
 
-        return create_look(new_look)
+          return create_look(new_look)
       end
     end
 

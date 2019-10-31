@@ -21,429 +21,443 @@
 
 require 'gzr/commands/look/import'
 
+module Gzr
+  class CLI
+    Error = Class.new(StandardError)
+  end
+end
+
+class HashResponse
+  def initialize(doc)
+    @doc = doc || {}
+  end
+
+  def to_attrs
+    @doc
+  end
+
+  def respond_to?(m, include_private = false)
+    m = m.to_sym if m.instance_of? String
+    @doc.respond_to?(m) || @doc.has_key?(m)
+  end
+
+  def method_missing(m, *args, &block)
+    m = m.to_sym if m.instance_of? String
+    if @doc.respond_to?(m)
+      @doc.send(m, *args, &block)
+    else
+      @doc.fetch(m,nil)
+    end
+  end
+end
+
 RSpec.describe Gzr::Commands::Look::Import do
-  it "executes `import` command successfully" do
-    require 'sawyer'
-    me_response_doc = { :id=>1000, :first_name=>"John", :last_name=>"Jones", :email=>"jjones@example.com" }
-    mock_me_response = double(Sawyer::Resource, me_response_doc)
-    allow(mock_me_response).to receive(:to_attrs).and_return(me_response_doc)
+  me_response_doc = { :id=>1000, :first_name=>"John", :last_name=>"Jones", :email=>"jjones@example.com" }.freeze
 
-    query_response_doc = {
-      :id=>555
+  query_response_doc = { :id=>555 }.freeze
+
+  look_response_doc = {
+    :id=>31415,
+    :title=>"Daily Profit",
+    :description=>"Total profit by day for the last 100 days",
+    :query_id=>555,
+    :user_id=>1000,
+    :space_id=>1,
+    :slug=>"123xyz"
+  }.freeze
+
+  operations = {
+    "create_query"=> {
+      :info=>{
+        :parameters=>[
+          {
+            :in=>"body",
+            :schema=>{ :$ref=>"#/definitions/Query" }
+          }
+        ]
+      }
+    },
+    "create_look"=>{
+      :info=>{
+        :parameters=>[
+          {
+            :in=>"body",
+            :schema=>{ :$ref=>"#/definitions/Look" }
+          }
+        ]
+      }
     }
-    mock_query_response = double(Sawyer::Resource, query_response_doc)
-    allow(mock_query_response).to receive(:to_attrs).and_return(query_response_doc)
+  }.freeze
 
-    look_response_doc = {
-      :id=>31415,
-      :title=>"Daily Profit",
-      :description=>"Total profit by day for the last 100 days",
-      :query_id=>555,
-      :user_id=>1000,
-      :space_id=>1
+  swagger = JSON.parse(<<-SWAGGER, {:symbolize_names => true}).freeze
+    {
+      "definitions": {
+        "Query": {
+          "properties": {
+            "model": {
+              "type": "string",
+              "description": "Model",
+              "x-looker-nullable": false
+            },
+            "view": {
+              "type": "string",
+              "description": "View",
+              "x-looker-nullable": false
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Fields",
+              "x-looker-nullable": true
+            },
+            "pivots": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Pivots",
+              "x-looker-nullable": true
+            },
+            "fill_fields": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Fill Fields",
+              "x-looker-nullable": true
+            },
+            "filters": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Filters",
+              "x-looker-nullable": true
+            },
+            "filter_expression": {
+              "type": "string",
+              "description": "Filter Expression",
+              "x-looker-nullable": true
+            },
+            "sorts": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "x-looker-nullable": true
+            },
+            "limit": {
+              "type": "string",
+              "description": "Limit",
+              "x-looker-nullable": true
+            },
+            "column_limit": {
+              "type": "string",
+              "description": "Column Limit",
+              "x-looker-nullable": true
+            },
+            "total": {
+              "type": "boolean",
+              "description": "Total",
+              "x-looker-nullable": false
+            },
+            "row_total": {
+              "type": "string",
+              "description": "Raw Total",
+              "x-looker-nullable": true
+            },
+            "runtime": {
+              "type": "number",
+              "format": "double",
+              "description": "Runtime",
+              "x-looker-nullable": true
+            },
+            "vis_config": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string",
+                "format": "any"
+              },
+              "x-looker-nullable": true
+            },
+            "filter_config": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string",
+                "format": "any"
+              },
+              "x-looker-nullable": true
+            },
+            "visible_ui_sections": {
+              "type": "string",
+              "description": "Visible UI Sections",
+              "x-looker-nullable": true
+            },
+            "dynamic_fields": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "any"
+              },
+              "description": "Dynamic Fields",
+              "x-looker-nullable": true
+            },
+            "client_id": {
+              "type": "string",
+              "x-looker-nullable": true
+            },
+            "query_timezone": {
+              "type": "string",
+              "description": "Query Timezone",
+              "x-looker-nullable": true
+            }
+          },
+          "x-looker-status": "stable",
+          "required": [
+            "model",
+            "view"
+          ]
+        },
+        "Look": {
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Look Title",
+              "x-looker-nullable": true
+            },
+            "query_id": {
+              "type": "integer",
+              "format": "int64",
+              "description": "Query Id",
+              "x-looker-nullable": true
+            },
+            "description": {
+              "type": "string",
+              "description": "Description",
+              "x-looker-nullable": true
+            },
+            "user_id": {
+              "type": "integer",
+              "format": "int64",
+              "description": "User Id",
+              "x-looker-nullable": true
+            },
+            "space_id": {
+              "type": "string",
+              "description": "Space Id",
+              "x-looker-nullable": true
+            }
+          },
+          "x-looker-status": "beta"
+        }
+      }
     }
-    mock_look_response = double(Sawyer::Resource, look_response_doc)
-    allow(mock_look_response).to receive(:to_attrs).and_return(look_response_doc)
+    SWAGGER
 
+  define_method :mock_sdk do |block_hash={}|
     mock_sdk = Object.new
     mock_sdk.define_singleton_method(:authenticated?) { true }
     mock_sdk.define_singleton_method(:logout) { }
+    mock_sdk.define_singleton_method(:operations) { operations }
+    mock_sdk.define_singleton_method(:swagger) { swagger }
     mock_sdk.define_singleton_method(:me) do |req|
-      return mock_me_response
+      HashResponse.new(me_response_doc)
     end
-    mock_sdk.define_singleton_method(:search_looks) do |req|
-      return []
-    end
-    mock_sdk.define_singleton_method(:operations) do 
-      {
-        "create_query"=> {
-          :info=>{
-            :parameters=>[
-              {
-                :in=>"body",
-                :schema=>{ :$ref=>"#/definitions/Query" }
-              }
-            ]
-          }
-        },
-        "create_look"=>{
-          :info=>{
-            :parameters=>[
-              {
-                :in=>"body",
-                :schema=>{ :$ref=>"#/definitions/Look" }
-              }
-            ]
-          }
-        }
-      }
-    end
-    mock_sdk.define_singleton_method(:swagger) do 
-      JSON.parse <<-SWAGGER, {:symbolize_names => true}
-{
-  "definitions": {
-    "Query": {
-      "properties": {
-        "model": {
-          "type": "string",
-          "description": "Model",
-          "x-looker-nullable": false
-        },
-        "view": {
-          "type": "string",
-          "description": "View",
-          "x-looker-nullable": false
-        },
-        "fields": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Fields",
-          "x-looker-nullable": true
-        },
-        "pivots": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Pivots",
-          "x-looker-nullable": true
-        },
-        "fill_fields": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Fill Fields",
-          "x-looker-nullable": true
-        },
-        "filters": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "Filters",
-          "x-looker-nullable": true
-        },
-        "filter_expression": {
-          "type": "string",
-          "description": "Filter Expression",
-          "x-looker-nullable": true
-        },
-        "sorts": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "x-looker-nullable": true
-        },
-        "limit": {
-          "type": "string",
-          "description": "Limit",
-          "x-looker-nullable": true
-        },
-        "column_limit": {
-          "type": "string",
-          "description": "Column Limit",
-          "x-looker-nullable": true
-        },
-        "total": {
-          "type": "boolean",
-          "description": "Total",
-          "x-looker-nullable": false
-        },
-        "row_total": {
-          "type": "string",
-          "description": "Raw Total",
-          "x-looker-nullable": true
-        },
-        "runtime": {
-          "type": "number",
-          "format": "double",
-          "description": "Runtime",
-          "x-looker-nullable": true
-        },
-        "vis_config": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string",
-            "format": "any"
-          },
-          "x-looker-nullable": true
-        },
-        "filter_config": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string",
-            "format": "any"
-          },
-          "x-looker-nullable": true
-        },
-        "visible_ui_sections": {
-          "type": "string",
-          "description": "Visible UI Sections",
-          "x-looker-nullable": true
-        },
-        "dynamic_fields": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "format": "any"
-          },
-          "description": "Dynamic Fields",
-          "x-looker-nullable": true
-        },
-        "client_id": {
-          "type": "string",
-          "x-looker-nullable": true
-        },
-        "query_timezone": {
-          "type": "string",
-          "description": "Query Timezone",
-          "x-looker-nullable": true
-        }
-      },
-      "x-looker-status": "stable",
-      "required": [
-        "model",
-        "view"
-      ]
-    },
-    "Look": {
-      "properties": {
-        "title": {
-          "type": "string",
-          "description": "Look Title",
-          "x-looker-nullable": true
-        },
-        "query_id": {
-          "type": "integer",
-          "format": "int64",
-          "description": "Query Id",
-          "x-looker-nullable": true
-        },
-        "description": {
-          "type": "string",
-          "description": "Description",
-          "x-looker-nullable": true
-        },
-        "user_id": {
-          "type": "integer",
-          "format": "int64",
-          "description": "User Id",
-          "x-looker-nullable": true
-        },
-        "space_id": {
-          "type": "string",
-          "description": "Space Id",
-          "x-looker-nullable": true
-        }
-      },
-      "x-looker-status": "beta"
-    }
-  }
-}
-      SWAGGER
-    end
-
     mock_sdk.define_singleton_method(:create_query) do |req|
-      #$stderr.puts JSON.pretty_generate req
-      return mock_query_response
+      if block_hash && block_hash[:create_query]
+        block_hash[:create_query].call(req)
+      end
+      doc = query_response_doc.dup
+      doc[:id] += 1
+      HashResponse.new(doc)
     end
     mock_sdk.define_singleton_method(:create_look) do |req|
-      #$stderr.puts JSON.pretty_generate req
-      return mock_look_response
+      if block_hash && block_hash[:create_look]
+        block_hash[:create_look].call(req)
+      end
+      doc = look_response_doc.dup
+      doc.merge!(req)
+      doc[:id] += 1
+      HashResponse.new(doc)
     end
+    mock_sdk.define_singleton_method(:update_look) do |id,req|
+      if block_hash && block_hash[:update_look]
+        block_hash[:update_look].call(id,req)
+      end
+      doc = look_response_doc.dup
+      doc.merge!(req)
+      doc[:id] = id
+      HashResponse.new(doc)
+    end
+    mock_sdk.define_singleton_method(:search_looks) do |req|
+      if req&.fetch(:slug,nil) == look_response_doc[:slug] && req&.fetch(:space_id,nil) == look_response_doc[:space_id]
+        [HashResponse.new(look_response_doc)]
+      elsif req&.fetch(:slug,nil) == look_response_doc[:slug] && !req.has_key?(:space_id)
+        [HashResponse.new(look_response_doc)]
+      elsif "DeletedSlug".eql?(req&.fetch(:slug,nil)) && req[:deleted]
+        doc = look_response_doc.dup
+        doc[:id] = 201
+        doc[:space_id] = 2
+        doc[:slug] = "DeletedSlug"
+        doc[:deleted] = true
+        [HashResponse.new(doc)]
+      elsif "dupe".eql?(req&.fetch(:slug,nil)) && !req.has_key?(:space_id)
+        doc = look_response_doc.dup
+        doc[:id] = 201
+        doc[:space_id] = 2
+        doc[:slug] = "dupe"
+        [HashResponse.new(doc)]
+      elsif req&.fetch(:title,nil) == look_response_doc[:title] && req&.fetch(:space_id,nil) == look_response_doc[:space_id]
+        [HashResponse.new(look_response_doc)]
+      else
+        []
+      end
+    end
+    mock_sdk
+  end
+
+  it "executes `import` command successfully" do
     output = StringIO.new
     file = nil
     options = {}
 
     command = Gzr::Commands::Look::Import.new(StringIO.new( <<-LOOK
-{
-  "id": 198,
-  "content_metadata_id": 1155,
-  "view_count": 13,
-  "favorite_count": 0,
-  "last_accessed_at": "2018-02-05 20:33:54 +0000",
-  "user": {
-    "id": 696
-  },
-  "user_id": 696,
-  "query_id": 90961,
-  "title": "Daily Profit",
-  "created_at": "2015-04-09 18:53:26 +0000",
-  "updated_at": "2018-04-30 19:38:23 +0000",
-  "description": "Total profit by day for the last 100 days",
-  "short_url": "/looks/198",
-  "space_id": 673,
-  "space": {
-    "id": 673,
-    "creator_id": 696,
-    "name": "**Company-Wide**",
-    "content_metadata_id": 28,
-    "is_personal": false,
-    "is_shared_root": false,
-    "is_users_root": false,
-    "is_personal_descendant": false,
-    "is_embed": false,
-    "is_embed_shared_root": false,
-    "is_embed_users_root": false,
-    "external_id": null,
-    "is_user_root": false,
-    "is_root": false,
-    "can": {
-      "index": true,
-      "show": true,
-      "create": true,
-      "see_admin_spaces": true,
-      "update": true,
-      "destroy": true,
-      "move_content": true,
-      "edit_content": true
-    }
-  },
-  "last_updater_id": 943,
-  "deleted_at": null,
-  "deleter_id": null,
-  "is_run_on_load": true,
-  "query": {
-    "id": 90961,
-    "view": "order_items",
-    "fields": [
-      "orders.created_date",
-      "orders.total_profit"
-    ],
-    "pivots": null,
-    "fill_fields": null,
-    "filters": {
-      "orders.created_date": "100 days",
-      "order_items.date_filter": "true"
-    },
-    "filter_expression": null,
-    "sorts": [
-      "orders.created_date desc"
-    ],
-    "limit": "500",
-    "column_limit": "50",
-    "total": null,
-    "row_total": null,
-    "runtime": 0.6258010864257812,
-    "vis_config": {
-      "type": "looker_line",
-      "show_null_points": false,
-      "show_y_axis_labels": true,
-      "show_y_axis_ticks": true,
-      "y_axis_gridlines": true,
-      "y_axis_combined": true,
-      "stacking": "",
-      "show_value_labels": false,
-      "x_axis_gridlines": false,
-      "show_view_names": true,
-      "show_x_axis_label": true,
-      "show_x_axis_ticks": true,
-      "x_axis_scale": "auto",
-      "point_style": "none",
-      "interpolation": "linear",
-      "discontinuous_nulls": false,
-      "x_axis_datetime_tick_count": 10,
-      "label_density": 25,
-      "legend_position": "center",
-      "limit_displayed_rows": false,
-      "y_axis_tick_density": "default",
-      "y_axis_tick_density_custom": 5,
-      "y_axis_scale_mode": "linear",
-      "hidden_fields": [
-
-      ],
-      "y_axes": [
-
-      ]
-    },
-    "filter_config": {
-      "orders.created_date": [
-        {
-          "type": "past",
-          "values": [
-            {
-              "constant": "100",
-              "unit": "day"
-            },
-            {
-            }
+      {
+        "id": 198,
+        "query_id": 90961,
+        "title": "New Look",
+        "query": {
+          "id": 90961,
+          "view": "order_items",
+          "fields": [
+            "orders.created_date",
+            "orders.total_profit"
           ],
-          "id": 0
-        }
-      ],
-      "order_items.date_filter": [
-        {
-          "type": "advanced",
-          "values": [
-            {
-              "constant": "true"
-            },
-            {
-            }
+          "sorts": [
+            "orders.created_date desc"
           ],
-          "id": 0
-        }
-      ]
-    },
-    "visible_ui_sections": null,
-    "client_id": "1ehnZEi7EIjlGyaIijQh1S",
-    "query_timezone": "America/Los_Angeles",
-    "has_table_calculations": false,
-    "model": "ecommerce",
-    "can": {
-      "run": true,
-      "see_results": true,
-      "explore": true,
-      "create": true,
-      "show": true,
-      "cost_estimate": true,
-      "index": true,
-      "see_lookml": true,
-      "see_derived_table_lookml": true,
-      "see_sql": true,
-      "generate_drill_links": true,
-      "download": true,
-      "render": true
+          "limit": "500",
+          "column_limit": "50",
+          "total": null,
+          "row_total": null,
+          "model": "ecommerce"
+        },
+        "model": {
+          "id": "ecommerce",
+          "label": "Ecommerce"
+        },
+        "deleted": false,
+        "public": null
+      }
+    LOOK
+    ), 1, options)
+
+    block_hash = {:create_look =>
+      Proc.new do |req|
+        expect(req).not_to include(:deleted => true)
+        expect(req).to include(:space_id => 1)
+        expect(req).not_to include(:folder_id)
+      end
     }
-  },
-  "model": {
-    "id": "ecommerce",
-    "label": "Ecommerce"
-  },
-  "content_favorite_id": null,
-  "last_viewed_at": null,
-  "deleted": false,
-  "public": null,
-  "can": {
-    "download": true,
-    "index": true,
-    "show": true,
-    "copy": true,
-    "run": true,
-    "create": true,
-    "explore": true,
-    "move": true,
-    "update": true,
-    "destroy": true,
-    "recover": true,
-    "update_publicity": true,
-    "show_errors": true,
-    "find_and_replace": true,
-    "schedule": true,
-    "render": true
-  }
-}
+    command.instance_variable_set(:@sdk, mock_sdk(block_hash))
+
+    command.execute(output: output)
+
+    expect(output.string).to eq("Imported look 31416\n")
+  end
+
+  it "executes `import` command successfully with conflicting slug" do
+    output = StringIO.new
+    file = nil
+    options = {}
+
+    command = Gzr::Commands::Look::Import.new(StringIO.new( <<-LOOK
+      {
+        "id": 198,
+        "slug": "dupe",
+        "query_id": 90961,
+        "title": "New Look",
+        "query": {
+          "id": 90961,
+          "view": "order_items",
+          "fields": [
+            "orders.created_date",
+            "orders.total_profit"
+          ],
+          "sorts": [
+            "orders.created_date desc"
+          ],
+          "limit": "500",
+          "column_limit": "50",
+          "total": null,
+          "row_total": null,
+          "model": "ecommerce"
+        },
+        "model": {
+          "id": "ecommerce",
+          "label": "Ecommerce"
+        },
+        "deleted": false,
+        "public": null
+      }
+    LOOK
+    ), 1, options)
+
+    block_hash = {:create_look =>
+      Proc.new do |req|
+        expect(req).not_to include(:deleted => true)
+        expect(req).to include(:space_id => 1)
+        expect(req).not_to include(:folder_id)
+        expect(req).not_to include(:slug)
+      end
+    }
+    command.instance_variable_set(:@sdk, mock_sdk(block_hash))
+
+    command.execute(output: output)
+
+    expect(output.string).to end_with("Imported look 31416\n")
+  end
+
+  it "executes `import` command and gets exception with conflicting name" do
+    output = StringIO.new
+    file = nil
+    options = {}
+
+    command = Gzr::Commands::Look::Import.new(StringIO.new( <<-LOOK
+      {
+        "id": 198,
+        "query_id": 90961,
+        "title": "Daily Profit",
+        "query": {
+          "id": 90961,
+          "view": "order_items",
+          "fields": [
+            "orders.created_date",
+            "orders.total_profit"
+          ],
+          "sorts": [
+            "orders.created_date desc"
+          ],
+          "limit": "500",
+          "column_limit": "50",
+          "total": null,
+          "row_total": null,
+          "model": "ecommerce"
+        },
+        "model": {
+          "id": "ecommerce",
+          "label": "Ecommerce"
+        },
+        "deleted": false,
+        "public": null
+      }
     LOOK
     ), 1, options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
 
-    command.execute(output: output)
-
-    expect(output.string).to eq("Imported look 31415\n")
+    expect { command.execute(output: output) }.to raise_error(/Use --force/)
   end
 end
