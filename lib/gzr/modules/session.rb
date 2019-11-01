@@ -33,16 +33,16 @@ module Gzr
       @pastel ||= Pastel.new
     end
 
-    def say_ok(data)
-      puts pastel.green data
+    def say_ok(data, output: $stdout)
+      output.puts pastel.green data
     end
 
-    def say_warning(data)
-      puts pastel.yellow data
+    def say_warning(data, output: $stdout)
+      output.puts pastel.yellow data
     end
 
-    def say_error(data)
-      puts pastel.red data
+    def say_error(data, output: $stdout)
+      output.puts pastel.red data
     end
 
     def v3_1_available?
