@@ -30,6 +30,7 @@ Options:
   -h, [--help], [--no-help]    # Display usage information
       [--dir=DIR]              # Directory to store output file
       [--plans], [--no-plans]  # Include scheduled plans
+      [--transform=TRANSFORM]  # Fully-qualified path to a JSON file describing the transformations to apply
 
 Output the JSON representation of a dashboard to the screen or a file
     OUT

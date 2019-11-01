@@ -86,6 +86,24 @@ RSpec.describe Gzr::Commands::Look::Import do
           }
         ]
       }
+    },
+    "update_look"=>{
+      :info=>{
+        :parameters=>[
+          {
+              "name": "look_id",
+              "in": "path",
+              "description": "Id of look",
+              "required": true,
+              "type": "integer",
+              "format": "int64"
+          },
+          {
+            :in=>"body",
+            :schema=>{ :$ref=>"#/definitions/Look" }
+          }
+        ]
+      }
     }
   }.freeze
 
