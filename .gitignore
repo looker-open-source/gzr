@@ -13,3 +13,6 @@
 *~
 *.swp
 *.json
+gzr.code-workspace
+/output/
+scratch
