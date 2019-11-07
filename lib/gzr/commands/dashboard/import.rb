@@ -197,9 +197,15 @@ module Gzr
             end
             )
             (element[:query_id],element[:look_id],element[:merge_result_id]) = process_dashboard_element(new_element) 
+            if existing_element[:result_maker_id] && !new_element[:result_maker_id]
+              element[:result_maker] = nil
+              element[:result_maker_id] = nil
+            elsif new_element[:result_maker]
+              result_maker = copy_result_maker_filterables(new_element)
+              element[:result_maker] = result_maker if result_maker
+            end
+
             say_warning "Updating dashboard element #{existing_element.id}" if @options[:debug]
-            result_maker = copy_result_maker_filterables(new_element)
-            element[:result_maker] = result_maker if result_maker
             return [new_element[:id], update_dashboard_element(existing_element.id,element).id]
           end
           say_warning "Deleting dashboard element #{existing_element.id}" if @options[:debug]
@@ -208,9 +214,13 @@ module Gzr
         end
 
         def process_dashboard_element(dash_elem)
-          return [create_fetch_query(dash_elem[:query]).id, nil, nil] if dash_elem[:query]
+          query = dash_elem[:result_maker]&.fetch(:query, false) || dash_elem[:query]
+          return [create_fetch_query(query).id, nil, nil] if query
+
           return [nil, upsert_look(@me.id, create_fetch_query(dash_elem[:look][:query]).id, @dest_space_id, dash_elem[:look]).id, nil] if dash_elem[:look]
-          return [nil,nil,create_merge_result(dash_elem[:merge_result]).id] if dash_elem[:merge_result]
+
+          merge_result = dash_elem[:result_maker]&.fetch(:merge_result, false) || dash_elem[:merge_result]
+          return [nil,nil,create_merge_result(merge_result).id] if merge_result
           [nil,nil,nil]
         end
 
