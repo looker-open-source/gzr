@@ -214,13 +214,14 @@ module Gzr
         end
 
         def process_dashboard_element(dash_elem)
+          return [nil, upsert_look(@me.id, create_fetch_query(dash_elem[:look][:query]).id, @dest_space_id, dash_elem[:look]).id, nil] if dash_elem[:look]
+
           query = dash_elem[:result_maker]&.fetch(:query, false) || dash_elem[:query]
           return [create_fetch_query(query).id, nil, nil] if query
 
-          return [nil, upsert_look(@me.id, create_fetch_query(dash_elem[:look][:query]).id, @dest_space_id, dash_elem[:look]).id, nil] if dash_elem[:look]
-
           merge_result = dash_elem[:result_maker]&.fetch(:merge_result, false) || dash_elem[:merge_result]
           return [nil,nil,create_merge_result(merge_result).id] if merge_result
+
           [nil,nil,nil]
         end
 
