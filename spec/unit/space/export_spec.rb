@@ -22,100 +22,122 @@
 require 'gzr/commands/space/export'
 
 RSpec.describe Gzr::Commands::Space::Export do
-  require 'sawyer'
+  me_response_doc = {
+    :id=>1000,
+    :first_name=>"John",
+    :last_name=>"Jones",
+    :email=>"jjones@example.com",
+    :home_space_id=>314159,
+    :personal_space_id=>1088
+  }.freeze
+
+  mock_looks = [
+    {:id=>101, :space_id=>2, :title=>"Look 101"},
+    {:id=>102, :space_id=>2, :title=>"Look 102"},
+    {:id=>103, :space_id=>3, :title=>"Look 103"},
+    {:id=>104, :space_id=>3, :title=>"Look 104 with / in name"},
+    {:id=>105, :space_id=>5, :title=>"Look 105"},
+    {:id=>106, :space_id=>5, :title=>"Look 106 with / in name"}
+  ]
+
+  mock_dashboards = [
+    {:id=>201, :space_id=>2, :title=>"Dash 201", :dashboard_elements=>[]},
+    {:id=>202, :space_id=>2, :title=>"Dash 202", :dashboard_elements=>[]},
+    {:id=>203, :space_id=>3, :title=>"Dash 203", :dashboard_elements=>[]},
+    {:id=>204, :space_id=>3, :title=>"Dash 204 with / in name", :dashboard_elements=>[]},
+    {:id=>205, :space_id=>5, :title=>"Dash 205", :dashboard_elements=>[]},
+    {:id=>206, :space_id=>5, :title=>"Dash 206 with / in name", :dashboard_elements=>[]}
+  ]
+
+  mock_spaces = Array.new
+  mock_spaces << {
+    :id=>1,
+    :name=>"Space 1",
+    :looks=>[ ],
+    :dashboards=>[ ],
+    :parent_id=>nil
+  }
+  mock_spaces << {
+    :id=>2,
+    :name=>"Space 2",
+    :looks=>mock_looks.select {|l| l[:space_id] == 2}.map{|l| HashResponse.new(l)},
+    :dashboards=>mock_dashboards.select {|d| d[:space_id] == 2}.map{|d| HashResponse.new(d)},
+    :parent_id=>1
+  }
+  mock_spaces << {
+    :id=>5,
+    :name=>"Space 5",
+    :looks=>mock_looks.select {|l| l[:space_id] == 5}.map{|l| HashResponse.new(l)},
+    :dashboards=>mock_dashboards.select {|d| d[:space_id] == 5}.map{|d| HashResponse.new(d)},
+    :parent_id=>1
+  }
+  mock_spaces << {
+    :id=>3,
+    :name=>"Space with / in name",
+    :looks=>mock_looks.select {|l| l[:space_id] == 3}.map{|l| HashResponse.new(l)},
+    :dashboards=>mock_dashboards.select {|d| d[:space_id] == 3}.map{|d| HashResponse.new(d)},
+    :parent_id=>2
+  }
+  mock_spaces << {
+    :id=>4,
+    :name=>nil,
+    :looks=>[],
+    :dashboards=>[ ],
+    :parent_id=>2
+  }
+
+  define_method :mock_sdk do |block_hash={}|
+    mock_sdk = Object.new
+    mock_sdk.define_singleton_method(:authenticated?) { true }
+    mock_sdk.define_singleton_method(:logout) { }
+    mock_sdk.define_singleton_method(:me) do |req|
+      HashResponse.new(me_response_doc)
+    end
+    mock_sdk.define_singleton_method(:search_spaces) do |req|
+      if block_hash && block_hash[:search_spaces]
+        block_hash[:search_spaces].call(req)
+      end
+      doc = dash_response_doc.dup
+      doc[:id] += 1
+      HashResponse.new(doc)
+    end
+    mock_sdk.define_singleton_method(:space) do |id,req|
+      if block_hash && block_hash[:space]
+        block_hash[:space].call(id,req)
+      end
+      docs = mock_spaces.select {|s| s[:id] == id}
+      return HashResponse.new(docs.first) unless docs.empty?
+      nil
+    end
+    mock_sdk.define_singleton_method(:look) do |id|
+      if block_hash && block_hash[:look]
+        block_hash[:look].call(id)
+      end
+      docs = mock_looks.select {|l| l[:id] == id}
+      return HashResponse.new(docs.first) unless docs.empty?
+      nil
+    end
+    mock_sdk.define_singleton_method(:dashboard) do |id|
+      if block_hash && block_hash[:dashboard]
+        block_hash[:dashboard].call(id)
+      end
+      docs = mock_dashboards.select {|d| d[:id] == id}
+      return HashResponse.new(docs.first) unless docs.empty?
+      nil
+    end
+    mock_sdk.define_singleton_method(:space_children) do |id,req|
+      if block_hash && block_hash[:space_children]
+        block_hash[:space_children].call(id,req)
+      end
+      docs = mock_spaces.select {|s| s[:parent_id] == id}
+      return docs.map {|d| HashResponse.new(d)}
+    end
+    mock_sdk
+  end
+
   require 'rubygems/package'
 
   it "executes `export` command successfully" do
-    look_response_docs = [
-      { 
-        :id=>2,
-        :title=>"bar"
-      },
-      {
-        :id=>5,
-        :title=>"bar"
-      }
-    ]
-    mock_look_responses = look_response_docs.collect { |l| double(Sawyer::Resource, l) }
-    mock_look_responses.each_index { |i| allow(mock_look_responses[i]).to receive(:to_attrs).and_return(look_response_docs[i]) }
-
-    dashboard_response_docs = [
-      {
-        :id=>3,
-        :title=>"bar",
-        :dashboard_elements=>[],
-        :dashboard_layouts=>[],
-        :dashboard_filters=>[]
-      },
-      {
-        :id=>6,
-        :title=>"bar",
-        :dashboard_elements=>[],
-        :dashboard_layouts=>[],
-        :dashboard_filters=>[]
-      }
-    ]
-    mock_dashboard_responses = dashboard_response_docs.collect { |d| double(Sawyer::Resource, d) }
-    mock_dashboard_responses.each_index { |i| allow(mock_dashboard_responses[i]).to receive(:to_attrs).and_return(dashboard_response_docs[i]) }
-
-    space_response_docs = [
-      {
-        :id=>1,
-        :name=>"foo",
-        :parent_id=>0,
-        :looks=>[
-          mock_look_responses[0]
-        ],
-        :dashboards=>[
-          mock_dashboard_responses[0]
-        ]
-      },
-      {
-        :id=>4,
-        :name=>"buz",
-        :parent_id=>1,
-        :looks=>[
-          mock_look_responses[1]
-        ],
-        :dashboards=>[
-          mock_dashboard_responses[1]
-        ]
-      }
-    ]
-    mock_space_responses = space_response_docs.collect { |s| double(Sawyer::Resource, s) }
-    mock_space_responses.each_index { |i| allow(mock_space_responses[i]).to receive(:to_attrs).and_return(space_response_docs[i]) }
-
-    space_child_response_doc = {
-      :id=>4,
-      :name=>"buz",
-      :parent_id=>1,
-      :looks=>[
-      ],
-      :dashboards=>[
-      ]
-    }
-    mock_space_child_response = double(Sawyer::Resource, space_child_response_doc)
-    allow(mock_space_child_response).to receive(:to_attrs).and_return(space_child_response_doc)
-
-    mock_sdk = Object.new
-    mock_sdk.define_singleton_method(:logout) { }
-    mock_sdk.define_singleton_method(:space) do |space_id,req|
-      return mock_space_responses[0] if space_id == 1
-      return mock_space_responses[1] if space_id == 4
-    end
-    mock_sdk.define_singleton_method(:dashboard) do |dashboard_id|
-      return mock_dashboard_responses[0] if dashboard_id == 3 
-      return mock_dashboard_responses[1] if dashboard_id == 6 
-    end
-    mock_sdk.define_singleton_method(:look) do |look_id|
-      return mock_look_responses[0] if look_id == 2 
-      return mock_look_responses[1] if look_id == 5 
-    end
-    mock_sdk.define_singleton_method(:space_children) do |id,req|
-      return [mock_space_child_response] if id == 1
-      return []
-    end
-
     output = StringIO.new
     options = {}
     command = Gzr::Commands::Space::Export.new(1,options)
@@ -135,14 +157,28 @@ RSpec.describe Gzr::Commands::Space::Export do
     command.process_space(1,mock_tar_writer)
 
     expect(output.string).to eq <<-OUT
-mkdir foo,493
-add_file foo/Space_1_foo.json,420
-add_file foo/Look_2_bar.json,420
-add_file foo/Dashboard_3_bar.json,420
-mkdir foo/buz,493
-add_file foo/buz/Space_4_buz.json,420
-add_file foo/buz/Look_5_bar.json,420
-add_file foo/buz/Dashboard_6_bar.json,420
+mkdir Space 1,493
+add_file Space 1/Space_1_Space 1.json,420
+mkdir Space 1/Space 2,493
+add_file Space 1/Space 2/Space_2_Space 2.json,420
+add_file Space 1/Space 2/Look_101_Look 101.json,420
+add_file Space 1/Space 2/Look_102_Look 102.json,420
+add_file Space 1/Space 2/Dashboard_201_Dash 201.json,420
+add_file Space 1/Space 2/Dashboard_202_Dash 202.json,420
+mkdir Space 1/Space 2/Space with ∕ in name,493
+add_file Space 1/Space 2/Space with ∕ in name/Space_3_Space with ∕ in name.json,420
+add_file Space 1/Space 2/Space with ∕ in name/Look_103_Look 103.json,420
+add_file Space 1/Space 2/Space with ∕ in name/Look_104_Look 104 with ∕ in name.json,420
+add_file Space 1/Space 2/Space with ∕ in name/Dashboard_203_Dash 203.json,420
+add_file Space 1/Space 2/Space with ∕ in name/Dashboard_204_Dash 204 with ∕ in name.json,420
+mkdir Space 1/Space 2/nil (4),493
+add_file Space 1/Space 2/nil (4)/Space_4_nil (4).json,420
+mkdir Space 1/Space 5,493
+add_file Space 1/Space 5/Space_5_Space 5.json,420
+add_file Space 1/Space 5/Look_105_Look 105.json,420
+add_file Space 1/Space 5/Look_106_Look 106 with ∕ in name.json,420
+add_file Space 1/Space 5/Dashboard_205_Dash 205.json,420
+add_file Space 1/Space 5/Dashboard_206_Dash 206 with ∕ in name.json,420
     OUT
   end
 end

@@ -75,10 +75,12 @@ module Gzr
 
         def process_space(space_id, base, rel_path = nil)
           space = query_space(space_id)
-          path = Pathname.new(space.name.gsub('/',"\u{2215}"))
+          name = space.name
+          name = "nil (#{space_id})" if name.nil?
+          path = Pathname.new(name.gsub('/',"\u{2215}"))
           path = rel_path + path if rel_path
 
-          write_file("Space_#{space.id}_#{space.name}.json", base, path) do |f|
+          write_file("Space_#{space.id}_#{name}.json", base, path) do |f|
             f.write JSON.pretty_generate(space.to_attrs.reject do |k,v|
               [:looks, :dashboards].include?(k)
             end)
