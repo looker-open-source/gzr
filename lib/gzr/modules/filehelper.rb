@@ -28,16 +28,26 @@ module Gzr
   module FileHelper
     def write_file(file_name=nil,base_dir=nil,path=nil,output=$stdout)
       f = nil
-      if base_dir.respond_to?(:mkdir)&& base_dir.respond_to?(:add_file) then
+      if base_dir.respond_to?(:mkdir)&& (base_dir.respond_to?(:add_file) || base_dir.respond_to?(:get_output_stream)) then
         if path then
           @archived_paths ||= Array.new
-          base_dir.mkdir(path.to_path, 0755) unless @archived_paths.include?(path.to_path)
+          begin
+            base_dir.mkdir(path.to_path, 0755) unless @archived_paths.include?(path.to_path)
+          rescue Errno::EEXIST => e
+            nil
+          end
           @archived_paths << path.to_path
         end
         fn = Pathname.new(file_name.gsub('/',"\u{2215}"))
         fn = path + fn if path
-        base_dir.add_file(fn.to_path, 0644) do |tf|
-          yield tf
+        if base_dir.respond_to?(:add_file)
+          base_dir.add_file(fn.to_path, 0644) do |tf|
+            yield tf
+          end
+        elsif base_dir.respond_to?(:get_output_stream)
+          base_dir.get_output_stream(fn.to_path, 0644) do |zf|
+            yield zf
+          end
         end
         return
       end

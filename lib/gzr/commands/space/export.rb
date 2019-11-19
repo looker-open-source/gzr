@@ -28,6 +28,7 @@ require_relative '../../modules/dashboard'
 require_relative '../../modules/filehelper'
 require 'pathname'
 require 'stringio'
+require 'zip'
 
 module Gzr
   module Commands
@@ -46,26 +47,35 @@ module Gzr
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
           with_session("3.1") do
-            if @options[:tar] || @options[:tgz] then
-              arc_path = Pathname.new(@options[:tgz] || @options[:tar])
+            if @options[:tar] || @options[:tgz] || @options[:zip] then
+              arc_path = Pathname.new(@options[:tgz] || @options[:tar] || @options[:zip])
               arc_path = Pathname.new(File.expand_path(@options[:dir])) + arc_path unless arc_path.absolute?
-              f = File.open(arc_path.to_path, "wb")
-              tarfile = StringIO.new(String.new,"w")
-              begin
-                tw = Gem::Package::TarWriter.new(tarfile)
-                process_space(@space_id, tw)
-                tw.flush
-                tarfile.rewind
-                if @options[:tgz]
-                  gzw = Zlib::GzipWriter.new(f)
-                  gzw.write tarfile.string
-                  gzw.close
-                else
-                  f.write tarfile.string
+              if @options[:tar] || @options[:tgz]
+                f = File.open(arc_path.to_path, "wb")
+                tarfile = StringIO.new(String.new,"w") unless @options[:zip]
+                begin
+                  tw = Gem::Package::TarWriter.new(tarfile)
+                  process_space(@space_id, tw)
+                  tw.flush
+                  tarfile.rewind
+                  if @options[:tgz]
+                    gzw = Zlib::GzipWriter.new(f)
+                    gzw.write tarfile.string
+                    gzw.close
+                  else
+                    f.write tarfile.string
+                  end
+                ensure
+                  f.close
+                  tarfile.close
                 end
-              ensure
-                f.close
-                tarfile.close
+              else
+                z = Zip::File.new(arc_path.to_path, Zip::File::CREATE, false, continue_on_exists_proc: true)
+                begin
+                  process_space(@space_id, z)
+                ensure
+                  z.close
+                end
               end
             else
               process_space(@space_id, @options[:dir])

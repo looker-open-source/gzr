@@ -68,6 +68,8 @@ module Gzr
                            desc: 'Tar file to store output'
       method_option :tgz, type: :string,
                            desc: 'TarGZ file to store output'
+      method_option :zip, type: :string,
+                           desc: 'Zip file to store output'
       def export(starting_space)
         if options[:help]
           invoke :help, ['export']

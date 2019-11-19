@@ -32,6 +32,7 @@ Options:
                              # Default: .
       [--tar=TAR]            # Tar file to store output
       [--tgz=TGZ]            # TarGZ file to store output
+      [--zip=ZIP]            # Zip file to store output
 
 Export a space, including all child looks, dashboards, and spaces.
     OUT
