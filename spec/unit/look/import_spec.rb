@@ -21,36 +21,6 @@
 
 require 'gzr/commands/look/import'
 
-module Gzr
-  class CLI
-    Error = Class.new(StandardError)
-  end
-end
-
-class HashResponse
-  def initialize(doc)
-    @doc = doc || {}
-  end
-
-  def to_attrs
-    @doc
-  end
-
-  def respond_to?(m, include_private = false)
-    m = m.to_sym if m.instance_of? String
-    @doc.respond_to?(m) || @doc.has_key?(m)
-  end
-
-  def method_missing(m, *args, &block)
-    m = m.to_sym if m.instance_of? String
-    if @doc.respond_to?(m)
-      @doc.send(m, *args, &block)
-    else
-      @doc.fetch(m,nil)
-    end
-  end
-end
-
 RSpec.describe Gzr::Commands::Look::Import do
   me_response_doc = { :id=>1000, :first_name=>"John", :last_name=>"Jones", :email=>"jjones@example.com" }.freeze
 

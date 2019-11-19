@@ -25,6 +25,30 @@ require_relative '../../command'
 require_relative '../../modules/space'
 require 'tty-tree'
 
+# The tty-tree tool is built on the idea of handling directories, so it does
+# parsing based on slashs (or backslashs on Windows). If those characters are
+# in object names, tty-tree pulls them out.
+# This monkey patch disables that.
+
+module TTY
+  class Tree
+    class Node
+      def initialize(path, parent, prefix, level)
+        if path.is_a? String
+          # strip null bytes from the string to avoid throwing errors
+          path = path.delete("\0")
+        end
+
+        @path = path
+        @name   = path
+        @parent = parent
+        @prefix = prefix
+        @level  = level
+      end
+    end
+  end
+end
+
 module Gzr
   module Commands
     class Space
