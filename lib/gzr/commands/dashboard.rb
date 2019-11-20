@@ -66,6 +66,8 @@ module Gzr
                            desc: 'Display usage information'
       method_option :plain, type: :boolean,
                            desc: 'Provide minimal response information'
+      method_option :force,  type: :boolean,
+                           desc: 'Overwrite a dashboard with the same name/slug in the target space'
       def import(file,dest_space_id)
         if options[:help]
           invoke :help, ['import']

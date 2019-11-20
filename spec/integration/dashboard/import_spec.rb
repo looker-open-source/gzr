@@ -29,6 +29,7 @@ Usage:
 Options:
   -h, [--help], [--no-help]    # Display usage information
       [--plain], [--no-plain]  # Provide minimal response information
+      [--force]                # Overwrite a dashboard with the same name/slug in the target space
 
 Import a dashboard from a file
     OUT
