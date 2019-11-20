@@ -29,6 +29,20 @@ module Gzr
 
       namespace :look
 
+      desc 'mv LOOK_ID TARGET_SPACE_ID', 'Move a look to the given space'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      method_option :force,  type: :boolean,
+                           desc: 'Overwrite a look with the same name in the target space'
+      def mv(look_id, target_space_id)
+        if options[:help]
+          invoke :help, ['mv']
+        else
+          require_relative 'look/mv'
+          Gzr::Commands::Look::Mv.new(look_id, target_space_id, options).execute
+        end
+      end
+
       desc 'rm LOOK_ID', 'Delete look given by LOOK_ID'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
