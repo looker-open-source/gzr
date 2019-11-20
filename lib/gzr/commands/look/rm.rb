@@ -37,8 +37,14 @@ module Gzr
 
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
-            with_session do
-            delete_look(@look_id)
+          with_session do
+            if @options[:restore]
+              update_look(@look_id, {:deleted=>false})
+            elsif @options[:soft]
+              update_look(@look_id, {:deleted=>true})
+            else
+              delete_look(@look_id)
+            end
           end
         end
       end

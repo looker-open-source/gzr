@@ -32,6 +32,10 @@ module Gzr
       desc 'rm LOOK_ID', 'Delete look given by LOOK_ID'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
+      method_option :soft,  type: :boolean,
+                           desc: 'Soft delete the look'
+      method_option :restore,  type: :boolean,
+                           desc: 'Restore a soft deleted look'
       def rm(look_id)
         if options[:help]
           invoke :help, ['rm']

@@ -27,7 +27,9 @@ Usage:
   gzr dashboard rm DASHBOARD_ID
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help]        # Display usage information
+      [--soft], [--no-soft]        # Soft delete the dashboard
+      [--restore], [--no-restore]  # Restore a soft deleted dashboard
 
 Remove or delete the given dashboard
     OUT

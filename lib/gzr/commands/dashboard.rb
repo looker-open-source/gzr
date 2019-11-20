@@ -64,6 +64,10 @@ module Gzr
       desc 'rm DASHBOARD_ID', 'Remove or delete the given dashboard'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
+      method_option :soft,  type: :boolean,
+                           desc: 'Soft delete the dashboard'
+      method_option :restore,  type: :boolean,
+                           desc: 'Restore a soft deleted dashboard'
       def rm(id)
         if options[:help]
           invoke :help, ['rm']

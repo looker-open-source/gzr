@@ -38,7 +38,13 @@ module Gzr
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
           with_session do
-            delete_dashboard(@dashboard)
+            if @options[:restore]
+              update_dashboard(@dashboard, {:deleted=>false})
+            elsif @options[:soft]
+              update_dashboard(@dashboard, {:deleted=>true})
+            else
+              delete_dashboard(@dashboard)
+            end
           end
         end
       end
