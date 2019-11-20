@@ -3,12 +3,16 @@ RSpec.describe "`gzr attribute ls` command", type: :cli do
     output = `gzr attribute help ls`
     expected_output = <<-OUT
 Usage:
-  gzr ls
+  gzr attribute ls
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help]    # Display usage information
+      [--fields=FIELDS]        # Fields to display
+                               # Default: id,name,label,type,default_value
+      [--plain], [--no-plain]  # print without any extra formatting
+      [--csv], [--no-csv]      # output in csv format per RFC4180
 
-Command description...
+List all the defined user attributes
     OUT
 
     expect(output).to eq(expected_output)
