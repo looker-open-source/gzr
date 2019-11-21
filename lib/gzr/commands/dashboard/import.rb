@@ -197,9 +197,8 @@ module Gzr
             end
             )
             (element[:query_id],element[:look_id],element[:merge_result_id]) = process_dashboard_element(new_element) 
-            if existing_element[:result_maker_id] && !new_element[:result_maker_id]
+            if existing_element[:result_maker] && !new_element[:result_maker]
               element[:result_maker] = nil
-              element[:result_maker_id] = nil
             elsif new_element[:result_maker]
               result_maker = copy_result_maker_filterables(new_element)
               element[:result_maker] = result_maker if result_maker
