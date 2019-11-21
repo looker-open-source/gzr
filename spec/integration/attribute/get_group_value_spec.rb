@@ -24,7 +24,7 @@ RSpec.describe "`gzr attribute get_group_value` command", type: :cli do
     output = `gzr attribute help get_group_value`
     expected_output = <<-OUT
 Usage:
-  gzr attribute get_group_value
+  gzr attribute get_group_value GROUP_ID|GROUP_NAME ATTR_ID|ATTR_NAME
 
 Options:
   -h, [--help], [--no-help]  # Display usage information

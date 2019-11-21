@@ -41,15 +41,15 @@ module Gzr
         end
       end
 
-      desc 'get_group_value', 'Retrieve a user attribute value for a group'
+      desc 'get_group_value GROUP_ID|GROUP_NAME ATTR_ID|ATTR_NAME', 'Retrieve a user attribute value for a group'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def get_group_value(*)
+      def get_group_value(group,attr)
         if options[:help]
           invoke :help, ['get_group_value']
         else
           require_relative 'attribute/get_group_value'
-          Gzr::Commands::Attribute::GetGroupValue.new(options).execute
+          Gzr::Commands::Attribute::GetGroupValue.new(group,attr,options).execute
         end
       end
 

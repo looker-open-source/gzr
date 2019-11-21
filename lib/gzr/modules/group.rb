@@ -89,5 +89,32 @@ module Gzr
       end
       data
     end
+    
+    def search_groups(name)
+      req = {:name => name }
+      begin
+        return @sdk.search_groups(req)
+      rescue LookerSDK::NotFound => e
+        return nil
+      rescue LookerSDK::ClientError => e
+        say_error "Unable to search_groups(#{JSON.pretty_generate(req)})"
+        say_error e.message
+        raise
+      end
+    end
+    
+    def query_group(id, fields=nil)
+      req = Hash.new
+      req[:fields] = fields if fields
+      begin
+        return @sdk.group(id,req)
+      rescue LookerSDK::NotFound => e
+        return nil
+      rescue LookerSDK::ClientError => e
+        say_error "Unable to find group(#{id},#{JSON.pretty_generate(req)})"
+        say_error e.message
+        raise
+      end
+    end
   end
 end

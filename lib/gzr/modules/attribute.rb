@@ -102,6 +102,26 @@ module Gzr
       data
     end
 
+    def query_all_user_attribute_group_values(attr_id, fields=nil)
+      begin
+        req = {}
+        req[:fields] = fields if fields
+        return @sdk.all_user_attribute_group_values(attr_id,req)
+      rescue LookerSDK::NotFound => e
+        return nil
+      rescue LookerSDK::Error => e
+        say_error "Error querying all_user_attribute_group_values(#{attr_id},#{JSON.pretty_generate(req)})"
+        say_error e.message
+        raise
+      end
+    end
+
+    def query_user_attribute_group_value(group_id, attr_id)
+      data = query_all_user_attribute_group_values(attr_id)&.select {|a| a.group_id == group_id}
+      return nil if data.nil? || data.empty?
+      data.first
+    end
+
     def upsert_user_attribute(source, force=false, output: $stdout)
       name_used = get_attribute_by_name(source[:name])
       if name_used

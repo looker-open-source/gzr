@@ -22,18 +22,54 @@
 # frozen_string_literal: true
 
 require_relative '../../command'
+require_relative '../../modules/group'
+require_relative '../../modules/attribute'
 
 module Gzr
   module Commands
     class Attribute
       class GetGroupValue < Gzr::Command
-        def initialize(options)
+        include Gzr::Attribute
+        include Gzr::Group
+        def initialize(group,attr,options)
+          super()
+          @group = group
+          @attr = attr
           @options = options
         end
 
         def execute(input: $stdin, output: $stdout)
-          # Command logic goes here ...
-          output.puts "OK"
+          say_warning(@options) if @options[:debug]
+          with_session("3.1") do
+
+            group_id = @group if /^\d+$/.match @group
+            group = nil
+            if group_id
+              group = query_group(group_id)
+            else
+              results = search_groups(@group)
+              if results && results.length == 1
+                group = results.first
+              elsif results
+                raise(Gzr::CLI::Error, "Pattern #{@group} matched more than one group")
+              else
+                raise(Gzr::CLI::Error, "Pattern #{@group} did not match any groups")
+              end
+            end
+
+            attr_id = @attr if /^\d+$/.match @attr
+            attr = nil
+            if attr_id
+              attr = query_user_attribute(attr_id)
+            else
+              attr = get_attribute_by_name(@attr)
+            end
+            raise(Gzr::CLI::Error, "Attribute #{@attr} does not exist") unless attr
+
+            data = query_user_attribute_group_value(group.id,attr.id)
+            say_warning("Attribute #{attr.name} does not have a value set for group #{group.name}", output: output) unless data
+            output.puts data.value if data
+          end
         end
       end
     end
