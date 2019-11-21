@@ -26,7 +26,7 @@ require_relative '../../command'
 module Gzr
   module Commands
     class Attribute
-      class GetGroupValues < Gzr::Command
+      class SetGroupValue < Gzr::Command
         def initialize(options)
           @options = options
         end

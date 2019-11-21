@@ -3,7 +3,7 @@ RSpec.describe "`gzr attribute cat` command", type: :cli do
     output = `gzr attribute help cat`
     expected_output = <<-OUT
 Usage:
-  gzr attribute cat ATTR_ID
+  gzr attribute cat ATTR_ID|ATTR_NAME
 
 Options:
   -h, [--help], [--no-help]  # Display usage information

@@ -29,39 +29,41 @@ module Gzr
 
       namespace :attribute
 
-      desc 'set_group_values', 'Command description...'
+      desc 'set_group_value', 'Set a user attribute value for a group'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def set_group_values(*)
+      def set_group_value(*)
         if options[:help]
-          invoke :help, ['set_group_values']
+          invoke :help, ['set_group_value']
         else
-          require_relative 'attribute/set_group_values'
-          Gzr::Commands::Attribute::SetGroupValues.new(options).execute
+          require_relative 'attribute/set_group_value'
+          Gzr::Commands::Attribute::SetGroupValue.new(options).execute
         end
       end
 
-      desc 'get_group_values', 'Command description...'
+      desc 'get_group_value', 'Retrieve a user attribute value for a group'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def get_group_values(*)
+      def get_group_value(*)
         if options[:help]
-          invoke :help, ['get_group_values']
+          invoke :help, ['get_group_value']
         else
-          require_relative 'attribute/get_group_values'
-          Gzr::Commands::Attribute::GetGroupValues.new(options).execute
+          require_relative 'attribute/get_group_value'
+          Gzr::Commands::Attribute::GetGroupValue.new(options).execute
         end
       end
 
-      desc 'rm', 'Command description...'
+      desc 'rm ATTR_ID|ATTR_NAME', 'Delete a user attribute'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def rm(*)
+      method_option :plain, type: :boolean,
+                           desc: 'Provide minimal response information'
+      def rm(attr)
         if options[:help]
           invoke :help, ['rm']
         else
           require_relative 'attribute/rm'
-          Gzr::Commands::Attribute::Rm.new(options).execute
+          Gzr::Commands::Attribute::Rm.new(attr,options).execute
         end
       end
 
@@ -81,31 +83,47 @@ module Gzr
         end
       end
 
-      desc 'create', 'Command description...'
+      desc 'create ATTR_NAME [ATTR_LABEL] [OPTIONS]', 'Create or modify an attribute'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def create(*)
+      method_option :plain, type: :boolean,
+                           desc: 'Provide minimal response information'
+      method_option :force,  type: :boolean,
+                           desc: 'If the user attribute already exists, modify it'
+      method_option :type, type: :string, default: 'string',
+                           desc: '"string", "number", "datetime", "yesno", "zipcode"'
+      method_option :'default-value', type: :string,
+                           desc: 'default value to be used if one not otherwise set'
+      method_option :'is-hidden', type: :boolean, default: false,
+                           desc: 'can a non-admin user view the value'
+      method_option :'can-view', type: :boolean, default: true,
+                           desc: 'can a non-admin user view the value'
+      method_option :'can-edit', type: :boolean, default: true,
+                           desc: 'can a user change the value themself'
+      method_option :'domain-whitelist', type: :string,
+                          desc: 'what domains can receive the value of a hidden attribute.' 
+      def create(attr_name, attr_label=nil)
         if options[:help]
           invoke :help, ['create']
         else
           require_relative 'attribute/create'
-          Gzr::Commands::Attribute::Create.new(options).execute
+          Gzr::Commands::Attribute::Create.new(attr_name, attr_label, options).execute
         end
       end
 
-      desc 'cat ATTR_ID', 'Output json information about an attribute to screen or file'
+      desc 'cat ATTR_ID|ATTR_NAME', 'Output json information about an attribute to screen or file'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :fields, type: :string,
                            desc: 'Fields to display'
       method_option :dir,  type: :string,
                            desc: 'Directory to store output file'
-      def cat(attribute_id)
+      def cat(attr)
         if options[:help]
           invoke :help, ['cat']
         else
           require_relative 'attribute/cat'
-          Gzr::Commands::Attribute::Cat.new(attribute_id,options).execute
+          Gzr::Commands::Attribute::Cat.new(attr,options).execute
         end
       end
 

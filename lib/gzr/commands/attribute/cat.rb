@@ -31,9 +31,9 @@ module Gzr
       class Cat < Gzr::Command
         include Gzr::Attribute
         include Gzr::FileHelper
-        def initialize(attr_id,options)
+        def initialize(attr,options)
           super()
-          @attr_id = attr_id
+          @attr = attr
           @options = options
         end
 
@@ -41,9 +41,16 @@ module Gzr
           say_warning(@options) if @options[:debug]
           with_session do
             f = @options[:fields]
-            data = query_user_attribute(@attr_id,f)
-            write_file(@options[:dir] ? "Attribute_#{data.id}_#{data.name}.json" : nil, @options[:dir],nil, output) do |f|
-              f.puts JSON.pretty_generate(data.to_attrs)
+            id = @attr if /^\d+$/.match @attr
+            attr = nil
+            if id
+              attr = query_user_attribute(id,f)
+            else
+              attr = get_attribute_by_name(@attr,f)
+            end
+            raise(Gzr::CLI::Error, "Attribute #{@attr} does not exist") unless attr
+            write_file(@options[:dir] ? "Attribute_#{attr.id}_#{attr.name}.json" : nil, @options[:dir],nil, output) do |f|
+              f.puts JSON.pretty_generate(attr.to_attrs)
             end
           end
         end

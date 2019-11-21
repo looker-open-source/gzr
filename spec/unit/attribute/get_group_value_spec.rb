@@ -19,23 +19,16 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-# frozen_string_literal: true
+require 'gzr/commands/attribute/get_group_value'
 
-require_relative '../../command'
+RSpec.describe Gzr::Commands::Attribute::GetGroupValue do
+  it "executes `attribute get_group_value` command successfully" do
+    output = StringIO.new
+    options = {}
+    command = Gzr::Commands::Attribute::GetGroupValue.new(options)
 
-module Gzr
-  module Commands
-    class Attribute
-      class SetGroupValues < Gzr::Command
-        def initialize(options)
-          @options = options
-        end
+    command.execute(output: output)
 
-        def execute(input: $stdin, output: $stdout)
-          # Command logic goes here ...
-          output.puts "OK"
-        end
-      end
-    end
+    expect(output.string).to eq("OK\n")
   end
 end

@@ -19,22 +19,23 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-RSpec.describe "`gzr attribute` command", type: :cli do
-  it "executes `gzr help attribute` command successfully" do
-    output = `gzr help attribute`
-    expected_output = <<-OUT
-Commands:
-  gzr attribute cat ATTR_ID|ATTR_NAME                    # Output json information about an attribute to screen or file
-  gzr attribute create ATTR_NAME [ATTR_LABEL] [OPTIONS]  # Create or modify an attribute
-  gzr attribute get_group_value                          # Retrieve a user attribute value for a group
-  gzr attribute help [COMMAND]                           # Describe subcommands or one specific subcommand
-  gzr attribute import FILE                              # Import a user attribute from a file
-  gzr attribute ls                                       # List all the defined user attributes
-  gzr attribute rm ATTR_ID|ATTR_NAME                     # Delete a user attribute
-  gzr attribute set_group_value                          # Set a user attribute value for a group
+# frozen_string_literal: true
 
-    OUT
+require_relative '../../command'
 
-    expect(output).to eq(expected_output)
+module Gzr
+  module Commands
+    class Attribute
+      class GetGroupValue < Gzr::Command
+        def initialize(options)
+          @options = options
+        end
+
+        def execute(input: $stdin, output: $stdout)
+          # Command logic goes here ...
+          output.puts "OK"
+        end
+      end
+    end
   end
 end

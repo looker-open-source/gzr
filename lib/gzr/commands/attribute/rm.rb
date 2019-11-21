@@ -22,18 +22,39 @@
 # frozen_string_literal: true
 
 require_relative '../../command'
+require_relative '../../modules/attribute'
 
 module Gzr
   module Commands
     class Attribute
       class Rm < Gzr::Command
-        def initialize(options)
+        include Gzr::Attribute
+        def initialize(attr,options)
+          super()
+          @attr = attr
           @options = options
         end
 
         def execute(input: $stdin, output: $stdout)
-          # Command logic goes here ...
-          output.puts "OK"
+          say_warning(@options) if @options[:debug]
+          with_session do
+            id = @attr if /^\d+$/.match @attr
+            attr = nil
+            if id
+              attr = query_user_attribute(id)
+            else
+              attr = get_attribute_by_name(@attr)
+            end
+
+            raise(Gzr::CLI::Error, "Attribute #{@attr} does not exist") unless attr
+            raise(Gzr::CLI::Error, "Attribute #{attr[:name]} is a system built-in and cannot be deleted ") if attr[:is_system]
+            raise(Gzr::CLI::Error, "Attribute #{attr[:name]} is marked permanent and cannot be deleted ") if attr[:is_permanent]
+
+            delete_user_attribute(attr.id)
+
+            output.puts "Deleted attribute #{attr.name} #{attr.id}" unless @options[:plain] 
+            output.puts attr.id if @options[:plain] 
+          end
         end
       end
     end

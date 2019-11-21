@@ -29,6 +29,8 @@ module Gzr
         req = {}
         req[:fields] = fields if fields
         data = @sdk.user_attribute(attr_id,req)
+      rescue LookerSDK::NotFound => e
+        # do nothing
       rescue LookerSDK::Error => e
         say_error "Error querying user_attribute(#{attr_id},#{JSON.pretty_generate(req)})"
         say_error e.message
@@ -52,19 +54,20 @@ module Gzr
       data
     end
 
-    def get_attribute_by_name(name)
-      data = query_all_user_attributes().select {|a| a.name == name}
+    def get_attribute_by_name(name, fields = nil)
+      data = query_all_user_attributes(fields).select {|a| a.name == name}
       return nil if data.empty?
       data.first
     end
 
-    def get_attribute_by_label(label)
-      data = query_all_user_attributes().select {|a| a.label == label}
+    def get_attribute_by_label(label, fields = nil)
+      data = query_all_user_attributes(fields).select {|a| a.label == label}
       return nil if data.empty?
       data.first
     end
 
     def create_attribute(attr)
+      data = nil
       begin
         data = @sdk.create_user_attribute(attr)
       rescue LookerSDK::Error => e
@@ -76,6 +79,7 @@ module Gzr
     end
 
     def update_attribute(id,attr)
+      data = nil
       begin
         data = @sdk.update_user_attribute(id,attr)
       rescue LookerSDK::Error => e
@@ -96,6 +100,36 @@ module Gzr
         raise
       end
       data
+    end
+
+    def upsert_user_attribute(source, force=false, output: $stdout)
+      name_used = get_attribute_by_name(source[:name])
+      if name_used
+        raise(Gzr::CLI::Error, "Attribute #{source[:name]} already exists and can't be modified") if name_used[:is_system]
+        raise(Gzr::CLI::Error, "Attribute #{source[:name]} already exists\nUse --force if you want to overwrite it") unless @options[:force]
+      end
+
+      label_used = get_attribute_by_label(source[:label])
+      if label_used
+        raise(Gzr::CLI::Error, "Attribute with label #{source[:label]} already exists and can't be modified") if label_used[:is_system]
+        raise(Gzr::CLI::Error, "Attribute with label #{source[:label]} already exists\nUse --force if you want to overwrite it") unless force
+      end
+
+      existing = name_used || label_used
+      if existing
+        upd_attr = source.select do |k,v|
+          keys_to_keep('update_user_attribute').include?(k) && !(name_used[k] == v)
+        end
+
+        return update_attribute(existing.id,upd_attr)
+      else
+        new_attr = source.select do |k,v|
+          (keys_to_keep('create_user_attribute') - [:hidden_value_domain_whitelist]).include? k
+        end
+        new_attr[:hidden_value_domain_whitelist] = source[:hidden_value_domain_whitelist] if source[:value_is_hidden] && source[:hidden_value_domain_whitelist]
+
+        return create_attribute(new_attr)
+      end
     end
   end
 end

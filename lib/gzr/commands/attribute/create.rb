@@ -22,18 +22,34 @@
 # frozen_string_literal: true
 
 require_relative '../../command'
+require_relative '../../modules/attribute'
 
 module Gzr
   module Commands
     class Attribute
       class Create < Gzr::Command
-        def initialize(options)
+        include Gzr::Attribute
+        def initialize(name,label,options)
+          super()
+          @name = name
+          @label = label || @name.split(/ |\_|\-/).map(&:capitalize).join(" ")
           @options = options
         end
 
         def execute(input: $stdin, output: $stdout)
-          # Command logic goes here ...
-          output.puts "OK"
+          say_warning(@options) if @options[:debug]
+          with_session do
+            source = { :name=>@name, :label=>@label, :type=>@options[:type] }
+            source[:'default_value'] = @options[:'default-value'] if @options[:'default-value']
+            source[:'value_is_hidden'] = true if @options[:'is-hidden']
+            source[:'user_can_view'] = true if @options[:'can-view']
+            source[:'user_can_edit'] = true if @options[:'can-edit']
+            source[:'hidden_value_domain_whitelist'] = @options[:'domain-whitelist'] if @options[:'is-hidden'] && @options[:'domain-whitelist']
+
+            attr = upsert_user_attribute(source, @options[:force], output: $stdout)
+            output.puts "Imported attribute #{attr.name} #{attr.id}" unless @options[:plain] 
+            output.puts attr.id if @options[:plain] 
+          end
         end
       end
     end

@@ -3,12 +3,13 @@ RSpec.describe "`gzr attribute rm` command", type: :cli do
     output = `gzr attribute help rm`
     expected_output = <<-OUT
 Usage:
-  gzr rm
+  gzr attribute rm ATTR_ID|ATTR_NAME
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help]    # Display usage information
+      [--plain], [--no-plain]  # Provide minimal response information
 
-Command description...
+Delete a user attribute
     OUT
 
     expect(output).to eq(expected_output)
