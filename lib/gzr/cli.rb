@@ -53,6 +53,9 @@ module Gzr
     end
     map %w(--version -v) => :version
 
+    require_relative 'commands/attribute'
+    register Gzr::Commands::Attribute, 'attribute', 'attribute [SUBCOMMAND]', 'Command description...'
+
     require_relative 'commands/permissions'
     register Gzr::Commands::Permissions, 'permissions', 'permissions [SUBCOMMAND]', 'Command to retrieve available permissions'
 
