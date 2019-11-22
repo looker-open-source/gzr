@@ -82,8 +82,6 @@ RSpec.describe Gzr::Commands::Attribute::GetGroupValue do
     mock_sdk = Object.new
     mock_sdk.define_singleton_method(:authenticated?) { true }
     mock_sdk.define_singleton_method(:logout) { }
-    mock_sdk.define_singleton_method(:operations) { operations }
-    mock_sdk.define_singleton_method(:swagger) { swagger }
     mock_sdk.define_singleton_method(:group) do |id,req|
       if block_hash && block_hash[:group]
         block_hash[:group].call(id,req)

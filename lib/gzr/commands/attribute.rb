@@ -29,15 +29,15 @@ module Gzr
 
       namespace :attribute
 
-      desc 'set_group_value', 'Set a user attribute value for a group'
+      desc 'set_group_value GROUP_ID|GROUP_NAME ATTR_ID|ATTR_NAME VALUE', 'Set a user attribute value for a group'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def set_group_value(*)
+      def set_group_value(group,attr,value)
         if options[:help]
           invoke :help, ['set_group_value']
         else
           require_relative 'attribute/set_group_value'
-          Gzr::Commands::Attribute::SetGroupValue.new(options).execute
+          Gzr::Commands::Attribute::SetGroupValue.new(group,attr,value,options).execute
         end
       end
 

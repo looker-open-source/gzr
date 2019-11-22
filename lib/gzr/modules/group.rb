@@ -116,5 +116,17 @@ module Gzr
         raise
       end
     end
+    
+    def update_user_attribute_group_value(group_id, attr_id, value)
+      req = Hash.new
+      req[:value] = value
+      begin
+        return @sdk.update_user_attribute_group_value(group_id,attr_id, req)
+      rescue LookerSDK::ClientError => e
+        say_error "Unable to update_user_attribute_group_value(#{group_id},#{attr_id},#{JSON.pretty_generate(req)})"
+        say_error e.message
+        raise
+      end
+    end
   end
 end
