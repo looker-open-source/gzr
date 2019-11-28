@@ -1,6 +1,6 @@
 ## How to contribute to Gazer
 
-Did you read the [code of conduct](https://github.com/looker-open-source/gzr/blob/master/CODE_OF_CONDUCT.md).
+Did you read the [code of conduct](https://github.com/looker-open-source/gzr/blob/master/CODE_OF_CONDUCT.md)?
 
 #### **Did you find a bug?**
 
