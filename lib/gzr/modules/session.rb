@@ -21,10 +21,43 @@
 
 # frozen_string_literal: true
 
+require 'json'
 require 'pastel'
 require 'tty-reader'
 
 require_relative '../../gzr'
+
+# monkeypatch login to use /api/3.0/login enpoint instead of /login endpoint
+#
+# Customer has Looker instance that gets both API and UI traffic at 443
+# and then NGINX rule sends to 9999 or 19999. The UI /login and API
+# /login conflict. Same for /logout.
+module LookerSDK
+  module Authentication
+    
+    def authenticate
+      #puts "Using monkeypatch login to #{URI.parse(api_endpoint)}login"
+      raise "client_id and client_secret required" unless application_credentials?
+
+      set_access_token_from_params(nil)
+      without_authentication do
+        post("#{URI.parse(api_endpoint)}login", {}, :query => application_credentials)
+        raise "login failure #{last_response.status}" unless last_response.status == 200
+        set_access_token_from_params(last_response.data)
+      end
+    end
+
+    def logout
+      #puts "Using monkeypatch logout to #{URI.parse(api_endpoint)}logout"
+      without_authentication do
+        result = !!@access_token && ((delete("#{URI.parse(api_endpoint)}logout") ; delete_succeeded?) rescue false)
+        set_access_token_from_params(nil)
+        result
+      end
+    end
+
+  end
+end
 
 module Gzr
   module Session
@@ -49,9 +82,9 @@ module Gzr
       @v3_1_available ||= false
     end
 
-    def build_connection_hash(api_version)
+    def build_connection_hash()
       conn_hash = Hash.new
-      conn_hash[:api_endpoint] = "http#{@options[:ssl] ? "s" : ""}://#{@options[:host]}:#{@options[:port]}/api/#{api_version}"
+      conn_hash[:api_endpoint] = "http#{@options[:ssl] ? "s" : ""}://#{@options[:host]}:#{@options[:port]}/"
       if @options[:http_proxy]
         conn_hash[:connection_options] ||= {}
         conn_hash[:connection_options][:proxy] = {
@@ -96,35 +129,45 @@ module Gzr
 
     def login(api_version)
       @secret = nil
+      versions = nil
+      current_version = nil
       begin
-        conn_hash = build_connection_hash("3.0")
-        sdk = LookerSDK::Client.new(conn_hash)
+        conn_hash = build_connection_hash
+
+        sawyer_options = {
+          :links_parser => Sawyer::LinkParsers::Simple.new,
+          :serializer  => LookerSDK::Client::Serializer.new(JSON),
+          :faraday => conn_hash[:faraday] || Faraday.new(conn_hash[:connection_options])
+        }
+
+        agent = Sawyer::Agent.new(conn_hash[:api_endpoint], conn_hash) do |http|
+          http.headers[:accept] = 'application/json'
+          http.headers[:user_agent] = conn_hash[:user_agent]
+        end
+        
         begin 
-          sdk.get "/"
+          versions_response = agent.call(:get,"/versions")
+          versions = versions_response.data.supported_versions
+          current_version = versions_response.data.current_version
         rescue Faraday::SSLError => e
           raise Gzr::CLI::Error, "SSL Certificate could not be verified\nDo you need the --no-verify-ssl option or the --no-ssl option?"
         rescue Faraday::ConnectionFailed => cf
           raise Gzr::CLI::Error, "Connection Failed.\nDid you specify the --no-ssl option for an ssl secured server?"
         rescue LookerSDK::NotFound => nf
-          #ignore this
+          say_warning "endpoint #{conn_hash[:api_endpoint]}/versions was not found"
         end
-        raise Gzr::CLI::Error, "Invalid credentials" unless sdk.authenticated?
-        sdk.versions.supported_versions.each do |v|
+        versions.each do |v|
           @v3_1_available = true if v.version == "3.1"
         end
-        begin
-          sdk.logout
-        rescue LookerSDK::Error => e
-          # eat this error if it occurs
-        end
-      end unless @options[:api_version]
+      end
 
       say_warning "API 3.1 available? #{v3_1_available?}" if @options[:debug]
 
       raise Gzr::CLI::Error, "Operation requires API v3.1, but user specified a different version" if (api_version == "3.1") && @options[:api_version] && !("3.1" == @options[:api_version])
       raise Gzr::CLI::Error, "Operation requires API v3.1, which is not available from this host" if (api_version == "3.1") && !v3_1_available?
 
-      conn_hash = build_connection_hash(@options[:api_version] || api_version)
+      conn_hash = build_connection_hash()
+      conn_hash[:api_endpoint] = "#{conn_hash[:api_endpoint]}api/#{@options[:api_version] || current_version.version}"
       @secret = nil
 
       say_ok("connecting to #{conn_hash.each { |k,v| "#{k}=>#{(k == :client_secret) ? '*********' : v}" }}") if @options[:debug]
