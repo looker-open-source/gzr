@@ -170,7 +170,7 @@ module Gzr
       conn_hash[:api_endpoint] = "#{conn_hash[:api_endpoint]}api/#{@options[:api_version] || current_version.version}"
       @secret = nil
 
-      say_ok("connecting to #{conn_hash.each { |k,v| "#{k}=>#{(k == :client_secret) ? '*********' : v}" }}") if @options[:debug]
+      say_ok("connecting to #{conn_hash.map { |k,v| "#{k}=>#{(k == :client_secret) ? '*********' : v}" }}") if @options[:debug]
 
       begin
         @sdk = LookerSDK::Client.new(conn_hash) unless @sdk
