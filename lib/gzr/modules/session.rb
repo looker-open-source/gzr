@@ -82,9 +82,9 @@ module Gzr
       @v3_1_available ||= false
     end
 
-    def build_connection_hash()
+    def build_connection_hash(api_version='3.0')
       conn_hash = Hash.new
-      conn_hash[:api_endpoint] = "http#{@options[:ssl] ? "s" : ""}://#{@options[:host]}:#{@options[:port]}/"
+      conn_hash[:api_endpoint] = "http#{@options[:ssl] ? "s" : ""}://#{@options[:host]}:#{@options[:port]}/api/#{api_version}"
       if @options[:http_proxy]
         conn_hash[:connection_options] ||= {}
         conn_hash[:connection_options][:proxy] = {
@@ -137,10 +137,14 @@ module Gzr
         sawyer_options = {
           :links_parser => Sawyer::LinkParsers::Simple.new,
           :serializer  => LookerSDK::Client::Serializer.new(JSON),
-          :faraday => conn_hash[:faraday] || Faraday.new(conn_hash[:connection_options])
+          :faraday => Faraday.new(conn_hash[:connection_options])
         }
 
-        agent = Sawyer::Agent.new(conn_hash[:api_endpoint], conn_hash) do |http|
+        endpoint = conn_hash[:api_endpoint]
+        endpoint_uri = URI.parse(endpoint)
+        root = endpoint.slice(0..-endpoint_uri.path.length)
+
+        agent = Sawyer::Agent.new(root, sawyer_options) do |http|
           http.headers[:accept] = 'application/json'
           http.headers[:user_agent] = conn_hash[:user_agent]
         end
@@ -154,7 +158,7 @@ module Gzr
         rescue Faraday::ConnectionFailed => cf
           raise Gzr::CLI::Error, "Connection Failed.\nDid you specify the --no-ssl option for an ssl secured server?"
         rescue LookerSDK::NotFound => nf
-          say_warning "endpoint #{conn_hash[:api_endpoint]}/versions was not found"
+          say_warning "endpoint #{root}/versions was not found"
         end
         versions.each do |v|
           @v3_1_available = true if v.version == "3.1"
@@ -166,8 +170,7 @@ module Gzr
       raise Gzr::CLI::Error, "Operation requires API v3.1, but user specified a different version" if (api_version == "3.1") && @options[:api_version] && !("3.1" == @options[:api_version])
       raise Gzr::CLI::Error, "Operation requires API v3.1, which is not available from this host" if (api_version == "3.1") && !v3_1_available?
 
-      conn_hash = build_connection_hash()
-      conn_hash[:api_endpoint] = "#{conn_hash[:api_endpoint]}api/#{@options[:api_version] || current_version.version}"
+      conn_hash = build_connection_hash(@options[:api_version] || current_version.version)
       @secret = nil
 
       say_ok("connecting to #{conn_hash.map { |k,v| "#{k}=>#{(k == :client_secret) ? '*********' : v}" }}") if @options[:debug]
