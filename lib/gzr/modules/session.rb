@@ -27,38 +27,6 @@ require 'tty-reader'
 
 require_relative '../../gzr'
 
-# monkeypatch login to use /api/3.0/login enpoint instead of /login endpoint
-#
-# Customer has Looker instance that gets both API and UI traffic at 443
-# and then NGINX rule sends to 9999 or 19999. The UI /login and API
-# /login conflict. Same for /logout.
-module LookerSDK
-  module Authentication
-    
-    def authenticate
-      #puts "Using monkeypatch login to #{URI.parse(api_endpoint).path}/login"
-      raise "client_id and client_secret required" unless application_credentials?
-
-      set_access_token_from_params(nil)
-      without_authentication do
-        post("#{URI.parse(api_endpoint).path}/login", {}, :query => application_credentials)
-        raise "login failure #{last_response.status}" unless last_response.status == 200
-        set_access_token_from_params(last_response.data)
-      end
-    end
-
-    def logout
-      #puts "Using monkeypatch logout to #{URI.parse(api_endpoint).path}/logout"
-      without_authentication do
-        result = !!@access_token && ((delete("#{URI.parse(api_endpoint).path}/logout") ; delete_succeeded?) rescue false)
-        set_access_token_from_params(nil)
-        result
-      end
-    end
-
-  end
-end
-
 module Gzr
   module Session
 
