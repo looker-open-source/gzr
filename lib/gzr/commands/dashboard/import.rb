@@ -174,6 +174,12 @@ module Gzr
         end
 
         def sync_dashboard_element(new_element,existing_element,dashboard_id)
+          if (new_element&.fetch(:type) == 'text' && existing_element && existing_element[:type] != 'text')
+            say_warning "Deleting dashboard element #{existing_element.id} to recreate it" if @options[:debug]
+            delete_dashboard_element(existing_element.id)
+            existing_element = nil
+          end
+
           if new_element && !existing_element then
             element = new_element.select do |k,v|
               (keys_to_keep('create_dashboard_element') - [:dashboard_id, :look_id, :query_id, :merge_result_id]).include? k
