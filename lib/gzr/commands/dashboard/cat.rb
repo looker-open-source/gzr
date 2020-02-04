@@ -43,20 +43,19 @@ module Gzr
         def execute(*args, input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
           with_session("3.1") do
-            result = query_dashboard(@dashboard_id)
-            data = result.to_attrs
+            data = query_dashboard(@dashboard_id).to_attrs
             data[:dashboard_elements].each_index do |i|
               element = data[:dashboard_elements][i]
               if element[:merge_result_id]
-                merge_result = merge_query(element[:merge_result_id])
+                merge_result = merge_query(element[:merge_result_id]).to_attrs
                 merge_result[:source_queries].each_index do |j|
                   source_query = merge_result[:source_queries][j]
-                  merge_result[:source_queries][j][:query] = query(source_query[:query_id])
+                  merge_result[:source_queries][j][:query] = query(source_query[:query_id]).to_attrs
                 end
                 data[:dashboard_elements][i][:merge_result] = merge_result
               end
             end
-            data[:scheduled_plans] = query_scheduled_plans_for_dashboard(@dashboard_id,"all") if @options[:plans]
+            data[:scheduled_plans] = query_scheduled_plans_for_dashboard(@dashboard_id,"all").to_attrs if @options[:plans]
 
             replacements = {}
             if @options[:transform]

@@ -102,20 +102,20 @@ module Gzr
             end
           end
           space.dashboards.each do |d|
-            data = query_dashboard(d.id)
-            data.to_attrs()[:dashboard_elements].each_index do |i|
+            data = query_dashboard(d.id).to_attrs()
+            data[:dashboard_elements].each_index do |i|
               element = data[:dashboard_elements][i]
               if element[:merge_result_id]
-                merge_result = merge_query(element[:merge_result_id])
+                merge_result = merge_query(element[:merge_result_id]).to_attrs()
                 merge_result[:source_queries].each_index do |j|
                   source_query = merge_result[:source_queries][j]
-                  merge_result[:source_queries][j][:query] = query(source_query[:query_id])
+                  merge_result[:source_queries][j][:query] = query(source_query[:query_id]).to_attrs()
                 end
                 data[:dashboard_elements][i][:merge_result] = merge_result
               end
             end
-            write_file("Dashboard_#{data.id}_#{data.title}.json", base, path) do |f|
-              f.write JSON.pretty_generate(data.to_attrs)
+            write_file("Dashboard_#{data[:id]}_#{data[:title]}.json", base, path) do |f|
+              f.write JSON.pretty_generate(data)
             end
           end
           space_children = query_space_children(space_id)
