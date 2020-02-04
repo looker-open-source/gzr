@@ -1,6 +1,6 @@
 # Gazer - A Looker Content Utility
 
-Gazer can be used to navigate and manges Spaces, Looks, 
+Gazer can be used to navigate and manage Spaces, Looks, 
 and Dashboards via a simple command line tool.
 
 ## Status and Support
