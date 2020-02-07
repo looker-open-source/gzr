@@ -107,7 +107,7 @@ module Gzr
               outputJSON.gsub! k,v
             end
 
-            write_file(@options[:dir] ? "Dashboard_#{result.id}_#{result.title}.json" : nil, @options[:dir], nil, output) do |f|
+            write_file(@options[:dir] ? "Dashboard_#{data[:id]}_#{data[:title]}.json" : nil, @options[:dir], nil, output) do |f|
               f.puts outputJSON
             end
           end
