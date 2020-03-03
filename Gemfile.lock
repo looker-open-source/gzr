@@ -31,7 +31,7 @@ GEM
       equatable (~> 0.5.0)
       tty-color (~> 0.4.0)
     public_suffix (4.0.1)
-    rake (10.5.0)
+    rake (12.3.3)
     rouge (3.1.1)
     rspec (3.8.0)
       rspec-core (~> 3.8.0)
@@ -139,7 +139,7 @@ PLATFORMS
 DEPENDENCIES
   bundler (~> 1.17)
   gazer!
-  rake (~> 10.0)
+  rake (~> 12.3.3)
   rspec (~> 3.0)
   tty (~> 0.8)
 
