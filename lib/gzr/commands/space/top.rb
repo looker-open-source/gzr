@@ -38,22 +38,36 @@ module Gzr
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
           with_session do
-            spaces = all_spaces("id,name,is_shared_root,is_users_root,is_root,is_user_root,is_embed_shared_root,is_embed_users_root")
+            extra_fields = %w(is_shared_root is_users_root is_embed_shared_root is_embed_users_root)
+            query_fields = (@options[:fields].split(',') + extra_fields).uniq
+            spaces = all_spaces(query_fields.join(','))
 
             begin
               puts "No spaces found"
               return nil
             end unless spaces && spaces.length > 0
 
-            table = TTY::Table.new(header: spaces[0].to_attrs.keys) do |t|
-              spaces.each do |h|
-                t << h.to_attrs.values if (
-                  h.is_shared_root || h.is_users_root || h.is_root ||
-                  h.is_user_root || h.is_embed_shared_root || h.is_embed_users_root
-                )
+            table_hash = Hash.new
+            fields = field_names(@options[:fields])
+            table_hash[:header] = fields unless @options[:plain]
+            expressions = fields.collect { |fn| field_expression(fn) }
+            rows = []
+            spaces.each do |h|
+              if ( h.is_shared_root || h.is_users_root || h.is_embed_shared_root || h.is_embed_users_root) then
+                rows << expressions.collect do |e|
+                  eval "h.#{e}"
+                end
               end
-            end if spaces[0]
-            output.puts table.render(:ascii, alignments: [:right]) if table
+            end
+            table_hash[:rows] = rows
+            table = TTY::Table.new(table_hash)
+            begin
+              if @options[:csv] then
+                output.puts render_csv(table)
+              else
+                output.puts table.render(if @options[:plain] then :basic else :ascii end, alignments: [:right])
+              end
+            end if table
           end
         end
       end

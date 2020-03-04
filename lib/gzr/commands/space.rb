@@ -46,6 +46,8 @@ module Gzr
       desc 'top', 'Retrieve the top level (or root) spaces'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
+      method_option :fields, type: :string, default: 'id,name,is_shared_root,is_users_root,is_embed_shared_root,is_embed_users_root',
+                           desc: 'Fields to display'
       method_option :plain, type: :boolean, default: false,
                            desc: 'print without any extra formatting'
       method_option :csv, type: :boolean, default: false,

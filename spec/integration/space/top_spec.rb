@@ -28,6 +28,8 @@ Usage:
 
 Options:
   -h, [--help], [--no-help]    # Display usage information
+      [--fields=FIELDS]        # Fields to display
+                               # Default: id,name,is_shared_root,is_users_root,is_embed_shared_root,is_embed_users_root
       [--plain], [--no-plain]  # print without any extra formatting
       [--csv], [--no-csv]      # output in csv format per RFC4180
 
