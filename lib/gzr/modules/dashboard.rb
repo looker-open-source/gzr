@@ -139,6 +139,17 @@ module Gzr
       data
     end
 
+    def get_dashboard_layout(id)
+      begin
+        data = @sdk.dashboard_layout(id)
+      rescue LookerSDK::Error => e
+        say_error "Error getting dashboard_layout(#{id})"
+        say_error e.message
+        raise
+      end
+      data
+    end
+
     def create_dashboard_layout(dash_layout)
       begin
         data = @sdk.create_dashboard_layout(dash_layout)

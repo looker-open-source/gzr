@@ -55,31 +55,60 @@ module Gzr
 
               dashboard = sync_dashboard(data,@dest_space_id, output: output)
 
+
+              dashboard[:dashboard_filters] ||= []
               source_filters = data[:dashboard_filters].sort { |a,b| a[:row] <=> b[:row] }
-              existing_filters = dashboard.dashboard_filters.sort { |a,b| a.row <=> b.row }
-              existing_filters.collect! do |e|
-                matches_by_name_title = source_filters.select { |s| s[:row] != e.row && (s[:title] == e.title || s[:name] == e.name) }
-                if matches_by_name_title.length > 0
-                  delete_dashboard_filter(e.id)
-                  nil
-                else
-                  e
+              source_filters.each do |new_filter|
+                filter = new_filter.select do |k,v|
+                  (keys_to_keep('create_dashboard_filter') + [:row]).include? k
                 end
-              end
-              pairs(source_filters,existing_filters,dashboard.id) do |source,target,id|
-                say_warning("Synching dashboard filter for dashboard #{id}", output: output) if @options[:debug]
-                sync_dashboard_filter(source,target,id)
-              end
-
-              elem_table = pairs(data[:dashboard_elements],dashboard.dashboard_elements,dashboard.id) do |source,target,id|
-                sync_dashboard_element(source,target,id)
+                filter[:dashboard_id] = dashboard.id
+                say_warning "Creating filter" if @options[:debug]
+                dashboard[:dashboard_filters].append create_dashboard_filter(filter)
               end
 
-              source_dashboard_layouts = data[:dashboard_layouts].sort_by { |v| (v[:active] ? 0 : 1) }
-              existing_dashboard_layouts = dashboard.dashboard_layouts.sort_by { |v| (v.active ? 0 : 1) }
-              pairs(source_dashboard_layouts,existing_dashboard_layouts) do |s,t|
-                sync_dashboard_layout(dashboard.id,s,t) do |s,t|
-                  sync_dashboard_layout_component(s,t,elem_table)
+              dashboard[:dashboard_elements] ||= []
+              elem_table = data[:dashboard_elements].map do |new_element|
+                element = new_element.select do |k,v|
+                  (keys_to_keep('create_dashboard_element') - [:dashboard_id, :look_id, :query_id, :merge_result_id, :result_maker_id]).include? k
+                end
+                (element[:query_id],element[:look_id],element[:merge_result_id]) = process_dashboard_element(new_element) 
+                say_warning "Creating dashboard element #{element.inspect}" if @options[:debug]
+                element[:dashboard_id] = dashboard.id
+                result_maker = copy_result_maker_filterables(new_element)
+                element[:result_maker] = result_maker if result_maker
+                dashboard_element = create_dashboard_element(element)
+                dashboard[:dashboard_elements].push dashboard_element
+                [new_element[:id], dashboard_element.id]
+              end
+
+              source_dashboard_layouts = data[:dashboard_layouts].map do |new_layout|
+                layout_obj = nil
+                if new_layout[:active] 
+                  layout_obj = get_dashboard_layout(dashboard[:dashboard_layouts].first.id)
+                  say_warning "Updating layout #{layout_obj.id}" if @options[:debug]
+                else  
+                  layout = new_layout.select do |k,v|
+                    (keys_to_keep('create_dashboard_layout') - [:dashboard_id]).include? k
+                  end
+                  layout[:dashboard_id] = dashboard.id
+                  say_warning "Creating dashboard layout #{layout}" if @options[:debug]
+                  layout_obj = create_dashboard_layout(layout)
+                end
+                layout_components = new_layout[:dashboard_layout_components].zip(layout_obj.dashboard_layout_components)
+                layout_components.each do |source,target|
+                  component = keys_to_keep('update_dashboard_layout_component').collect do |e|
+                    [e,nil]
+                  end.to_h
+                  component[:dashboard_layout_id] = target.dashboard_layout_id
+
+                  component.merge!(source.select do |k,v|
+                    (keys_to_keep('update_dashboard_layout_component') - [:id,:dashboard_layout_id]).include? k
+                  end)
+
+                  component[:dashboard_element_id] = elem_table.assoc(source[:dashboard_element_id])[1]
+                  say_warning "Updating dashboard layout component #{target.id}" if @options[:debug]
+                  update_dashboard_layout_component(target.id,component)
                 end
               end
               upsert_plans_for_dashboard(dashboard.id,@me.id,data[:scheduled_plans]) if data[:scheduled_plans]
@@ -127,7 +156,24 @@ module Gzr
             end
             new_dash[:slug] = source[:slug] unless slug_used
             new_dash[:deleted] = false if existing_dashboard[:deleted]
-            return update_dashboard(existing_dashboard.id,new_dash)
+            d = update_dashboard(existing_dashboard.id,new_dash)
+
+            d.dashboard_filters.each do |f|
+              delete_dashboard_filter(f.id)
+            end
+            d.dashboard_filters = []
+
+            d.dashboard_elements.each do |e|
+              delete_dashboard_element(e.id)
+            end
+            d.dashboard_elements = []
+
+            d.dashboard_layouts.each do |l|
+              delete_dashboard_layout(l.id) unless l.active
+            end
+            d.dashboard_layouts.select! { |l| l.active }
+
+            return d
           else
             new_dash = source.select do |k,v|
               (keys_to_keep('create_dashboard') - [:space_id,:folder_id,:user_id,:slug]).include? k
@@ -137,26 +183,6 @@ module Gzr
             new_dash[:user_id] = @me.id
             return create_dashboard(new_dash)
           end
-        end
-
-        def sync_dashboard_filter(new_filter,existing_filter,dashboard_id)
-          if new_filter && !existing_filter then
-            filter = new_filter.select do |k,v|
-              (keys_to_keep('create_dashboard_filter') + [:row]).include? k
-            end
-            filter[:dashboard_id] = dashboard_id
-            say_warning "Creating filter" if @options[:debug]
-            return create_dashboard_filter(filter)
-          end
-          if existing_filter && new_filter then
-            filter = new_filter.select do |k,v|
-              (keys_to_keep('update_dashboard_filter') + [:row]).include? k
-            end
-            say_warning "Updating filter #{existing_filter.id}" if @options[:debug]
-            return update_dashboard_filter(existing_filter.id,filter)
-          end
-          say_warning "Deleting filter #{existing_filter.id}" if @options[:debug]
-          return delete_dashboard_filter(existing_filter.id)
         end
 
         def copy_result_maker_filterables(new_element)
@@ -173,51 +199,6 @@ module Gzr
           nil
         end
 
-        def sync_dashboard_element(new_element,existing_element,dashboard_id)
-          if (new_element&.fetch(:type) == 'text' && existing_element && existing_element[:type] != 'text')
-            say_warning "Deleting dashboard element #{existing_element.id} to recreate it" if @options[:debug]
-            delete_dashboard_element(existing_element.id)
-            existing_element = nil
-          end
-
-          if new_element && !existing_element then
-            element = new_element.select do |k,v|
-              (keys_to_keep('create_dashboard_element') - [:dashboard_id, :look_id, :query_id, :merge_result_id]).include? k
-            end
-            (element[:query_id],element[:look_id],element[:merge_result_id]) = process_dashboard_element(new_element) 
-            say_warning "Creating dashboard element #{element.inspect}" if @options[:debug]
-            element[:dashboard_id] = dashboard_id
-            result_maker = copy_result_maker_filterables(new_element)
-            element[:result_maker] = result_maker if result_maker
-            return [new_element[:id], create_dashboard_element(element).id]
-          end
-          if existing_element && new_element then
-            element = keys_to_keep('update_dashboard_element').collect do |e|
-              [e,nil]
-            end.to_h
-
-            element[:dashboard_id] = dashboard_id
-
-            element.merge!( new_element.select do |k,v|
-              (keys_to_keep('update_dashboard_element') - [:dashboard_id, :look_id, :query_id, :merge_result_id]).include? k
-            end
-            )
-            (element[:query_id],element[:look_id],element[:merge_result_id]) = process_dashboard_element(new_element) 
-            if existing_element[:result_maker] && !new_element[:result_maker]
-              element[:result_maker] = nil
-            elsif new_element[:result_maker]
-              result_maker = copy_result_maker_filterables(new_element)
-              element[:result_maker] = result_maker if result_maker
-            end
-
-            say_warning "Updating dashboard element #{existing_element.id}" if @options[:debug]
-            return [new_element[:id], update_dashboard_element(existing_element.id,element).id]
-          end
-          say_warning "Deleting dashboard element #{existing_element.id}" if @options[:debug]
-          delete_dashboard_element(existing_element.id)
-          return [nil,existing_element.id]
-        end
-
         def process_dashboard_element(dash_elem)
           return [nil, upsert_look(@me.id, create_fetch_query(dash_elem[:look][:query]).id, @dest_space_id, dash_elem[:look]).id, nil] if dash_elem[:look]
 
@@ -230,56 +211,6 @@ module Gzr
           [nil,nil,nil]
         end
 
-        def sync_dashboard_layout(dashboard_id,new_layout,existing_layout)
-          layout_obj = nil
-          if new_layout && !existing_layout then
-            layout = new_layout.select do |k,v|
-              (keys_to_keep('create_dashboard_layout') - [:dashboard_id]).include? k
-            end
-            layout[:dashboard_id] = dashboard_id
-            say_warning "Creating dashboard layout #{layout}" if @options[:debug]
-            layout_obj = create_dashboard_layout(layout)
-          end
-          if new_layout && existing_layout then
-            layout = new_layout.select do |k,v|
-              (keys_to_keep('update_dashboard_layout') - [:dashboard_id]).include? k
-            end
-            say_warning "Updating dashboard layout #{existing_layout.id}" if @options[:debug]
-            layout_obj = update_dashboard_layout(existing_layout.id,layout)
-          end
-          if !new_layout && existing_layout then
-            say_warning "Deleting dashboard layout #{existing_layout.id}" if @options[:debug]
-            delete_dashboard_layout(existing_layout.id)
-          end
-
-          return unless layout_obj
-
-          #say_warning "new_layout[:active] is #{new_layout&.fetch(:active)} for #{layout_obj.id}"
-          #if layout_obj && new_layout&.fetch(:active,false)
-          #  say_warning "Setting layout #{layout_obj.id} active"
-          #  update_dashboard_layout(layout_obj.id, { :active => true })
-          #end
-
-          layout_components = new_layout[:dashboard_layout_components].zip(layout_obj.dashboard_layout_components)
-          return layout_components unless block_given?
-
-          layout_components.each { |s,t| yield(s,t) }
-        end
-
-        def sync_dashboard_layout_component(source, target, elem_table)
-          component = keys_to_keep('update_dashboard_layout_component').collect do |e|
-            [e,nil]
-          end.to_h
-          component[:dashboard_layout_id] = target.dashboard_layout_id
-
-          component.merge!(source.select do |k,v|
-            (keys_to_keep('update_dashboard_layout_component') - [:id,:dashboard_layout_id]).include? k
-          end)
-
-          component[:dashboard_element_id] = elem_table.assoc(source[:dashboard_element_id])[1]
-          say_warning "Updating dashboard layout component #{target.id}" if @options[:debug]
-          update_dashboard_layout_component(target.id,component)
-        end
       end
     end
   end
