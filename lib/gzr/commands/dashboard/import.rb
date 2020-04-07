@@ -64,7 +64,7 @@ module Gzr
                 end
                 filter[:dashboard_id] = dashboard.id
                 say_warning "Creating filter" if @options[:debug]
-                dashboard[:dashboard_filters].append create_dashboard_filter(filter)
+                dashboard[:dashboard_filters].push create_dashboard_filter(filter)
               end
 
               dashboard[:dashboard_elements] ||= []
