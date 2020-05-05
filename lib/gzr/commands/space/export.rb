@@ -105,8 +105,8 @@ module Gzr
             data = query_dashboard(d.id).to_attrs()
             data[:dashboard_elements].each_index do |i|
               element = data[:dashboard_elements][i]
-              if element[:merge_result_id]
-                merge_result = merge_query(element[:merge_result_id]).to_attrs()
+              merge_result = merge_query(element[:merge_result_id])&.to_attrs() if element[:merge_result_id]
+              if merge_result
                 merge_result[:source_queries].each_index do |j|
                   source_query = merge_result[:source_queries][j]
                   merge_result[:source_queries][j][:query] = query(source_query[:query_id]).to_attrs()
