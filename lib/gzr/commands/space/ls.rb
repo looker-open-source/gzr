@@ -36,6 +36,28 @@ module Gzr
           @options = options
         end
 
+        def flatten_data(raw_array)
+          rows = raw_array.map do |entry|
+            entry.select do |k,v|
+              !(v.kind_of?(Array) || v.kind_of?(Hash))
+            end
+          end
+          raw_array.map do |entry|
+            entry.select do |k,v|
+              v.kind_of? Array
+            end.each do |section,section_value|
+              section_value.each do |section_entry|
+                h = {}
+                section_entry.each_pair do |k,v|
+                  h[:"#{section}.#{k}"] = v
+                end
+                rows.push(h)
+              end
+            end
+          end
+          rows
+        end
+
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
           with_session do
@@ -45,40 +67,33 @@ module Gzr
               return nil
             end unless space_ids && space_ids.length > 0
 
+            @options[:fields] = 'dashboards(id,title)' if @filter_spec == 'lookml'
+            f = @options[:fields]
+
             data = space_ids.map do |space_id|
-              query_space(space_id, @options[:fields])
+              query_space(space_id, f).to_attrs
             end.compact
+            space_ids.each do |space_id|
+              query_space_children(space_id, 'id,name,parent_id').map {|child| child.to_attrs}.each do |child|
+                data.push child
+              end
+            end
+
 
             begin
               puts "No data returned for spaces #{space_ids.inspect}"
               return nil
             end unless data && data.length > 0
 
-            @options[:fields] = 'dashboards(id,title)' if @filter_spec == 'lookml'
             table_hash = Hash.new
             fields = field_names(@options[:fields])
-            table_hash[:header] = field_names(@options[:fields]) unless @options[:plain]
-            rows = []
-            data.each do |r|
-              h = r.to_attrs
-              if @filter_spec != 'lookml' then
-                rows << [h[:parent_id],h[:id],h[:name], nil, nil, nil, nil]
-                subspaces = query_space_children(h[:id], "id,name,parent_id")
-                rows += subspaces.map do |r|
-                  h1 = r.to_attrs
-                  [h1[:parent_id], h1[:id], h1[:name], nil, nil, nil, nil]
-                end
+            table_hash[:header] = fields unless @options[:plain]
+            table_hash[:rows] = flatten_data(data).map do |row|
+              fields.collect do |e|
+                row.fetch(e.to_sym,nil)
               end
-              h[:looks].each do |r|
-                rows << [h[:parent_id],h[:id],h[:name], r[:id], r[:title], nil, nil]
-              end if h[:looks]
-              h[:dashboards].each do |r|
-                rows << [h[:parent_id],h[:id],h[:name], nil, nil, r[:id], r[:title]] unless @filter_spec == 'lookml'
-                rows << [r[:id], r[:title]] if @filter_spec == 'lookml'
-              end if h[:dashboards]
             end
-            table_hash[:rows] = rows
-            table = TTY::Table.new(table_hash) if data[0]
+            table = TTY::Table.new(table_hash)
             alignments = fields.collect do |k|
               (k =~ /id\)*$/) ? :right : :left
             end

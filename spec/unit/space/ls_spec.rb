@@ -51,19 +51,7 @@ RSpec.describe Gzr::Commands::Space::Ls do
     resp_hash2 = {
       :id=>4,
       :name=>"buz",
-      :parent_id=>1,
-      :looks=>[
-        {
-          :id=>5,
-          :title=>"bar"
-        }
-      ],
-      :dashboards=>[
-        {
-          :id=>6,
-          :title=>"baz"
-        }
-      ]
+      :parent_id=>1
     }
     mock_response2 = double(Sawyer::Resource, resp_hash2)
     allow(mock_response2).to receive(:to_attrs).and_return(resp_hash2)
@@ -85,8 +73,8 @@ RSpec.describe Gzr::Commands::Space::Ls do
 +---------+--+----+--------+-----------+-------------+----------------+
 |        0| 1|foo |        |           |             |                |
 |        1| 4|buz |        |           |             |                |
-|        0| 1|foo |       2|bar        |             |                |
-|        0| 1|foo |        |           |            3|baz             |
+|         |  |    |       2|bar        |             |                |
+|         |  |    |        |           |            3|baz             |
 +---------+--+----+--------+-----------+-------------+----------------+
     OUT
   end
