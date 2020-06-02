@@ -35,7 +35,10 @@ machine foo.bar.mycompany.com
 Make sure that the `~/.netrc` file has restricted permissions by running `chmod 600 ~/.netrc`.
 
 ### API port
-AWS-hosted instances of Looker uses the port 19999 for the API. Gazer will use that port by default when executing a command.
+Most instances of Looker use port 19999 for the API. Gazer will use that port by default when executing a command.
+Looker instances that are hosted in Google Cloud direct both the API and the web
+interface traffic through port 443, the standard https port. Some other
+installations may also use port 443.
 
 If your Looker instance is GCP-hosted (*.cloud.looker.com), you must specify `--port 443`, eg:
 
