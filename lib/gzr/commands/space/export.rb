@@ -84,32 +84,47 @@ module Gzr
         end
 
         def process_space(space_id, base, rel_path = nil)
-          space = query_space(space_id)
-          name = space.name
+          space = query_space(space_id).to_attrs
+          name = space[:name]
           name = "nil (#{space_id})" if name.nil?
           path = Pathname.new(name.gsub('/',"\u{2215}"))
           path = rel_path + path if rel_path
 
-          write_file("Space_#{space.id}_#{name}.json", base, path) do |f|
-            f.write JSON.pretty_generate(space.to_attrs.reject do |k,v|
+          write_file("Space_#{space[:id]}_#{name}.json", base, path) do |f|
+            f.write JSON.pretty_generate(space.reject do |k,v|
               [:looks, :dashboards].include?(k)
             end)
           end
-          space.looks.each do |l|
-            look = query_look(l.id)
-            write_file("Look_#{look.id}_#{look.title}.json", base, path) do |f|
-              f.write JSON.pretty_generate(look.to_attrs) 
+          space[:looks].each do |l|
+            look = query_look(l[:id]).to_attrs
+            find_vis_config_reference(look) do |vis_config|
+              find_color_palette_reference(vis_config) do |o,default_colors|
+                rewrite_color_palette!(o,default_colors)
+              end
+            end
+            write_file("Look_#{look[:id]}_#{look[:title]}.json", base, path) do |f|
+              f.write JSON.pretty_generate(look)
             end
           end
-          space.dashboards.each do |d|
-            data = query_dashboard(d.id).to_attrs()
+          space[:dashboards].each do |d|
+            data = query_dashboard(d[:id]).to_attrs()
             data[:dashboard_elements].each_index do |i|
               element = data[:dashboard_elements][i]
+              find_vis_config_reference(element) do |vis_config|
+                find_color_palette_reference(vis_config) do |o,default_colors|
+                  rewrite_color_palette!(o,default_colors)
+                end
+              end
               merge_result = merge_query(element[:merge_result_id])&.to_attrs() if element[:merge_result_id]
               if merge_result
                 merge_result[:source_queries].each_index do |j|
                   source_query = merge_result[:source_queries][j]
                   merge_result[:source_queries][j][:query] = query(source_query[:query_id]).to_attrs()
+                end
+                find_vis_config_reference(merge_result) do |vis_config|
+                  find_color_palette_reference(vis_config) do |o,default_colors|
+                    rewrite_color_palette!(o,default_colors)
+                  end
                 end
                 data[:dashboard_elements][i][:merge_result] = merge_result
               end
@@ -120,7 +135,7 @@ module Gzr
           end
           space_children = query_space_children(space_id)
           space_children.each do |child_space|
-            process_space(child_space.id, base, path)
+            process_space(child_space[:id], base, path)
           end
         end
       end

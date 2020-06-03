@@ -136,40 +136,55 @@ module Gzr
         new_look = source.select do |k,v|
           (keys_to_keep('update_look') - [:space_id,:folder_id,:user_id,:query_id,:slug]).include? k
         end
-        new_look[:slug] = source[:slug] if source[:slug] && !slug_used 
-          new_look[:deleted] = false if existing_look[:deleted]
-          new_look[:query_id] = query_id
-          return update_look(existing_look.id,new_look)
-        else
-          new_look = source.select do |k,v|
-            (keys_to_keep('create_look') - [:space_id,:folder_id,:user_id,:query_id,:slug]).include? k
-          end
-          new_look[:slug] = source[:slug] unless slug_used
-          new_look[:query_id] = query_id
-          new_look[:user_id] = user_id
-          new_look[:space_id] = space_id
+        new_look[:slug] = source[:slug] if source[:slug] && !slug_used
+        new_look[:deleted] = false if existing_look[:deleted]
+        new_look[:query_id] = query_id
+        return update_look(existing_look.id,new_look)
+      else
+        new_look = source.select do |k,v|
+          (keys_to_keep('create_look') - [:space_id,:folder_id,:user_id,:query_id,:slug]).include? k
+        end
+        new_look[:slug] = source[:slug] unless slug_used
+        new_look[:query_id] = query_id
+        new_look[:user_id] = user_id
+        new_look[:space_id] = space_id
 
-          return create_look(new_look)
+        find_vis_config_reference(new_look) do |vis_config|
+          find_color_palette_reference(vis_config) do |o,default_colors|
+            update_color_palette!(o,default_colors)
+          end
+        end
+        return create_look(new_look)
       end
     end
 
     def create_fetch_query(source_query)
       new_query = source_query.select do |k,v|
         (keys_to_keep('create_query') - [:client_id]).include? k
-      end 
+      end
+      find_vis_config_reference(new_query) do |vis_config|
+        find_color_palette_reference(vis_config) do |o,default_colors|
+          update_color_palette!(o,default_colors)
+        end
+      end
       return create_query(new_query)
     end
 
     def create_merge_result(merge_result)
       new_merge_result = merge_result.select do |k,v|
         (keys_to_keep('create_merge_query') - [:client_id,:source_queries]).include? k
-      end 
+      end
       new_merge_result[:source_queries] = merge_result[:source_queries].map do |query|
         new_query = {}
         new_query[:query_id] = create_fetch_query(query[:query]).id
         new_query[:name] = query[:name]
         new_query[:merge_fields] = query[:merge_fields]
         new_query
+      end
+      find_vis_config_reference(new_merge_result) do |vis_config|
+        find_color_palette_reference(vis_config) do |o,default_colors|
+          update_color_palette!(o,default_colors)
+        end
       end
       return create_merge_query(new_merge_result)
     end

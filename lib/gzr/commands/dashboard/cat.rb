@@ -46,11 +46,21 @@ module Gzr
             data = query_dashboard(@dashboard_id).to_attrs
             data[:dashboard_elements].each_index do |i|
               element = data[:dashboard_elements][i]
+              find_vis_config_reference(element) do |vis_config|
+                find_color_palette_reference(vis_config) do |o,default_colors|
+                  rewrite_color_palette!(o,default_colors)
+                end
+              end
               merge_result = merge_query(element[:merge_result_id])&.to_attrs if element[:merge_result_id]
               if merge_result
                 merge_result[:source_queries].each_index do |j|
                   source_query = merge_result[:source_queries][j]
                   merge_result[:source_queries][j][:query] = query(source_query[:query_id]).to_attrs
+                end
+                find_vis_config_reference(merge_result) do |vis_config|
+                  find_color_palette_reference(vis_config) do |o,default_colors|
+                    rewrite_color_palette!(o,default_colors)
+                  end
                 end
                 data[:dashboard_elements][i][:merge_result] = merge_result
               end
@@ -86,7 +96,7 @@ module Gzr
                   elsif e[:position] === 'bottom'
                     row = max_row.to_s
                   end
-                  
+
                   column = '0'
                   width = e[:width].to_s
                   height = e[:height].to_s

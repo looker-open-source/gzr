@@ -47,7 +47,7 @@ module Gzr
           with_session do
 
             @me ||= query_me("id")
-            
+
             read_file(@file) do |data|
               look = upsert_look(@me.id,create_fetch_query(data[:query]).id,@dest_space_id,data,output: output)
               upsert_plans_for_look(look.id,@me.id,data[:scheduled_plans]) if data[:scheduled_plans]

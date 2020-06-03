@@ -116,6 +116,146 @@ module Gzr
       data
     end
 
+    def all_color_collections()
+      data = nil
+      begin
+        data = @sdk.all_color_collections()
+      rescue NoMethodError => nme
+        say_warning "The api endpoint all_color_collections() is not implemented on this Looker instance"
+      rescue LookerSDK::NotFound => nf
+        say_warning "The current user can't query all color collections"
+      rescue LookerSDK::Error => e
+        say_error "Error querying all_color_collections()"
+        say_error e.message
+        raise
+      end
+      data
+    end
+
+    def default_color_collection()
+      return @dcc if @dcc
+      data = nil
+      begin
+        data = @sdk.default_color_collection()
+        @dcc = data
+      rescue NoMethodError => nme
+        say_warning "The api endpoint default_color_collection() is not implemented on this Looker instance"
+      rescue LookerSDK::NotFound => nf
+        say_warning "The current user can't query the default color collection"
+      rescue LookerSDK::Error => e
+        say_error "Error querying default_color_collection()"
+        say_error e.message
+        raise
+      end
+      data
+    end
+
+    def color_collection(collection_id)
+      data = nil
+      begin
+        data = @sdk.color_collection(collection_id)
+      rescue NoMethodError => nme
+        say_warning "The api endpoint color_collection(collection_id) is not implemented on this Looker instance"
+      rescue LookerSDK::NotFound => nf
+        say_warning "The color_collection(#{collection_id}) is not found"
+      rescue LookerSDK::Error => e
+        say_error "Error querying color_collection(#{collection_id})"
+        say_error e.message
+        raise
+      end
+      data
+    end
+
+    def find_vis_config_reference(obj, &block)
+      if obj.respond_to?(:'has_key?') && obj.has_key?(:vis_config)
+        yield (obj[:vis_config])
+      end
+      if obj.is_a? Enumerable
+        obj.each { |o| find_vis_config_reference(o,&block) }
+      end
+    end
+
+    def find_color_palette_reference(obj, default_colors=nil, &block)
+      begin
+        dcc = default_color_collection()
+        if dcc.nil?
+          say_warning "You do not have access to query color palettes so these won't be processed."
+          return
+        end
+        default_colors=color_palette_lookup!(dcc)
+      end unless default_colors
+
+      if obj.respond_to?(:'has_key?') && obj.has_key?(:collection_id) && obj.has_key?(:palette_id)
+        yield(obj,default_colors)
+      end
+      if obj.is_a? Enumerable
+        obj.each { |o| find_color_palette_reference(o,default_colors,&block) }
+      end
+    end
+
+    def color_palette_lookup!(obj)
+      return nil unless obj
+      palettes = []
+      palettes += obj[:categoricalPalettes] if obj[:categoricalPalettes]
+      palettes += obj[:sequentialPalettes] if obj[:sequentialPalettes]
+      palettes += obj[:divergingPalettes] if obj[:divergingPalettes]
+      obj[:palettes]=palettes
+      obj
+    end
+
+    def rewrite_color_palette!(o,default_colors)
+      cc = nil
+      if o[:collection_id] == default_colors[:id]
+        o[:collection_default] = true
+        cc = default_colors
+      else
+        o[:collection_default] = false
+        cc = color_palette_lookup!(color_collection(o[:collection_id]))
+      end
+      return unless cc
+      o[:collection_label] = cc[:label]
+      ps = cc[:palettes].select { |p| p[:id] == o[:palette_id] }
+      if ps.length > 0
+        o[:palette_label] = ps.first[:label]
+        o[:palette_type] = ps.first[:type]
+      end
+    end
+
+    def update_color_palette!(o,default_colors,force_default=false)
+      return unless o.has_key?(:collection_label) && o.has_key?(:palette_type)
+
+      cc = default_colors
+      if !(force_default && o[:collection_default])
+        # look up color collection by id
+        cc = color_palette_lookup!(color_collection(o[:collection_id]))
+        if cc.nil?
+          # find color collection by name
+          ccs = all_color_collections()&.select { |cc| o[:collection_label] == cc[:label]}
+          if ccs.nil? || ccs.length == 0
+            # no color collection found. Use default.
+            say_warning "Color collection #{o[:collection_label]} not found. Using default."
+            cc = default_colors
+          else
+            cc = color_palette_lookup!(ccs.first)
+          end
+        end
+      end
+      o[:collection_id] = cc[:id]
+
+      # look up palette by id
+      ps = cc[:palettes].select {|p| p[:id] == o[:palette_id]}
+      if ps.length == 0
+        # find palette by type
+        ps = cc[:palettes].select {|p| p[:type] == o[:palette_type]}
+        if ps.length > 0
+          o[:palette_id] = ps.first[:id]
+        else
+          # no palette found
+          say_warning "Color palette #{o[:palette_type]} not found."
+          o.delete(:palette_id)
+        end
+      end
+    end
 
     ##
     # This method accepts the name of an sdk operation, then finds the parameter for that
@@ -131,7 +271,7 @@ module Gzr
     #   new_obj_hash = existing_obj_hash.select do |k,v|
     #     keys_to_keep('create_new_obj').include? k
     #   end
-    
+
     def keys_to_keep(operation)
       o = @sdk.operations[operation]
       begin
@@ -145,12 +285,12 @@ module Gzr
       schema_ref = parameters[0][:schema][:$ref].split(/\//)
       return @sdk.swagger[schema_ref[1].to_sym][schema_ref[2].to_sym][:properties].reject { |k,v| v[:readOnly] }.keys
     end
-    
+
     ##
     # The tty-table gem is normally used to output tabular data. This method accepts a Table
     # object as used by the tty-table gem, and generates CSV output. It returns a string
     # with crlf encoding
-    
+
     def render_csv(t)
       io = StringIO.new
       io.puts (
