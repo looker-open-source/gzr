@@ -1,4 +1,4 @@
-# The MIT License (MIT)
+# The MIT icense (MIT)
 
 # Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
 
@@ -169,8 +169,7 @@ module Gzr
     def find_vis_config_reference(obj, &block)
       if obj.respond_to?(:'has_key?') && obj.has_key?(:vis_config)
         yield (obj[:vis_config])
-      end
-      if obj.is_a? Enumerable
+      elsif obj.is_a? Enumerable
         obj.each { |o| find_vis_config_reference(o,&block) }
       end
     end
@@ -187,19 +186,20 @@ module Gzr
 
       if obj.respond_to?(:'has_key?') && obj.has_key?(:collection_id) && obj.has_key?(:palette_id)
         yield(obj,default_colors)
-      end
-      if obj.is_a? Enumerable
+      elsif obj.is_a? Enumerable
         obj.each { |o| find_color_palette_reference(o,default_colors,&block) }
       end
     end
 
     def color_palette_lookup!(obj)
-      return nil unless obj
+      say_warning("performing color_palette_lookup! on #{obj.inspect}") if @options[:debug]
+      return nil unless obj.respond_to?(:'has_key?')
       palettes = []
       palettes += obj[:categoricalPalettes] if obj[:categoricalPalettes]
       palettes += obj[:sequentialPalettes] if obj[:sequentialPalettes]
       palettes += obj[:divergingPalettes] if obj[:divergingPalettes]
       obj[:palettes]=palettes
+      say_warning("got palettes #{palettes.inspect}") if @options[:debug]
       obj
     end
 
@@ -227,9 +227,11 @@ module Gzr
       cc = default_colors
       if !(force_default && o[:collection_default])
         # look up color collection by id
+        say_warning("attempting to match palette on id #{o[:collection_id]}") if @options[:debug]
         cc = color_palette_lookup!(color_collection(o[:collection_id]))
         if cc.nil?
           # find color collection by name
+          say_warning("no match on id, attempting to match palette on name #{o[:collection_label]}") if @options[:debug]
           ccs = all_color_collections()&.select { |cc| o[:collection_label] == cc[:label]}
           if ccs.nil? || ccs.length == 0
             # no color collection found. Use default.
