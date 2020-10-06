@@ -153,7 +153,7 @@ module Gzr
     def color_collection(collection_id)
       data = nil
       begin
-        data = @sdk.color_collection(collection_id)
+        data = @sdk.color_collection(collection_id).to_attrs
       rescue NoMethodError => nme
         say_warning "The api endpoint color_collection(collection_id) is not implemented on this Looker instance"
       rescue LookerSDK::NotFound => nf
@@ -181,25 +181,26 @@ module Gzr
           say_warning "You do not have access to query color palettes so these won't be processed."
           return
         end
-        default_colors=color_palette_lookup!(dcc)
-      end unless default_colors
+        @default_colors=color_palette_lookup!(dcc.to_attrs)
+        say_warning("Default colors #{JSON.pretty_generate @default_colors}") if @options[:debug]
+      end unless @default_colors
 
       if obj.respond_to?(:'has_key?') && obj.has_key?(:collection_id) && obj.has_key?(:palette_id)
-        yield(obj,default_colors)
+        yield(obj,@default_colors)
       elsif obj.is_a? Enumerable
-        obj.each { |o| find_color_palette_reference(o,default_colors,&block) }
+        obj.each { |o| find_color_palette_reference(o,@default_colors,&block) }
       end
     end
 
     def color_palette_lookup!(obj)
-      say_warning("performing color_palette_lookup! on #{obj.inspect}") if @options[:debug]
       return nil unless obj.respond_to?(:'has_key?')
+      say_warning("performing color_palette_lookup! on #{JSON.pretty_generate obj}") if @options[:debug]
       palettes = []
       palettes += obj[:categoricalPalettes] if obj[:categoricalPalettes]
       palettes += obj[:sequentialPalettes] if obj[:sequentialPalettes]
       palettes += obj[:divergingPalettes] if obj[:divergingPalettes]
       obj[:palettes]=palettes
-      say_warning("got palettes #{palettes.inspect}") if @options[:debug]
+      say_warning("got palettes #{JSON.pretty_generate palettes}") if @options[:debug]
       obj
     end
 
@@ -210,14 +211,19 @@ module Gzr
         cc = default_colors
       else
         o[:collection_default] = false
+        say_ok("looking up color collection by id #{o[:collection_id]}") if @options[:debug]
         cc = color_palette_lookup!(color_collection(o[:collection_id]))
       end
       return unless cc
+      say_warning("got color collection #{JSON.pretty_generate cc}") if @options[:debug]
       o[:collection_label] = cc[:label]
       ps = cc[:palettes].select { |p| p[:id] == o[:palette_id] }
       if ps.length > 0
-        o[:palette_label] = ps.first[:label]
-        o[:palette_type] = ps.first[:type]
+        p = ps.first
+        o[:palette_label] = p[:label]
+        o[:palette_type] = p[:type]
+        o[:palette_colors] = p[:colors] if p[:colors]
+        o[:palette_stops] = p[:stops] if p[:stops]
       end
     end
 
