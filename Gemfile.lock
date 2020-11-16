@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    gazer (0.2.43)
+    gazer (0.2.44)
       looker-sdk (~> 0.0.7)
       netrc (~> 0.11.0)
       pastel (~> 0.7.2)

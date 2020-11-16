@@ -119,7 +119,7 @@ module Gzr
     def all_color_collections()
       data = nil
       begin
-        data = @sdk.all_color_collections()
+        data = @sdk.all_color_collections().collect { |o| o.to_attrs if o.respond_to?(:to_attrs) }
       rescue NoMethodError => nme
         say_warning "The api endpoint all_color_collections() is not implemented on this Looker instance"
       rescue LookerSDK::NotFound => nf
@@ -136,7 +136,7 @@ module Gzr
       return @dcc if @dcc
       data = nil
       begin
-        data = @sdk.default_color_collection()
+        data = @sdk.default_color_collection().to_attrs
         @dcc = data
       rescue NoMethodError => nme
         say_warning "The api endpoint default_color_collection() is not implemented on this Looker instance"
@@ -181,7 +181,7 @@ module Gzr
           say_warning "You do not have access to query color palettes so these won't be processed."
           return
         end
-        @default_colors=color_palette_lookup!(dcc.to_attrs)
+        @default_colors=color_palette_lookup!(dcc)
         say_warning("Default colors #{JSON.pretty_generate @default_colors}") if @options[:debug]
       end unless @default_colors
 
