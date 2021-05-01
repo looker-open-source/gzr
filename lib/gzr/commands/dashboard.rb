@@ -52,6 +52,8 @@ module Gzr
                            desc: 'Include scheduled plans'
       method_option :transform,  type: :string,
                            desc: 'Fully-qualified path to a JSON file describing the transformations to apply'
+      method_option :simple_filename, type: :boolean,
+                    desc: 'Use simple filename for output (Dashboard_<id>.json)'
       def cat(dashboard_id)
         if options[:help]
           invoke :help, ['cat']

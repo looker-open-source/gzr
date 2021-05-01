@@ -82,6 +82,8 @@ module Gzr
                            desc: 'Directory to store output file'
       method_option :plans,  type: :boolean,
                            desc: 'Include scheduled plans'
+      method_option :simple_filename,  type: :boolean,
+                           desc: 'Use simple filename for output (Look_<id>.json)'
       def cat(look_id)
         if options[:help]
           invoke :help, ['cat']
