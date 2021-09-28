@@ -1,29 +1,29 @@
-## How to contribute to Gazer
+# How to Contribute
 
-Did you read the [code of conduct](https://github.com/looker-open-source/gzr/blob/master/CODE_OF_CONDUCT.md)?
+We'd love to accept your patches and contributions to this project. There are
+just a few small guidelines you need to follow.
 
-#### **Did you find a bug?**
+## Contributor License Agreement
 
-* **Ensure the bug was not already reported** by searching on GitHub under [Issues](https://github.com/looker-open-source/gzr/issues).
+Contributions to this project must be accompanied by a Contributor License
+Agreement (CLA). You (or your employer) retain the copyright to your
+contribution; this simply gives us permission to use and redistribute your
+contributions as part of the project. Head over to
+<https://cla.developers.google.com/> to see your current agreements on file or
+to sign a new one.
 
-* If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/looker-open-source/gzr/issues/new). Be sure to include a **title and clear description**, as much relevant information as possible, and a **code sample** or an **executable test case** demonstrating the expected behavior that is not occurring.
+You generally only need to submit a CLA once, so if you've already submitted one
+(even if it was for a different project), you probably don't need to do it
+again.
 
-#### **Did you write a patch that fixes a bug?**
+## Code Reviews
 
-* Open a new GitHub pull request with the patch.
+All submissions, including submissions by project members, require review. We
+use GitHub pull requests for this purpose. Consult
+[GitHub Help](https://help.github.com/articles/about-pull-requests/) for more
+information on using pull requests.
 
-* Ensure the PR description clearly describes the problem and solution. Include the relevant issue number if applicable.
+## Community Guidelines
 
-* Depending on the content of the patch, we may need to work out a legal agreement to clarify everyone's rights before the patch is accepted.
-
-#### **Do you intend to add a new feature or change an existing one?**
-
-*  Again please open an issue in GitHub. Larger projects often segregate bugs from new features and enhancements, but we are still small enough that it is not an issue.
-
-#### **Do you have questions about the source code?**
-
-* Ask any question about how to use Gazer by contacting the [primary developer](mailto:deangelo+gzr@looker.com).
-
-Thanks! :heart: :heart: :heart:
-
-Gazer Team
+This project follows
+[Google's Open Source Community Guidelines](https://opensource.google/conduct/).
