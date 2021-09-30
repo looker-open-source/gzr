@@ -46,13 +46,19 @@ module Gzr
       output.puts pastel.red data
     end
 
-    def v3_1_available?
-      @v3_1_available ||= false
+    @versions = []
+    @current_version = nil
+
+    def sufficient_version?(given_version, minimum_version)
+      return true unless (given_version && minimum_version)
+      versions = @versions.map {|v| v.version}.sort
+      !versions.drop_while {|v| v < minimum_version}.reverse.drop_while {|v| v > given_version}.empty?
     end
 
-    def build_connection_hash(api_version='3.0')
+
+    def build_connection_hash(api_version=nil)
       conn_hash = Hash.new
-      conn_hash[:api_endpoint] = "http#{@options[:ssl] ? "s" : ""}://#{@options[:host]}:#{@options[:port]}/api/#{api_version}"
+      conn_hash[:api_endpoint] = "http#{@options[:ssl] ? "s" : ""}://#{@options[:host]}:#{@options[:port]}/api/#{api_version||@current_version||""}"
       if @options[:http_proxy]
         conn_hash[:connection_options] ||= {}
         conn_hash[:connection_options][:proxy] = {
@@ -95,10 +101,8 @@ module Gzr
       conn_hash
     end
 
-    def login(api_version)
+    def login(min_api_version=nil)
       @secret = nil
-      versions = nil
-      current_version = nil
       begin
         conn_hash = build_connection_hash
 
@@ -119,8 +123,8 @@ module Gzr
 
         begin
           versions_response = agent.call(:get,"/versions")
-          versions = versions_response.data.supported_versions
-          current_version = versions_response.data.current_version
+          @versions = versions_response.data.supported_versions
+          @current_version = versions_response.data.current_version.version
         rescue Faraday::SSLError => e
           raise Gzr::CLI::Error, "SSL Certificate could not be verified\nDo you need the --no-verify-ssl option or the --no-ssl option?"
         rescue Faraday::ConnectionFailed => cf
@@ -128,17 +132,18 @@ module Gzr
         rescue LookerSDK::NotFound => nf
           say_warning "endpoint #{root}/versions was not found"
         end
-        versions.each do |v|
-          @v3_1_available = true if v.version == "3.1"
-        end
       end
 
-      say_warning "API 3.1 available? #{v3_1_available?}" if @options[:debug]
+      say_warning "API current_version #{@current_version}" if @options[:debug]
+      say_warning "API versions #{@versions.map{|v| v.version}}" if @options[:debug]
 
-      raise Gzr::CLI::Error, "Operation requires API v3.1, but user specified a different version" if (api_version == "3.1") && @options[:api_version] && !("3.1" == @options[:api_version])
-      raise Gzr::CLI::Error, "Operation requires API v3.1, which is not available from this host" if (api_version == "3.1") && !v3_1_available?
+      raise Gzr::CLI::Error, "Operation requires API v#{min_api_version}, but user specified version #{@options[:api_version]}" unless sufficient_version?(@options[:api_version],min_api_version)
 
-      conn_hash = build_connection_hash(@options[:api_version] || current_version.version)
+      api_version = [min_api_version, @current_version].max
+      raise Gzr::CLI::Error, "Operation requires API v#{api_version}, which is not available from this host" if api_version && !@versions.any? {|v| v.version == api_version}
+      raise Gzr::CLI::Error, "User specified API v#{@options[:api_version]}, which is not available from this host" if @options[:api_version] && !@versions.any? {|v| v.version == @options[:api_version]}
+
+      conn_hash = build_connection_hash(@options[:api_version] || api_version)
       @secret = nil
 
       say_ok("connecting to #{conn_hash.map { |k,v| "#{k}=>#{(k == :client_secret) ? '*********' : v}" }}") if @options[:debug]
@@ -200,10 +205,10 @@ module Gzr
       end
     end
 
-    def with_session(api_version="3.0")
+    def with_session(min_api_version="3.0")
       return nil unless block_given?
       begin
-        login(api_version) unless @sdk
+        login(min_api_version) unless @sdk
         yield
       rescue LookerSDK::Error => e
         say_error e.errors if e.respond_to?(:errors) && e.errors
