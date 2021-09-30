@@ -41,6 +41,7 @@ module Gzr
     class_option :http_proxy, type: :string, desc: 'HTTP Proxy for connecting to Looker host'
     class_option :force, type: :boolean, default: false, desc: 'Overwrite objects on server'
     class_option :su, type: :string, desc: 'After connecting, change to user_id given'
+    class_option :width, type: :numeric, default: nil, desc: 'Width of rendering for tables'
 
 
     # Error raised by this runner

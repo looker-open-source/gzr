@@ -101,7 +101,7 @@ module Gzr
               if @options[:csv] then
                 output.puts render_csv(table)
               else
-                output.puts table.render(if @options[:plain] then :basic else :ascii end, alignments: alignments)
+                output.puts table.render(if @options[:plain] then :basic else :ascii end, alignments: alignments, width: @options[:width] || TTY::Screen.width)
               end
             end if table
           end

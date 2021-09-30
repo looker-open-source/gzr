@@ -41,7 +41,7 @@ RSpec.describe Gzr::Commands::Plan::Failures do
     end
 
     output = StringIO.new
-    options = {}
+    options = {:width=>130}
     command = Gzr::Commands::Plan::Failures.new(options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
