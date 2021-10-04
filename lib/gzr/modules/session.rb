@@ -101,6 +101,14 @@ module Gzr
       conn_hash
     end
 
+    def faraday_connection
+      @faraday_connection ||= Faraday.new { |conn|
+        if @options[:persistent]
+          conn.adapter :net_http_persistent
+        end
+      }
+    end
+
     def login(min_api_version=nil)
       @secret = nil
       begin
@@ -149,7 +157,8 @@ module Gzr
       say_ok("connecting to #{conn_hash.map { |k,v| "#{k}=>#{(k == :client_secret) ? '*********' : v}" }}") if @options[:debug]
 
       begin
-        @sdk = LookerSDK::Client.new(conn_hash) unless @sdk
+        @sdk = LookerSDK::Client.new(conn_hash.merge!(faraday: faraday_connection)) unless @sdk
+
         say_ok "check for connectivity: #{@sdk.alive?}" if @options[:debug]
         say_ok "verify authentication: #{@sdk.authenticated?}" if @options[:debug]
       rescue LookerSDK::Unauthorized => e
