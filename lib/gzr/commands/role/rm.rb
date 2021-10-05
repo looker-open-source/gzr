@@ -38,7 +38,7 @@ module Gzr
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
           with_session do
-            delete_role(@plan_id)
+            delete_role(@role_id)
           end
         end
       end
