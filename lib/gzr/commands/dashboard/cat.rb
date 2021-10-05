@@ -117,7 +117,12 @@ module Gzr
               outputJSON.gsub! k,v
             end
 
-            write_file(@options[:dir] ? "Dashboard_#{data[:id]}_#{data[:title]}.json" : nil, @options[:dir], nil, output) do |f|
+            file_name = if @options[:dir]
+                          @options[:simple_filename] ? "Dashboard_#{data[:id]}.json" : "Dashboard_#{data[:id]}_#{data[:title]}.json"
+                        else
+                          nil
+                        end
+            write_file(file_name, @options[:dir], nil, output) do |f|
               f.puts outputJSON
             end
           end

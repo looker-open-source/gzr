@@ -50,7 +50,12 @@ module Gzr
             end
 
             data[:scheduled_plans] = query_scheduled_plans_for_look(@look_id,"all").to_attrs if @options[:plans]
-            write_file(@options[:dir] ? "Look_#{data[:id]}_#{data[:title]}.json" : nil, @options[:dir],nil, output) do |f|
+            file_name = if @options[:dir]
+                          @options[:simple_filename] ? "Look_#{data[:id]}.json" : "Look_#{data[:id]}_#{data[:title]}.json"
+                        else
+                          nil
+                        end
+            write_file(file_name, @options[:dir],nil, output) do |f|
               f.puts JSON.pretty_generate(data)
             end
           end
