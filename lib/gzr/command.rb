@@ -281,7 +281,7 @@ module Gzr
     #   end
 
     def keys_to_keep(operation)
-      o = @sdk.operations[operation]
+      o = @sdk.operations[operation] || @sdk.operations[operation.to_sym]
       begin
         say_error "Operation #{operation} not found"
         return []
