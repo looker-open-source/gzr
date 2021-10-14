@@ -27,39 +27,39 @@ RSpec.describe Gzr::Commands::Look::Import do
   query_response_doc = { :id=>555 }.freeze
 
   look_response_doc = {
-    :id=>31415,
-    :title=>"Daily Profit",
-    :description=>"Total profit by day for the last 100 days",
-    :query_id=>555,
-    :user_id=>1000,
-    :space_id=>1,
-    :slug=>"123xyz"
+    :id => 31415,
+    :title => "Daily Profit",
+    :description => "Total profit by day for the last 100 days",
+    :query_id => 555,
+    :user_id => 1000,
+    :space_id => 1,
+    :slug => "123xyz"
   }.freeze
 
   operations = {
-    "create_query"=> {
-      :info=>{
-        :parameters=>[
+    :create_query => {
+      :info => {
+        :parameters => [
           {
-            :in=>"body",
-            :schema=>{ :$ref=>"#/definitions/Query" }
+            :in => "body",
+            :schema => { :$ref=>"#/definitions/Query" }
           }
         ]
       }
     },
-    "create_look"=>{
-      :info=>{
-        :parameters=>[
+    :create_look => {
+      :info => {
+        :parameters => [
           {
-            :in=>"body",
-            :schema=>{ :$ref=>"#/definitions/Look" }
+            :in => "body",
+            :schema => { :$ref=>"#/definitions/Look" }
           }
         ]
       }
     },
-    "update_look"=>{
-      :info=>{
-        :parameters=>[
+    :update_look => {
+      :info => {
+        :parameters => [
           {
               "name": "look_id",
               "in": "path",
@@ -69,8 +69,8 @@ RSpec.describe Gzr::Commands::Look::Import do
               "format": "int64"
           },
           {
-            :in=>"body",
-            :schema=>{ :$ref=>"#/definitions/Look" }
+            :in => "body",
+            :schema => { :$ref=>"#/definitions/Look" }
           }
         ]
       }

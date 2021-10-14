@@ -23,37 +23,37 @@ require 'gzr/commands/dashboard/mv'
 
 RSpec.describe Gzr::Commands::Dashboard::Mv do
   dash_response_doc = {
-      :id=>500,
-      :title=>"Original Dash",
-      :description=> "Description of the Dash",
-      :slug=> "123xyz",
-      :space_id=> 1,
-      :deleted=> false,
-      :dashboard_filters=>[],
-      :dashboard_elements=>[],
-      :dashboard_layouts=>[]
-    }.freeze
+    :id => 500,
+    :title => "Original Dash",
+    :description => "Description of the Dash",
+    :slug => "123xyz",
+    :space_id => 1,
+    :deleted => false,
+    :dashboard_filters => [],
+    :dashboard_elements => [],
+    :dashboard_layouts => []
+  }.freeze
 
   operations = {
-      "update_dashboard"=>
-      {
-        :info=>{
-          :parameters=>[
-            {
-              "name": "dashboard_id",
-              "in": "path",
-              "description": "Id of dashboard",
-              "required": true,
-              "type": "string"
-            },
-            {
-              :in=>"body",
-              :schema=>{ :$ref=>"#/definitions/Dashboard" }
-            }
-          ]
-        }
+    :update_dashboard =>
+    {
+      :info => {
+        :parameters => [
+          {
+            "name": "dashboard_id",
+            "in": "path",
+            "description": "Id of dashboard",
+            "required": true,
+            "type": "string"
+          },
+          {
+            :in => "body",
+            :schema => { :$ref=>"#/definitions/Dashboard" }
+          }
+        ]
       }
-    }.freeze
+    }
+  }.freeze
 
   define_method :mock_sdk do |block_hash={}|
     mock_sdk = Object.new
