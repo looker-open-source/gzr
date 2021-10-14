@@ -24,78 +24,78 @@ require 'gzr/commands/attribute/import'
 RSpec.describe Gzr::Commands::Attribute::Import do
   attrs = [
     {
-      :id=>1,
-      :name=>"attribute_1",
-      :label=>"Attribute 1",
-      :type=>"string",
-      :default_value=>nil,
-      :is_system=>true,
-      :is_permanent=>nil,
-      :value_is_hidden=>false,
-      :user_can_view=>true,
-      :user_can_edit=>true,
-      :hidden_value_domain_whitelist=>nil
+      :id => 1,
+      :name => "attribute_1",
+      :label => "Attribute 1",
+      :type => "string",
+      :default_value => nil,
+      :is_system => true,
+      :is_permanent => nil,
+      :value_is_hidden => false,
+      :user_can_view => true,
+      :user_can_edit => true,
+      :hidden_value_domain_whitelist => nil
     }.freeze,
     {
-      :id=>2,
-      :name=>"attribute_2",
-      :label=>"Attribute 2",
-      :type=>"number",
-      :default_value=>5,
-      :is_system=>false,
-      :is_permanent=>nil,
-      :value_is_hidden=>false,
-      :user_can_view=>true,
-      :user_can_edit=>true,
-      :hidden_value_domain_whitelist=>nil
+      :id => 2,
+      :name => "attribute_2",
+      :label => "Attribute 2",
+      :type => "number",
+      :default_value => 5,
+      :is_system => false,
+      :is_permanent => nil,
+      :value_is_hidden => false,
+      :user_can_view => true,
+      :user_can_edit => true,
+      :hidden_value_domain_whitelist => nil
     }.freeze,
     {
-      :id=>3,
-      :name=>"attribute_3",
-      :label=>"Attribute 3",
-      :type=>"string",
-      :default_value=>nil,
-      :is_system=>false,
-      :is_permanent=>nil,
-      :value_is_hidden=>false,
-      :user_can_view=>true,
-      :user_can_edit=>false,
-      :hidden_value_domain_whitelist=>nil
+      :id => 3,
+      :name => "attribute_3",
+      :label => "Attribute 3",
+      :type => "string",
+      :default_value => nil,
+      :is_system => false,
+      :is_permanent => nil,
+      :value_is_hidden => false,
+      :user_can_view => true,
+      :user_can_edit => false,
+      :hidden_value_domain_whitelist => nil
     }.freeze
   ]
 
   operations = {
-      "create_user_attribute"=>
-      {
-        :info=>{
-          :parameters=>[
-            {
-              :in=>"body",
-              :schema=>{ :$ref=>"#/definitions/UserAttribute" }
-            }
-          ]
-        }
-      },
-      "update_user_attribute"=>
-      {
-        :info=>{
-          :parameters=>[
-            {
-              "name": "user_attribute_id",
-              "in": "path",
-              "description": "Id of user attribute",
-              "required": true,
-              "type": "integer",
-              "format": "int64"
-            },
-            {
-              :in=>"body",
-              :schema=>{ :$ref=>"#/definitions/UserAttribute" }
-            }
-          ]
-        }
+    :create_user_attribute =>
+    {
+      :info => {
+        :parameters => [
+          {
+            :in => "body",
+            :schema => { :$ref=>"#/definitions/UserAttribute" }
+          }
+        ]
       }
-    }.freeze
+    },
+    :update_user_attribute =>
+    {
+      :info => {
+        :parameters => [
+          {
+            "name": "user_attribute_id",
+            "in": "path",
+            "description": "Id of user attribute",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            :in => "body",
+            :schema => { :$ref=>"#/definitions/UserAttribute" }
+          }
+        ]
+      }
+    }
+  }.freeze
 
   swagger = JSON.parse(<<-SWAGGER, {:symbolize_names => true}).freeze
     {

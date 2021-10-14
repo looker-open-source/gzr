@@ -25,48 +25,48 @@ RSpec.describe Gzr::Commands::Dashboard::Import do
   me_response_doc = { :id=>1000, :first_name=>"John", :last_name=>"Jones", :email=>"jjones@example.com" }.freeze
 
   dash_response_doc = {
-      :id=>500,
-      :title=>"Original Dash",
-      :description=> "Description of the Dash",
-      :slug=> "123xyz",
-      :space_id=> 1,
-      :deleted=> false,
-      :dashboard_filters=>[],
-      :dashboard_elements=>[],
-      :dashboard_layouts=>[]
-    }.freeze
+    :id => 500,
+    :title => "Original Dash",
+    :description => "Description of the Dash",
+    :slug => "123xyz",
+    :space_id => 1,
+    :deleted => false,
+    :dashboard_filters => [],
+    :dashboard_elements => [],
+    :dashboard_layouts => []
+  }.freeze
 
   operations = {
-      "create_dashboard"=>
-      {
-        :info=>{
-          :parameters=>[
-            {
-              :in=>"body",
-              :schema=>{ :$ref=>"#/definitions/Dashboard" }
-            }
-          ]
-        }
-      },
-      "update_dashboard"=>
-      {
-        :info=>{
-          :parameters=>[
-            {
-              "name": "dashboard_id",
-              "in": "path",
-              "description": "Id of dashboard",
-              "required": true,
-              "type": "string"
-            },
-            {
-              :in=>"body",
-              :schema=>{ :$ref=>"#/definitions/Dashboard" }
-            }
-          ]
-        }
+    :create_dashboard =>
+    {
+      :info => {
+        :parameters => [
+          {
+            :in => "body",
+            :schema => { :$ref=>"#/definitions/Dashboard" }
+          }
+        ]
       }
-    }.freeze
+    },
+    :update_dashboard =>
+    {
+      :info => {
+        :parameters => [
+          {
+            "name": "dashboard_id",
+            "in": "path",
+            "description": "Id of dashboard",
+            "required": true,
+            "type": "string"
+          },
+          {
+            :in => "body",
+            :schema => { :$ref=>"#/definitions/Dashboard" }
+          }
+        ]
+      }
+    }
+  }.freeze
 
   swagger = JSON.parse(<<-SWAGGER, {:symbolize_names => true}).freeze
     { "definitions": {
