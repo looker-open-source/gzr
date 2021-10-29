@@ -52,18 +52,17 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "tty-reader", "~> 0.3.0"
-  spec.add_dependency "tty-table", "~> 0.10.0"
-  spec.add_dependency "tty-tree", "~> 0.1.0"
-  spec.add_dependency "pastel", "~> 0.7.2"
-  spec.add_dependency "thor", "~> 0.20.0"
+  spec.add_dependency "tty-reader", "~> 0.9.0"
+  spec.add_dependency "tty-table", "~> 0.12.0"
+  spec.add_dependency "tty-tree", "~> 0.4.0"
+  spec.add_dependency "pastel", "~> 0.8.0"
+  spec.add_dependency "thor", "~> 1.1.0"
   spec.add_dependency 'netrc', "~> 0.11.0"
   spec.add_dependency 'rubyzip', "~> 1.3.0"
   spec.add_dependency 'looker-sdk', "~> 0.1.1"
   spec.add_dependency 'net-http-persistent', '~> 4.0.1'
 
-  spec.add_development_dependency "bundler", "~> 1.17"
+  spec.add_development_dependency "bundler", ">= 2.2.10"
   spec.add_development_dependency "rake", "~> 12.3.3"
   spec.add_development_dependency "rspec", "~> 3.0"
-  spec.add_development_dependency "tty", "~> 0.8"
 end
