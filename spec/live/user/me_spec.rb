@@ -26,7 +26,7 @@ RSpec.describe "`gzr user me` command", type: :cli do
 +--+------------------------+---------+----------+-----------------+-------------+
 |id|email                   |last_name|first_name|personal_space_id|home_space_id|
 +--+------------------------+---------+----------+-----------------+-------------+
-| 1|firstadmin@schmoogle.com|Rekool   |Firstadmin|                 |             |
+| 1|firstadmin@schmoogle.com|Rekool   |Firstadmin|                5|            1|
 +--+------------------------+---------+----------+-----------------+-------------+
     OUT
   end
