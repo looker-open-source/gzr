@@ -21,7 +21,7 @@
 
 RSpec.describe "`gzr user me` command", type: :cli do
   it "executes `user me` command successfully against a live server" do
-    output = `gzr user me`
+    output = `gzr user me --width=130`
     expect(output).to eq <<-OUT
 +--+------------------------+---------+----------+-----------------+-------------+
 |id|email                   |last_name|first_name|personal_space_id|home_space_id|
