@@ -51,6 +51,7 @@ RSpec.describe Gzr::Commands::Space::Top do
 
     output = StringIO.new
     options = {:fields => 'id,name,is_shared_root,is_users_root,is_embed_shared_root,is_embed_users_root'}
+    options[:width] = 130
     command = Gzr::Commands::Space::Top.new(options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
