@@ -49,6 +49,7 @@ RSpec.describe Gzr::Commands::Plan::Ls do
 
     output = StringIO.new
     options = {:fields=>'id,name,title,user(id,display_name),look_id,dashboard_id,lookml_dashboard_id'}
+    options[:width] = 130
     command = Gzr::Commands::Plan::Ls.new(options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
