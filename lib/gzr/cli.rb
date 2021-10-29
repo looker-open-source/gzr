@@ -44,7 +44,6 @@ module Gzr
     class_option :width, type: :numeric, default: nil, desc: 'Width of rendering for tables'
     class_option :persistent, type: :boolean, default: false, desc: 'Use persistent connection to communicate with host'
 
-
     # Error raised by this runner
     Error = Class.new(StandardError)
 
