@@ -28,7 +28,7 @@ Gem::Specification.new do |spec|
   spec.license       = "MIT"
   spec.version       = Gzr::VERSION
   spec.authors       = ["Mike DeAngelo"]
-  spec.email         = ["deangelo@looker.com"]
+  spec.email         = ["drstrangelove@google.com"]
 
   spec.summary       = %q{Command line tool to manage the content of a Looker instance.}
   spec.description   = %q{Command line tool to manage the content of a Looker instance.}

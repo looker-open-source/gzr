@@ -74,7 +74,8 @@ module Gzr
           }
         else
           conn_hash[:connection_options][:ssl] = {
-            :verify => false
+            :verify => false,
+            :verify_mode => (OpenSSL::SSL::VERIFY_NONE)
           }
         end
       end
@@ -101,15 +102,33 @@ module Gzr
       conn_hash
     end
 
-    def faraday_connection
-      @faraday_connection ||= Faraday.new { |conn|
-        if @options[:persistent]
-          conn.adapter :net_http_persistent
-        end
-      }
-    end
-
     def login(min_api_version=nil)
+      if (@options[:client_id].nil? && ENV["LOOKERSDK_CLIENT_ID"])
+        @options[:client_id] = ENV["LOOKERSDK_CLIENT_ID"]
+      end
+
+      if (@options[:client_secret].nil? && ENV["LOOKERSDK_CLIENT_SECRET"])
+        @options[:client_secret] = ENV["LOOKERSDK_CLIENT_SECRET"]
+      end
+
+      if (@options[:api_version].nil? && ENV["LOOKERSDK_API_VERSION"])
+        @options[:api_version] = ENV["LOOKERSDK_API_VERSION"]
+      end
+
+      if (@options[:verify_ssl] && ENV["LOOKERSDK_VERIFY_SSL"])
+        @options[:verify_ssl] = !(/^f(alse)?$/i =~ ENV["LOOKERSDK_VERIFY_SSL"])
+      end
+
+      if ((@options[:host] == 'localhost') && ENV["LOOKERSDK_BASE_URL"])
+        base_url = ENV["LOOKERSDK_BASE_URL"]
+        @options[:ssl] = !!(/^https/ =~ base_url)
+        @options[:host] = /^https?:\/\/([^:\/]+)/.match(base_url)[1]
+        md = /:([0-9]+)\/?$/.match(base_url)
+        @options[:port] = md[1] if md
+      end
+
+      say_ok("using options #{@options.select { |k,v| k != 'client_secret' }.map { |k,v| "#{k}=>#{v}" }}") if @options[:debug]
+
       @secret = nil
       begin
         conn_hash = build_connection_hash
@@ -117,7 +136,11 @@ module Gzr
         sawyer_options = {
           :links_parser => Sawyer::LinkParsers::Simple.new,
           :serializer  => LookerSDK::Client::Serializer.new(JSON),
-          :faraday => Faraday.new(conn_hash[:connection_options])
+          :faraday => Faraday.new(conn_hash[:connection_options]) do |conn|
+            if @options[:persistent]
+              conn.adapter :net_http_persistent
+            end
+          end
         }
 
         endpoint = conn_hash[:api_endpoint]
@@ -157,7 +180,12 @@ module Gzr
       say_ok("connecting to #{conn_hash.map { |k,v| "#{k}=>#{(k == :client_secret) ? '*********' : v}" }}") if @options[:debug]
 
       begin
-        @sdk = LookerSDK::Client.new(conn_hash.merge!(faraday: faraday_connection)) unless @sdk
+        faraday = Faraday.new(conn_hash[:connection_options]) do |conn|
+          if @options[:persistent]
+            conn.adapter :net_http_persistent
+          end
+        end
+        @sdk = LookerSDK::Client.new(conn_hash.merge(faraday: faraday)) unless @sdk
 
         say_ok "check for connectivity: #{@sdk.alive?}" if @options[:debug]
         say_ok "verify authentication: #{@sdk.authenticated?}" if @options[:debug]
