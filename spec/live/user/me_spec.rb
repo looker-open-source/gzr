@@ -30,4 +30,4 @@ RSpec.describe "`gzr user me` command", type: :cli do
 +--+------------------------+---------+----------+
     OUT
   end
-end
+end if ENV["LOOKERSDK_BASE_URL"]

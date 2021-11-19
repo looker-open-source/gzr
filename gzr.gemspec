@@ -31,7 +31,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["drstrangelove@google.com"]
 
   spec.summary       = %q{Command line tool to manage the content of a Looker instance.}
-  spec.description   = %q{Command line tool to manage the content of a Looker instance.}
+  spec.description   = %q{This tool will help manage the content of a Looker instance.}
   spec.homepage      = "https://github.com/looker-open-source/gzr"
 
   spec.required_ruby_version = '>= 2.3.0'
@@ -56,13 +56,13 @@ Gem::Specification.new do |spec|
   spec.add_dependency "tty-table", "~> 0.12.0"
   spec.add_dependency "tty-tree", "~> 0.4.0"
   spec.add_dependency "pastel", "~> 0.8.0"
-  spec.add_dependency "thor", "~> 1.1.0"
+  spec.add_runtime_dependency 'thor', '~> 1.1', '>= 1.1.0'
   spec.add_dependency 'netrc', "~> 0.11.0"
-  spec.add_dependency 'rubyzip', "~> 1.3.0"
+  spec.add_runtime_dependency 'rubyzip', '~> 1.3', '>= 1.3.0'
   spec.add_dependency 'looker-sdk', "~> 0.1.1"
-  spec.add_dependency 'net-http-persistent', '~> 4.0.1'
+  spec.add_runtime_dependency 'net-http-persistent', '~> 4.0', '>= 4.0.1'
 
-  spec.add_development_dependency "bundler", ">= 2.2.10"
-  spec.add_development_dependency "rake", "~> 12.3.3"
+  spec.add_development_dependency 'bundler', '~> 2.2', '>= 2.2.10'
+  spec.add_development_dependency 'rake', '~> 12.3', '>= 12.3.3'
   spec.add_development_dependency "rspec", "~> 3.0"
 end
