@@ -5,7 +5,7 @@ and Dashboards via a simple command line tool.
 
 ## Status and Support
 
-As of November 2021, Looker Deployer is supported, but not warrantied by Bytecode IO, Inc.  Issues and feature requests can be reported via https://github.com/llooker/looker_deployer/issues, which will be regularly monitored and prioritized by Bytecode IO, Inc., a preferred Looker consulting partner.
+As of November 2021, Gazer is supported, but not warrantied by Bytecode IO, Inc.  Issues and feature requests can be reported via https://github.com/looker-open-source/gzr/issues, which will be regularly monitored and prioritized by Bytecode IO, Inc., a preferred Looker consulting partner.
 
 ## Installation
 
