@@ -19,6 +19,7 @@ jobs:
           bump-minor-pre-major: true
           bump-patch-for-minor-pre-major: true
           version-file: "lib/gzr/version.rb"
+          token: ${{ secrets.LOS_AUTO_BOT_RP_TOKEN }}
       # Checkout code if release was created
       - uses: actions/checkout@v2
         if: ${{ steps.release.outputs.release_created }}
