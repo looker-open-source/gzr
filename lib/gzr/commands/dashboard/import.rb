@@ -53,8 +53,17 @@ module Gzr
 
             read_file(@file) do |data|
 
-              dashboard = sync_dashboard(data,@dest_space_id, output: output)
+              if data[:deleted]
+                say_warning("Attempt to import a deleted dashboard!")
+                say_warning("This may result in errors.")
+              end
 
+              if !data[:dashboard_elements]
+                say_error("File contains no dashboard_elements! Is this a look?")
+                raise Gzr::CLI::Error, "import file is not a valid dashboard"
+              end
+
+              dashboard = sync_dashboard(data,@dest_space_id, output: output)
 
               dashboard[:dashboard_filters] ||= []
               source_filters = data[:dashboard_filters].sort { |a,b| a[:row] <=> b[:row] }
