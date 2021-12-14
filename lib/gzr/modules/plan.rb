@@ -49,6 +49,9 @@ module Gzr
       data = nil
       begin
         data = @sdk.scheduled_plans_for_look(look_id,req)
+        return nil if data.respond_to?(:message) && data.message == 'Not found'
+      rescue LookerSDK::NotFound
+        return nil
       rescue LookerSDK::ClientError => e
         say_error "Unable to get scheduled_plans_for_look(#{look_id},#{JSON.pretty_generate(req)})"
         say_error e.message
@@ -65,6 +68,9 @@ module Gzr
       data = nil
       begin
         data = @sdk.scheduled_plans_for_dashboard(dashboard_id,req)
+        return nil if data.respond_to?(:message) && data.message == 'Not found'
+      rescue LookerSDK::NotFound
+        return nil
       rescue LookerSDK::ClientError => e
         say_error "Unable to get scheduled_plans_for_dashboard(#{dashboard_id},#{JSON.pretty_generate(req)})"
         say_error e.message

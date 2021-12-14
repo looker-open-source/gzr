@@ -42,14 +42,7 @@ module Gzr
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
           with_session do
-            data = query_look(@look_id).to_attrs
-            find_vis_config_reference(data) do |vis_config|
-              find_color_palette_reference(vis_config) do |o,default_colors|
-                rewrite_color_palette!(o,default_colors)
-              end
-            end
-
-            data[:scheduled_plans] = query_scheduled_plans_for_look(@look_id,"all").to_attrs if @options[:plans]
+            data = cat_look(@look_id)
             file_name = if @options[:dir]
                           @options[:simple_filename] ? "Look_#{data[:id]}.json" : "Look_#{data[:id]}_#{data[:title]}.json"
                         else
