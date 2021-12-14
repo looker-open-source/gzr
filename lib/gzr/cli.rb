@@ -29,6 +29,10 @@ module Gzr
   #
   # @api public
   class CLI < Thor
+    def self.exit_on_failure?
+      true
+    end
+
     class_option :debug, type: :boolean, default: false, desc: 'Run in debug mode'
     class_option :host, type: :string, default: 'localhost', desc: 'Looker Host'
     class_option :port, type: :string, default: '19999', desc: 'Looker API Port'
