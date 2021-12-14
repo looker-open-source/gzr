@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.2.53](https://www.github.com/looker-open-source/gzr/compare/v0.2.52...v0.2.53) (2021-12-14)
+
+
+### Bug Fixes
+
+* fix version ([#121](https://www.github.com/looker-open-source/gzr/issues/121)) ([f9b0b22](https://www.github.com/looker-open-source/gzr/commit/f9b0b2237eb3c520aabc2f1ff5a63ddf6c934ce4))
+
 ### [0.2.52](https://www.github.com/looker-open-source/gzr/compare/v0.2.51...v0.2.52) (2021-12-14)
 
 
