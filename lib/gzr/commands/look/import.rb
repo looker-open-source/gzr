@@ -49,6 +49,17 @@ module Gzr
             @me ||= query_me("id")
 
             read_file(@file) do |data|
+
+              if data[:deleted]
+                say_warning("Attempt to import a deleted look!")
+                say_warning("This may result in errors.")
+              end
+
+              if data[:dashboard_elements]
+                say_error("File contains dashboard_elements! Is this a dashboard?")
+                raise Gzr::CLI::Error, "import file is not a valid look"
+              end
+
               look = upsert_look(@me.id,create_fetch_query(data[:query]).id,@dest_space_id,data,output: output)
               upsert_plans_for_look(look.id,@me.id,data[:scheduled_plans]) if data[:scheduled_plans]
               output.puts "Imported look #{look.id}" unless @options[:plain] 
