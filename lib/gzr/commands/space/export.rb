@@ -25,6 +25,7 @@ require_relative '../../command'
 require_relative '../../modules/space'
 require_relative '../../modules/look'
 require_relative '../../modules/dashboard'
+require_relative '../../modules/plan'
 require_relative '../../modules/filehelper'
 require 'pathname'
 require 'stringio'
@@ -37,6 +38,7 @@ module Gzr
         include Gzr::Space
         include Gzr::Look
         include Gzr::Dashboard
+        include Gzr::Plan
         include Gzr::FileHelper
         def initialize(space_id, options)
           super()
@@ -96,39 +98,13 @@ module Gzr
             end)
           end
           space[:looks].each do |l|
-            look = query_look(l[:id]).to_attrs
-            find_vis_config_reference(look) do |vis_config|
-              find_color_palette_reference(vis_config) do |o,default_colors|
-                rewrite_color_palette!(o,default_colors)
-              end
-            end
+            look = cat_look(l[:id])
             write_file("Look_#{look[:id]}_#{look[:title]}.json", base, path) do |f|
               f.write JSON.pretty_generate(look)
             end
           end
           space[:dashboards].each do |d|
-            data = query_dashboard(d[:id]).to_attrs()
-            data[:dashboard_elements].each_index do |i|
-              element = data[:dashboard_elements][i]
-              find_vis_config_reference(element) do |vis_config|
-                find_color_palette_reference(vis_config) do |o,default_colors|
-                  rewrite_color_palette!(o,default_colors)
-                end
-              end
-              merge_result = merge_query(element[:merge_result_id])&.to_attrs() if element[:merge_result_id]
-              if merge_result
-                merge_result[:source_queries].each_index do |j|
-                  source_query = merge_result[:source_queries][j]
-                  merge_result[:source_queries][j][:query] = query(source_query[:query_id]).to_attrs()
-                end
-                find_vis_config_reference(merge_result) do |vis_config|
-                  find_color_palette_reference(vis_config) do |o,default_colors|
-                    rewrite_color_palette!(o,default_colors)
-                  end
-                end
-                data[:dashboard_elements][i][:merge_result] = merge_result
-              end
-            end
+            data = cat_dashboard(d[:id])
             write_file("Dashboard_#{data[:id]}_#{data[:title]}.json", base, path) do |f|
               f.write JSON.pretty_generate(data)
             end

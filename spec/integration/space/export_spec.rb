@@ -27,12 +27,13 @@ Usage:
   gzr space export SPACE_ID
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
-      [--dir=DIR]            # Directory to store output tree
-                             # Default: .
-      [--tar=TAR]            # Tar file to store output
-      [--tgz=TGZ]            # TarGZ file to store output
-      [--zip=ZIP]            # Zip file to store output
+  -h, [--help], [--no-help]    # Display usage information
+      [--plans], [--no-plans]  # Include scheduled plans
+      [--dir=DIR]              # Directory to store output tree
+                               # Default: .
+      [--tar=TAR]              # Tar file to store output
+      [--tgz=TGZ]              # TarGZ file to store output
+      [--zip=ZIP]              # Zip file to store output
 
 Export a space, including all child looks, dashboards, and spaces.
     OUT

@@ -43,29 +43,7 @@ module Gzr
         def execute(*args, input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
           with_session("3.1") do
-            data = query_dashboard(@dashboard_id).to_attrs
-            data[:dashboard_elements].each_index do |i|
-              element = data[:dashboard_elements][i]
-              find_vis_config_reference(element) do |vis_config|
-                find_color_palette_reference(vis_config) do |o,default_colors|
-                  rewrite_color_palette!(o,default_colors)
-                end
-              end
-              merge_result = merge_query(element[:merge_result_id])&.to_attrs if element[:merge_result_id]
-              if merge_result
-                merge_result[:source_queries].each_index do |j|
-                  source_query = merge_result[:source_queries][j]
-                  merge_result[:source_queries][j][:query] = query(source_query[:query_id]).to_attrs
-                end
-                find_vis_config_reference(merge_result) do |vis_config|
-                  find_color_palette_reference(vis_config) do |o,default_colors|
-                    rewrite_color_palette!(o,default_colors)
-                  end
-                end
-                data[:dashboard_elements][i][:merge_result] = merge_result
-              end
-            end
-            data[:scheduled_plans] = query_scheduled_plans_for_dashboard(@dashboard_id,"all").to_attrs if @options[:plans]
+            data = cat_dashboard(@dashboard_id)
 
             replacements = {}
             if @options[:transform]

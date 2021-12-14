@@ -64,6 +64,8 @@ module Gzr
       desc 'export SPACE_ID', 'Export a space, including all child looks, dashboards, and spaces.'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
+      method_option :plans,  type: :boolean,
+                           desc: 'Include scheduled plans'
       method_option :dir, type: :string, default: '.',
                            desc: 'Directory to store output tree'
       method_option :tar, type: :string,
