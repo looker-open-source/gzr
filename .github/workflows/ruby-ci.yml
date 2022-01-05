@@ -9,16 +9,22 @@ on:
 env:
   LOOKERSDK_BASE_URL: https://localhost:20000
   LOOKERSDK_VERIFY_SSL: false
-  TS_JUNIT_OUTPUT_DIR: results/sdk-codegen
   LOOKERSDK_CLIENT_ID: ${{ secrets.LOOKERSDK_CLIENT_ID__21_18 }}
   LOOKERSDK_CLIENT_SECRET: ${{ secrets.LOOKERSDK_CLIENT_SECRET__21_18 }}
 
 jobs:
   test:
-
-    runs-on: ubuntu-latest
+    name: Test - ${{ matrix.os }} / Looker.${{ matrix.looker }} / Ruby.${{ matrix.ruby-version }}
+    runs-on: ${{ matrix.os }}-latest
     strategy:
       matrix:
+        os:
+          - ubuntu
+        looker:
+          - '21_12'
+          - '21_16'
+          - '21_18'
+          - '21_20'
         ruby-version: [2.5.8]
 
     steps:
@@ -38,10 +44,19 @@ jobs:
         # TODO: can we cache some layers of the image for faster download?
         # we probably don't want to cache the final image for IP security...
         run: |
-          docker pull --quiet us-west1-docker.pkg.dev/cloud-looker-sdk-codegen-cicd/looker/21_20
+          docker pull --quiet us-west1-docker.pkg.dev/cloud-looker-sdk-codegen-cicd/looker/${{ matrix.looker }}
           # set $LOOKER_OPTS to --no-ssl if we want to turn off ssl
-          docker run --name looker-sdk-codegen-ci -d -p 10000:9999 -p 20000:19999 us-west1-docker.pkg.dev/cloud-looker-sdk-codegen-cicd/looker/21_20
+          docker run --name looker-sdk-codegen-ci -d -p 10000:9999 -p 20000:19999 us-west1-docker.pkg.dev/cloud-looker-sdk-codegen-cicd/looker/${{ matrix.looker }}
           docker logs -f looker-sdk-codegen-ci --until=30s &
+
+      - name: Determine credentials version
+        run: |
+          echo "CREDENTIALS_VERSION=$(${{ github.workspace }}/.github/scripts/parse_version.bash <<< ${{ matrix.looker }})" >> $GITHUB_ENV
+
+      - name: Set up Looker credentials
+        run: |
+          echo "LOOKERSDK_CLIENT_ID=${{ secrets[format('LOOKERSDK_CLIENT_ID__{0}', env.CREDENTIALS_VERSION )] }}" >> $GITHUB_ENV
+          echo "LOOKERSDK_CLIENT_SECRET=${{ secrets[format('LOOKERSDK_CLIENT_SECRET__{0}', env.CREDENTIALS_VERSION )] }}" >> $GITHUB_ENV
 
       - name: Set up Ruby ${{ matrix.ruby-version }}
         uses: ruby/setup-ruby@v1
