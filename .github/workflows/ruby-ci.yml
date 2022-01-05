@@ -21,8 +21,6 @@ jobs:
         os:
           - ubuntu
         looker:
-          - '21_12'
-          - '21_16'
           - '21_18'
           - '21_20'
         ruby-version: [2.5.8]
