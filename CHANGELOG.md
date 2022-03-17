@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.2.54](https://www.github.com/looker-open-source/gzr/compare/v0.2.53...v0.2.54) (2022-03-17)
+
+
+### Bug Fixes
+
+* Avoid API 4.0 for deprecation of spaces endpoint ([#124](https://www.github.com/looker-open-source/gzr/issues/124)) ([#125](https://www.github.com/looker-open-source/gzr/issues/125)) ([3823399](https://www.github.com/looker-open-source/gzr/commit/38233991bfc5456ac0cf3d485d12520f50a2ea76))
+
 ### [0.2.53](https://www.github.com/looker-open-source/gzr/compare/v0.2.52...v0.2.53) (2021-12-14)
 
 
