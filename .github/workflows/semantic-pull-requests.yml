@@ -1,0 +1,17 @@
+# .github/workflows/semantic-pull-requests.yml
+name: Semantic Pull Requests
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - name: semantic-pull-request
+        uses: amannn/action-semantic-pull-request@v4.5.0
