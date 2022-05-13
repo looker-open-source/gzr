@@ -57,6 +57,7 @@ module Gzr
       puts "v#{Gzr::VERSION}"
     end
     map %w(--version -v) => :version
+    map folder: :space  # Alias folder command to space
 
     require_relative 'commands/attribute'
     register Gzr::Commands::Attribute, 'attribute', 'attribute [SUBCOMMAND]', 'Command description...'
