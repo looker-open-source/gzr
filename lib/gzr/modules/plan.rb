@@ -76,6 +76,7 @@ module Gzr
         say_error e.message
         raise
       end
+      data.map! {|plan| plan.to_attrs}
       data
     end
     
