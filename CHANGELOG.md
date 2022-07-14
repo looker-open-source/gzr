@@ -2,12 +2,9 @@
 
 ### [0.2.56](https://www.github.com/looker-open-source/gzr/compare/v0.2.55...v0.2.56) (2022-07-14)
 
-
 ### Bug Fixes
 
-* fix for release 0.2.55 ([3e2e4bd](https://www.github.com/looker-open-source/gzr/commit/3e2e4bdfdc35018449b3c6be6a6610f44ae865f7))
-* release version ([c94373c](https://www.github.com/looker-open-source/gzr/commit/c94373ce0677b4bd86e525f6a7e15b0204cb69fe))
-* revert release to v2 ([4e0276b](https://www.github.com/looker-open-source/gzr/commit/4e0276bbb9427ed97b942ae57ac26b8a8252021d))
+- release version ([c94373c](https://www.github.com/looker-open-source/gzr/commit/c94373ce0677b4bd86e525f6a7e15b0204cb69fe))
 
 ### [0.2.55](https://github.com/looker-open-source/gzr/compare/v0.2.54...v0.2.55) (2022-07-14)
 
