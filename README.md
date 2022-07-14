@@ -3,6 +3,16 @@
 Gazer can be used to navigate and manage Spaces, Looks, 
 and Dashboards via a simple command line tool.
 
+<br/>
+
+## *Attention*
+
+> This project is on a path towards deprecation in favor of (Looker Deployer)[https://github.com/looker-open-source/looker_deployer]. New users should start with Looker Deployer if possible. 
+>
+> Looker Deployer is based on newer Looker APIs and is intended to provide a superset of CLI functionality, including content migration features.
+
+<br/>
+
 ## Status and Support
 
 As of November 2021, Gazer is supported, but not warrantied by Bytecode IO, Inc.  Issues and feature requests can be reported via https://github.com/looker-open-source/gzr/issues, which will be regularly monitored and prioritized by Bytecode IO, Inc., a preferred Looker consulting partner.
