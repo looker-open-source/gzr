@@ -1,11 +1,10 @@
 # Changelog
 
-### [0.2.55](https://www.github.com/looker-open-source/gzr/compare/v0.2.54...v0.2.55) (2022-07-14)
-
+### [0.2.55](https://github.com/looker-open-source/gzr/compare/v0.2.54...v0.2.55) (2022-07-14)
 
 ### Bug Fixes
 
-* Added alias for folder command to point to space. ([#133](https://www.github.com/looker-open-source/gzr/issues/133)) ([e54ffe0](https://www.github.com/looker-open-source/gzr/commit/e54ffe0c8c1ba300b5d989c5b16b8a234e9623b1))
+* Added alias for folder command to point to space. ([#133](https://github.com/looker-open-source/gzr/issues/133)) ([e54ffe0](https://github.com/looker-open-source/gzr/commit/e54ffe0c8c1ba300b5d989c5b16b8a234e9623b1))
 
 ### [0.2.54](https://www.github.com/looker-open-source/gzr/compare/v0.2.53...v0.2.54) (2022-03-17)
 
