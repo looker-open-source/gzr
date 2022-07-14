@@ -1,7 +1,6 @@
 # Changelog
 
-## [0.2.55](https://github.com/looker-open-source/gzr/compare/v0.2.54...v0.2.55) (2022-07-14)
-
+### [0.2.55](https://github.com/looker-open-source/gzr/compare/v0.2.54...v0.2.55) (2022-07-14)
 
 ### Bug Fixes
 
