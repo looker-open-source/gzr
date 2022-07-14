@@ -250,7 +250,7 @@ module Gzr
           data[:dashboard_elements][i][:merge_result] = merge_result
         end
       end
-      data[:scheduled_plans] = query_scheduled_plans_for_dashboard(@dashboard_id,"all")&.to_attrs if @options[:plans]
+      data[:scheduled_plans] = query_scheduled_plans_for_dashboard(@dashboard_id,"all") if @options[:plans]
       data
     end
   end
