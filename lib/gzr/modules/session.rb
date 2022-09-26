@@ -153,9 +153,10 @@ module Gzr
         end
 
         begin
-          versions_response = agent.call(:get,"/versions")
+          versions_response = agent.call(:get,"https://"+@options[:host]+"/versions")
           @versions = versions_response.data.supported_versions
-          @current_version = "3.1"
+          @current_version = versions_response.data.current_version.version
+
         rescue Faraday::SSLError => e
           raise Gzr::CLI::Error, "SSL Certificate could not be verified\nDo you need the --no-verify-ssl option or the --no-ssl option?"
         rescue Faraday::ConnectionFailed => cf
