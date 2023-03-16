@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.2.57](https://www.github.com/looker-open-source/gzr/compare/v0.2.56...v0.2.57) (2023-03-16)
+
+
+### Bug Fixes
+
+* temporary fix for faraday 2.x in looker-sdk ([acdb7e8](https://www.github.com/looker-open-source/gzr/commit/acdb7e8a174cd3dde5d8c95c95e572ec331b948f))
+
 ### [0.2.56](https://www.github.com/looker-open-source/gzr/compare/v0.2.55...v0.2.56) (2022-07-14)
 
 ### Bug Fixes
