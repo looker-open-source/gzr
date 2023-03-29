@@ -5,73 +5,61 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 env:
   LOOKERSDK_BASE_URL: https://localhost:20000
   LOOKERSDK_VERIFY_SSL: false
-  LOOKERSDK_CLIENT_ID: ${{ secrets.LOOKERSDK_CLIENT_ID__21_18 }}
-  LOOKERSDK_CLIENT_SECRET: ${{ secrets.LOOKERSDK_CLIENT_SECRET__21_18 }}
+  LOOKERSDK_CLIENT_ID: ${{ secrets.LOOKERSDK_CLIENT_ID }}
+  LOOKERSDK_CLIENT_SECRET: ${{ secrets.LOOKERSDK_CLIENT_SECRET }}
 
 jobs:
+  setup:
+    uses: looker-open-source/reusable-actions/.github/workflows/supported-versions.yml@main
+
   test:
-    name: Test - ${{ matrix.os }} / Looker.${{ matrix.looker }} / Ruby.${{ matrix.ruby-version }}
-    runs-on: ${{ matrix.os }}-latest
+    name: Test - Looker.${{ matrix.looker }} / Ruby.${{ matrix.ruby-version }}
+    runs-on: ubuntu-latest
+    needs: setup
     strategy:
       matrix:
-        os:
-          - ubuntu
-        looker:
-          - '21_18'
-          - '21_20'
-          - '22_0'
-        ruby-version: [2.5.8]
+        looker: ${{ fromJson(needs.setup.outputs.matrix_json) }}
+        ruby-version: [2.7.7]
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.11.0
+        with:
+          access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1.0.0
+        with:
+          credentials_json: ${{ secrets.GCP_AR_READER_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          create_credentials_file: true
+          export_environment_variables: true
 
       - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v0.2.0
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          service_account_key: ${{ secrets.GCP_AR_READER_SA_KEY }}
-          export_default_credentials: true
+        uses: google-github-actions/setup-gcloud@v1.1.0
 
       - name: Authenticate Artifact Repository
         run: gcloud auth configure-docker us-west1-docker.pkg.dev --quiet
 
       - name: Pull and run Looker docker image
-        # TODO: can we cache some layers of the image for faster download?
-        # we probably don't want to cache the final image for IP security...
         run: |
           docker pull --quiet us-west1-docker.pkg.dev/cloud-looker-sdk-codegen-cicd/looker/${{ matrix.looker }}
           # set $LOOKER_OPTS to --no-ssl if we want to turn off ssl
           docker run --name looker-sdk-codegen-ci -d -p 10000:9999 -p 20000:19999 us-west1-docker.pkg.dev/cloud-looker-sdk-codegen-cicd/looker/${{ matrix.looker }}
           docker logs -f looker-sdk-codegen-ci --until=30s &
 
-      - name: Determine credentials version
-        # Prior to 21_18, each version had different credentials and a 
-        # different secret. 21_20 and later all use the same credentials
-        # as 21_18. The parse_version.sh script parses the version and
-        # yields 21_12, 21_14, 21_16 etc for those versions but 21_18 for
-        # anything 21_18, 21_20, 22_0, etc.
-        #
-        # This can be factored out entirely once 21_18 is the earliest
-        # supported looker version.
-        run: |
-          echo "CREDENTIALS_VERSION=$(${{ github.workspace }}/.github/scripts/parse_version.sh <<< ${{ matrix.looker }})" >> $GITHUB_ENV
-
-      - name: Set up Looker credentials
-        # Load the correct credentials based on the version from
-        # the prior step.
-        run: |
-          echo "LOOKERSDK_CLIENT_ID=${{ secrets[format('LOOKERSDK_CLIENT_ID__{0}', env.CREDENTIALS_VERSION )] }}" >> $GITHUB_ENV
-          echo "LOOKERSDK_CLIENT_SECRET=${{ secrets[format('LOOKERSDK_CLIENT_SECRET__{0}', env.CREDENTIALS_VERSION )] }}" >> $GITHUB_ENV
-
       - name: Set up Ruby ${{ matrix.ruby-version }}
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby-version }}
-          bundler-cache: true
+          bundler-cache: false
 
       - name: Install dependencies
         run: bundle install
@@ -80,5 +68,51 @@ jobs:
         run: |
           ${{ github.workspace }}/.github/scripts/wait_for_looker.sh
 
+      - name: Report Failure
+        run: |
+          curl --request POST \
+          --url https://api.github.com/repos/looker-open-source/sdk-codegen/check-runs \
+          --header "authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          --header "content-type: application/json" \
+          --header "Accept: application/vnd.github.v3+json" \
+          --data '{
+            "name": "Ruby-CI Tests",
+            "head_sha": "${{ github.event.pull_request.head.sha || github.sha }}",
+            "conclusion": "failure"
+          }' \
+          --fail
+        if: failure()
+
       - name: Run tests
         run: bundle exec rake
+
+      - name: Upload ts unit test results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: ruby-ci-test-results-${{ matrix.looker }}
+          path: rspec.xml
+
+  publish-test-results:
+    needs: [test]
+    if: success() || failure()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: artifacts
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1.12
+        with:
+          # Cosmetic issue with `check_name` being associated to the wrong
+          # workflow: https://github.com/EnricoMi/publish-unit-test-result-action/issues/12
+          check_name: Ruby-CI Tests
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          report_individual_runs: true
+          hide_comments: orphaned commits
+          check_run_annotations: 'none'
+          compare_to_earlier_commit: false
+          files: 'artifacts/**/*.xml'
