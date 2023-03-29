@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.2.59](https://www.github.com/looker-open-source/gzr/compare/v0.2.58...v0.2.59) (2023-03-29)
+
+
+### Bug Fixes
+
+* migrate to API 4.0 ([#154](https://www.github.com/looker-open-source/gzr/issues/154)) ([eecdfd4](https://www.github.com/looker-open-source/gzr/commit/eecdfd41a886f2edbac528a34f83dc7a6ea83f74))
+
 ### [0.2.58](https://www.github.com/looker-open-source/gzr/compare/v0.2.57...v0.2.58) (2023-03-16)
 
 
