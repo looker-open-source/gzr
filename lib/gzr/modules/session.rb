@@ -51,7 +51,7 @@ module Gzr
 
     def sufficient_version?(given_version, minimum_version)
       return true unless (given_version && minimum_version)
-      versions = @versions.map {|v| v.version}.sort
+      versions = @versions.sort
       !versions.drop_while {|v| v < minimum_version}.reverse.drop_while {|v| v > given_version}.empty?
     end
 
@@ -154,8 +154,8 @@ module Gzr
 
         begin
           versions_response = agent.call(:get,"/versions")
-          @versions = versions_response.data.supported_versions
-          @current_version = "3.1"
+          @versions = versions_response.data.supported_versions.map {|v| v.version}
+          @current_version = versions_response.data.current_version.version || "4.0"
         rescue Faraday::SSLError => e
           raise Gzr::CLI::Error, "SSL Certificate could not be verified\nDo you need the --no-verify-ssl option or the --no-ssl option?"
         rescue Faraday::ConnectionFailed => cf
@@ -166,13 +166,13 @@ module Gzr
       end
 
       say_warning "API current_version #{@current_version}" if @options[:debug]
-      say_warning "API versions #{@versions.map{|v| v.version}}" if @options[:debug]
+      say_warning "API versions #{@versions}" if @options[:debug]
 
       raise Gzr::CLI::Error, "Operation requires API v#{min_api_version}, but user specified version #{@options[:api_version]}" unless sufficient_version?(@options[:api_version],min_api_version)
 
       api_version = [min_api_version, @current_version].max
-      raise Gzr::CLI::Error, "Operation requires API v#{api_version}, which is not available from this host" if api_version && !@versions.any? {|v| v.version == api_version}
-      raise Gzr::CLI::Error, "User specified API v#{@options[:api_version]}, which is not available from this host" if @options[:api_version] && !@versions.any? {|v| v.version == @options[:api_version]}
+      raise Gzr::CLI::Error, "Operation requires API v#{api_version}, which is not available from this host" if api_version && !@versions.any? {|v| v == api_version}
+      raise Gzr::CLI::Error, "User specified API v#{@options[:api_version]}, which is not available from this host" if @options[:api_version] && !@versions.any? {|v| v == @options[:api_version]}
 
       conn_hash = build_connection_hash(@options[:api_version] || api_version)
       @secret = nil
