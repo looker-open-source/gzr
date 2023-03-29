@@ -19,10 +19,8 @@ jobs:
 
   test:
     name: Test - Looker.${{ matrix.looker }} / Ruby.${{ matrix.ruby-version }}
-    runs-on: ${{ matrix.os }}-latest
-
-    needs: setup
     runs-on: ubuntu-latest
+    needs: setup
     strategy:
       matrix:
         looker: ${{ fromJson(needs.setup.outputs.matrix_json) }}
