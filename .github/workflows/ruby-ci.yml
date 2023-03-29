@@ -115,4 +115,4 @@ jobs:
           hide_comments: orphaned commits
           check_run_annotations: 'none'
           compare_to_earlier_commit: false
-          files: 'artifacts/*.xml'
+          files: 'artifacts/**/*.xml'
