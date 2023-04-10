@@ -292,7 +292,10 @@ module Gzr
 
       say_warning "Expecting exactly one body parameter with a schema for operation #{operation}" unless parameters.length == 1
       schema_ref = parameters[0][:schema][:$ref].split(/\//)
-      return @sdk.swagger[schema_ref[1].to_sym][schema_ref[2].to_sym][:properties].reject { |k,v| v[:readOnly] }.keys
+      key_list = @sdk.swagger[schema_ref[1].to_sym][schema_ref[2].to_sym][:properties].reject { |k,v| v[:readOnly] }.keys
+      say_warning "key_list #{operation} -> #{key_list}" if @options[:debug]
+      return key_list
+
     end
 
     ##
