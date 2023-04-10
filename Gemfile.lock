@@ -1,8 +1,9 @@
 PATH
   remote: .
   specs:
-    gazer (0.2.58)
-      looker-sdk (~> 0.1.1, <= 0.1.2)
+    gazer (0.2.59)
+      faraday (~> 1.10.3)
+      looker-sdk (~> 0.1.1)
       net-http-persistent (~> 4.0, >= 4.0.1)
       netrc (~> 0.11.0)
       pastel (~> 0.8.0)
@@ -42,8 +43,8 @@ GEM
     faraday-patron (1.0.0)
     faraday-rack (1.0.0)
     faraday-retry (1.0.3)
-    looker-sdk (0.1.2)
-      faraday (>= 1.2, < 2.0)
+    looker-sdk (0.1.4)
+      faraday (>= 1.2, < 3.0)
       sawyer (~> 0.8)
     multipart-post (2.3.0)
     net-http-persistent (4.0.1)
@@ -51,7 +52,7 @@ GEM
     netrc (0.11.0)
     pastel (0.8.0)
       tty-color (~> 0.5)
-    public_suffix (4.0.7)
+    public_suffix (5.0.1)
     rake (12.3.3)
     rspec (3.10.0)
       rspec-core (~> 3.10.0)

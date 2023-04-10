@@ -25,6 +25,7 @@ require 'forwardable'
 require 'tty-reader'
 require 'netrc'
 require 'looker-sdk'
+require 'faraday/multipart'
 
 require_relative 'modules/session'
 
