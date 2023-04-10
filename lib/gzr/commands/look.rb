@@ -29,17 +29,17 @@ module Gzr
 
       namespace :look
 
-      desc 'mv LOOK_ID TARGET_SPACE_ID', 'Move a look to the given space'
+      desc 'mv LOOK_ID TARGET_FOLDER_ID', 'Move a look to the given folder'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :force,  type: :boolean,
-                           desc: 'Overwrite a look with the same name in the target space'
-      def mv(look_id, target_space_id)
+                           desc: 'Overwrite a look with the same name in the target folder'
+      def mv(look_id, target_folder_id)
         if options[:help]
           invoke :help, ['mv']
         else
           require_relative 'look/mv'
-          Gzr::Commands::Look::Mv.new(look_id, target_space_id, options).execute
+          Gzr::Commands::Look::Mv.new(look_id, target_folder_id, options).execute
         end
       end
 
@@ -65,13 +65,13 @@ module Gzr
       method_option :plain, type: :boolean,
                            desc: 'Provide minimal response information'
       method_option :force,  type: :boolean,
-                           desc: 'Overwrite a look with the same name/slug in the target space'
-      def import(file,dest_space_id)
+                           desc: 'Overwrite a look with the same name/slug in the target folder'
+      def import(file,dest_folder_id)
         if options[:help]
           invoke :help, ['import']
         else
           require_relative 'look/import'
-          Gzr::Commands::Look::Import.new(file, dest_space_id, options).execute
+          Gzr::Commands::Look::Import.new(file, dest_folder_id, options).execute
         end
       end
 
