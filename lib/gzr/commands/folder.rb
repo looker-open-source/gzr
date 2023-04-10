@@ -25,25 +25,25 @@ require_relative 'subcommandbase'
 
 module Gzr
   module Commands
-    class Space < SubCommandBase
+    class Folder < SubCommandBase
 
-      namespace :space
+      namespace :folder
 
-      desc 'create NAME PARENT_SPACE', 'Command description...'
+      desc 'create NAME PARENT_FOLDER', 'Command description...'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :plain, type: :boolean,
                            desc: 'Provide minimal response information'
-      def create(name, parent_space)
+      def create(name, parent_folder)
         if options[:help]
           invoke :help, ['create']
         else
-          require_relative 'space/create'
-          Gzr::Commands::Space::Create.new(name, parent_space, options).execute
+          require_relative 'folder/create'
+          Gzr::Commands::Folder::Create.new(name, parent_folder, options).execute
         end
       end
 
-      desc 'top', 'Retrieve the top level (or root) spaces'
+      desc 'top', 'Retrieve the top level (or root) folders'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :fields, type: :string, default: 'id,name,is_shared_root,is_users_root,is_embed_shared_root,is_embed_users_root',
@@ -56,12 +56,12 @@ module Gzr
         if options[:help]
           invoke :help, ['top']
         else
-          require_relative 'space/top'
-          Gzr::Commands::Space::Top.new(options).execute
+          require_relative 'folder/top'
+          Gzr::Commands::Folder::Top.new(options).execute
         end
       end
 
-      desc 'export SPACE_ID', 'Export a space, including all child looks, dashboards, and spaces.'
+      desc 'export FOLDER_ID', 'Export a folder, including all child looks, dashboards, and folders.'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :plans,  type: :boolean,
@@ -74,42 +74,42 @@ module Gzr
                            desc: 'TarGZ file to store output'
       method_option :zip, type: :string,
                            desc: 'Zip file to store output'
-      def export(starting_space)
+      def export(starting_folder)
         if options[:help]
           invoke :help, ['export']
         else
-          require_relative 'space/export'
-          Gzr::Commands::Space::Export.new(starting_space,options).execute
+          require_relative 'folder/export'
+          Gzr::Commands::Folder::Export.new(starting_folder,options).execute
         end
       end
 
-      desc 'tree STARTING_SPACE', 'Display the dashbaords, looks, and subspaces or a space in a tree format'
+      desc 'tree STARTING_FOLDER', 'Display the dashboards, looks, and subfolders of a folder in a tree format'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def tree(starting_space)
+      def tree(starting_folder)
         if options[:help]
           invoke :help, ['tree']
         else
-          require_relative 'space/tree'
-          Gzr::Commands::Space::Tree.new(starting_space,options).execute
+          require_relative 'folder/tree'
+          Gzr::Commands::Folder::Tree.new(starting_folder,options).execute
         end
       end
 
-      desc 'cat SPACE_ID', 'Output the JSON representation of a space to the screen or a file'
+      desc 'cat FOLDER_ID', 'Output the JSON representation of a folder to the screen or a file'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :dir,  type: :string,
                            desc: 'Directory to get output file'
-      def cat(space_id)
+      def cat(folder_id)
         if options[:help]
           invoke :help, ['cat']
         else
-          require_relative 'space/cat'
-          Gzr::Commands::Space::Cat.new(space_id,options).execute
+          require_relative 'folder/cat'
+          Gzr::Commands::Folder::Cat.new(folder_id,options).execute
         end
       end
 
-      desc 'ls FILTER_SPEC', 'list the contents of a space given by space name, space_id, ~ for the current user\'s default space, or ~name / ~number for the home space of a user'
+      desc 'ls FILTER_SPEC', 'list the contents of a folder given by folder name, folder_id, ~ for the current user\'s default folder, or ~name / ~number for the home folder of a user'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :fields, type: :string, default: 'parent_id,id,name,looks(id,title),dashboards(id,title)',
@@ -122,20 +122,20 @@ module Gzr
         if options[:help]
           invoke :help, ['ls']
         else
-          require_relative 'space/ls'
-          Gzr::Commands::Space::Ls.new(filter_spec,options).execute
+          require_relative 'folder/ls'
+          Gzr::Commands::Folder::Ls.new(filter_spec,options).execute
         end
       end
 
-      desc 'rm SPACE_ID', 'Delete a space. The space must be empty or the --force flag specified to deleted subspaces, dashboards, and looks.'
+      desc 'rm FOLDER_ID', 'Delete a folder. The folder must be empty or the --force flag specified to deleted subfolders, dashboards, and looks.'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      def rm(space_id)
+      def rm(folder_id)
         if options[:help]
           invoke :help, ['rm']
         else
-          require_relative 'space/rm'
-          Gzr::Commands::Space::Rm.new(space_id,options).execute
+          require_relative 'folder/rm'
+          Gzr::Commands::Folder::Rm.new(folder_id,options).execute
         end
       end
     end

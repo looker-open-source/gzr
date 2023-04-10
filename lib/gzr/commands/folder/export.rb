@@ -22,7 +22,7 @@
 # frozen_string_literal: true
 
 require_relative '../../command'
-require_relative '../../modules/space'
+require_relative '../../modules/folder'
 require_relative '../../modules/look'
 require_relative '../../modules/dashboard'
 require_relative '../../modules/plan'
@@ -33,22 +33,22 @@ require 'zip'
 
 module Gzr
   module Commands
-    class Space
+    class Folder
       class Export < Gzr::Command
-        include Gzr::Space
+        include Gzr::Folder
         include Gzr::Look
         include Gzr::Dashboard
         include Gzr::Plan
         include Gzr::FileHelper
-        def initialize(space_id, options)
+        def initialize(folder_id, options)
           super()
-          @space_id = space_id
+          @folder_id = folder_id
           @options = options
         end
 
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
-          with_session("3.1") do
+          with_session do
             if @options[:tar] || @options[:tgz] || @options[:zip] then
               arc_path = Pathname.new(@options[:tgz] || @options[:tar] || @options[:zip])
               arc_path = Pathname.new(File.expand_path(@options[:dir])) + arc_path unless arc_path.absolute?
@@ -57,7 +57,7 @@ module Gzr
                 tarfile = StringIO.new(String.new,"w") unless @options[:zip]
                 begin
                   tw = Gem::Package::TarWriter.new(tarfile)
-                  process_space(@space_id, tw)
+                  process_folder(@folder_id, tw)
                   tw.flush
                   tarfile.rewind
                   if @options[:tgz]
@@ -74,44 +74,44 @@ module Gzr
               else
                 z = Zip::File.new(arc_path.to_path, Zip::File::CREATE, false, continue_on_exists_proc: true)
                 begin
-                  process_space(@space_id, z)
+                  process_folder(@folder_id, z)
                 ensure
                   z.close
                 end
               end
             else
-              process_space(@space_id, @options[:dir])
+              process_folder(@folder_id, @options[:dir])
             end
           end
         end
 
-        def process_space(space_id, base, rel_path = nil)
-          space = query_space(space_id).to_attrs
-          name = space[:name]
-          name = "nil (#{space_id})" if name.nil?
+        def process_folder(folder_id, base, rel_path = nil)
+          folder = query_folder(folder_id).to_attrs
+          name = folder[:name]
+          name = "nil (#{folder_id})" if name.nil?
           path = Pathname.new(name.gsub('/',"\u{2215}"))
           path = rel_path + path if rel_path
 
-          write_file("Space_#{space[:id]}_#{name}.json", base, path) do |f|
-            f.write JSON.pretty_generate(space.reject do |k,v|
+          write_file("Folder_#{folder[:id]}_#{name}.json", base, path) do |f|
+            f.write JSON.pretty_generate(folder.reject do |k,v|
               [:looks, :dashboards].include?(k)
             end)
           end
-          space[:looks].each do |l|
+          folder[:looks].each do |l|
             look = cat_look(l[:id])
             write_file("Look_#{look[:id]}_#{look[:title]}.json", base, path) do |f|
               f.write JSON.pretty_generate(look)
             end
           end
-          space[:dashboards].each do |d|
+          folder[:dashboards].each do |d|
             data = cat_dashboard(d[:id])
             write_file("Dashboard_#{data[:id]}_#{data[:title]}.json", base, path) do |f|
               f.write JSON.pretty_generate(data)
             end
           end
-          space_children = query_space_children(space_id)
-          space_children.each do |child_space|
-            process_space(child_space[:id], base, path)
+          folder_children = query_folder_children(folder_id)
+          folder_children.each do |child_folder|
+            process_folder(child_folder[:id], base, path)
           end
         end
       end

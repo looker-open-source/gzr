@@ -35,10 +35,10 @@ module Gzr
         include Gzr::User
         include Gzr::Plan
         include Gzr::FileHelper
-        def initialize(file, dest_space_id, options)
+        def initialize(file, dest_folder_id, options)
           super()
           @file = file
-          @dest_space_id = dest_space_id
+          @dest_folder_id = dest_folder_id
           @options = options
         end
 
@@ -60,7 +60,7 @@ module Gzr
                 raise Gzr::CLI::Error, "import file is not a valid look"
               end
 
-              look = upsert_look(@me.id,create_fetch_query(data[:query]).id,@dest_space_id,data,output: output)
+              look = upsert_look(@me.id,create_fetch_query(data[:query]).id,@dest_folder_id,data,output: output)
               upsert_plans_for_look(look.id,@me.id,data[:scheduled_plans]) if data[:scheduled_plans]
               output.puts "Imported look #{look.id}" unless @options[:plain] 
               output.puts look.id if @options[:plain] 

@@ -22,29 +22,26 @@
 # frozen_string_literal: true
 
 require_relative '../../command'
-require_relative '../../modules/space'
-require_relative '../../modules/filehelper'
-require 'zlib'
+require_relative '../../modules/folder'
 
 module Gzr
   module Commands
-    class Space
-      class Cat < Gzr::Command
-        include Gzr::Space
-        include Gzr::FileHelper
-        def initialize(space_id, options)
+    class Folder
+      class Create < Gzr::Command
+        include Gzr::Folder
+        def initialize(name,parent_folder, options)
           super()
-          @space_id = space_id
+          @name = name
+          @parent_folder = parent_folder
           @options = options
         end
 
         def execute(input: $stdin, output: $stdout)
-          say_warning("options: #{@options.inspect}") if @options[:debug]
+          folder = nil
           with_session do
-            data = query_space(@space_id)
-            write_file(@options[:dir] ? "Space_#{data.id}_#{data.name}.json" : nil, @options[:dir], nil, output) do |f|
-              f.puts JSON.pretty_generate(data.to_attrs)
-            end
+            folder = create_folder(@name, @parent_folder)
+            output.puts "Created folder #{folder.id}" unless @options[:plain] 
+            output.puts folder.id if @options[:plain] 
           end
         end
       end
