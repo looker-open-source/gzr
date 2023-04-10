@@ -137,6 +137,7 @@ module Gzr
           :links_parser => Sawyer::LinkParsers::Simple.new,
           :serializer  => LookerSDK::Client::Serializer.new(JSON),
           :faraday => Faraday.new(conn_hash[:connection_options]) do |conn|
+            conn.use LookerSDK::Response::RaiseError
             if @options[:persistent]
               conn.adapter :net_http_persistent
             end
@@ -181,6 +182,7 @@ module Gzr
 
       begin
         faraday = Faraday.new(conn_hash[:connection_options]) do |conn|
+          conn.use LookerSDK::Response::RaiseError
           if @options[:persistent]
             conn.adapter :net_http_persistent
           end
