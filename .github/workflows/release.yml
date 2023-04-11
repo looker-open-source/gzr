@@ -11,6 +11,8 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
+      # Checkout code
+      - uses: actions/checkout@v3
       - uses: GoogleCloudPlatform/release-please-action@v2
         id: release
         with:
@@ -20,9 +22,6 @@ jobs:
           bump-patch-for-minor-pre-major: true
           version-file: "lib/gzr/version.rb"
           token: ${{ secrets.LOS_AUTO_BOT_RP_TOKEN }}
-      # Checkout code if release was created
-      - uses: actions/checkout@v2
-        if: ${{ steps.release.outputs.release_created }}
       # Setup ruby if a release was created
       - uses: ruby/setup-ruby@v1
         with:
