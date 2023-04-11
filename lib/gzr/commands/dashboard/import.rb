@@ -47,7 +47,7 @@ module Gzr
 
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}", output: output) if @options[:debug]
-          with_session("3.1") do
+          with_session do
 
             @me ||= query_me("id")
 

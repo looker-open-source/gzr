@@ -102,17 +102,13 @@ module Gzr
       conn_hash
     end
 
-    def login(min_api_version=nil)
+    def login(min_api_version="4.0")
       if (@options[:client_id].nil? && ENV["LOOKERSDK_CLIENT_ID"])
         @options[:client_id] = ENV["LOOKERSDK_CLIENT_ID"]
       end
 
       if (@options[:client_secret].nil? && ENV["LOOKERSDK_CLIENT_SECRET"])
         @options[:client_secret] = ENV["LOOKERSDK_CLIENT_SECRET"]
-      end
-
-      if (@options[:api_version].nil? && ENV["LOOKERSDK_API_VERSION"])
-        @options[:api_version] = ENV["LOOKERSDK_API_VERSION"]
       end
 
       if (@options[:verify_ssl] && ENV["LOOKERSDK_VERIFY_SSL"])
@@ -167,15 +163,12 @@ module Gzr
       end
 
       say_warning "API current_version #{@current_version}" if @options[:debug]
-      say_warning "API versions #{@versions}" if @options[:debug]
-
-      raise Gzr::CLI::Error, "Operation requires API v#{min_api_version}, but user specified version #{@options[:api_version]}" unless sufficient_version?(@options[:api_version],min_api_version)
+      say_warning "Supported API versions #{@versions}" if @options[:debug]
 
       api_version = [min_api_version, @current_version].max
       raise Gzr::CLI::Error, "Operation requires API v#{api_version}, which is not available from this host" if api_version && !@versions.any? {|v| v == api_version}
-      raise Gzr::CLI::Error, "User specified API v#{@options[:api_version]}, which is not available from this host" if @options[:api_version] && !@versions.any? {|v| v == @options[:api_version]}
 
-      conn_hash = build_connection_hash(@options[:api_version] || api_version)
+      conn_hash = build_connection_hash(api_version)
       @secret = nil
 
       say_ok("connecting to #{conn_hash.map { |k,v| "#{k}=>#{(k == :client_secret) ? '*********' : v}" }}") if @options[:debug]
@@ -244,7 +237,7 @@ module Gzr
       end
     end
 
-    def with_session(min_api_version="3.0")
+    def with_session(min_api_version="4.0")
       return nil unless block_given?
       begin
         login(min_api_version) unless @sdk

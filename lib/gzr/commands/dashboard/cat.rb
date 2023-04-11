@@ -42,7 +42,7 @@ module Gzr
 
         def execute(*args, input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
-          with_session("3.1") do
+          with_session do
             data = cat_dashboard(@dashboard_id)
 
             replacements = {}
