@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.2.60](https://www.github.com/looker-open-source/gzr/compare/v0.2.59...v0.2.60) (2023-04-11)
+
+
+### Bug Fixes
+
+* quick typo fixes for API 4.0 changes ([#168](https://www.github.com/looker-open-source/gzr/issues/168)) ([82a634e](https://www.github.com/looker-open-source/gzr/commit/82a634e77de0aaee5bd62c84092e827a2f7f6c73))
+
 ### [0.2.59](https://www.github.com/looker-open-source/gzr/compare/v0.2.58...v0.2.59) (2023-03-29)
 
 
