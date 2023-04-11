@@ -84,7 +84,7 @@ module Gzr
       desc 'me', 'Show information for the current user'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      method_option :fields, type: :string, default: 'id,email,last_name,first_name,personal_space_id,home_space_id',
+      method_option :fields, type: :string, default: 'id,email,last_name,first_name,personal_folder_id,home_folder_id',
                            desc: 'Fields to display'
       method_option :plain, type: :boolean, default: false,
                            desc: 'print without any extra formatting'
@@ -102,7 +102,7 @@ module Gzr
       desc 'ls', 'list all users'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      method_option :fields, type: :string, default: 'id,email,last_name,first_name,personal_space_id,home_space_id',
+      method_option :fields, type: :string, default: 'id,email,last_name,first_name,personal_folder_id,home_folder_id',
                            desc: 'Fields to display'
       method_option :"last-login", type: :boolean, default: false,
                            desc: 'Include the time of the most recent login'

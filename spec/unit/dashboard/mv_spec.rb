@@ -27,7 +27,7 @@ RSpec.describe Gzr::Commands::Dashboard::Mv do
     :title => "Original Dash",
     :description => "Description of the Dash",
     :slug => "123xyz",
-    :space_id => 1,
+    :folder_id => 1,
     :deleted => false,
     :dashboard_filters => [],
     :dashboard_elements => [],
@@ -77,7 +77,7 @@ RSpec.describe Gzr::Commands::Dashboard::Mv do
       HashResponse.new(doc)
     end
     mock_sdk.define_singleton_method(:search_dashboards) do |req|
-      if req&.fetch(:space_id,nil) == 2 && req&.fetch(:title,nil) == 'Original Dash'
+      if req&.fetch(:folder_id,nil) == 2 && req&.fetch(:title,nil) == 'Original Dash'
         []
       end
     end
@@ -93,7 +93,7 @@ RSpec.describe Gzr::Commands::Dashboard::Mv do
 
     command.execute(output: output)
 
-    expect(output.string).to eq("Moved dashboard 500 to space 2\n")
+    expect(output.string).to eq("Moved dashboard 500 to folder 2\n")
   end
 
 end

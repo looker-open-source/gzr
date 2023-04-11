@@ -49,11 +49,11 @@ module Gzr
       data
     end
 
-    def search_dashboards_by_slug(slug, space_id=nil)
+    def search_dashboards_by_slug(slug, folder_id=nil)
       data = []
       begin
         req = { :slug => slug }
-        req[:space_id] = space_id if space_id 
+        req[:folder_id] = folder_id if folder_id 
         data = @sdk.search_dashboards(req)
         req[:deleted] = true
         data = @sdk.search_dashboards(req) if data.empty?
@@ -65,11 +65,11 @@ module Gzr
       data
     end
 
-    def search_dashboards_by_title(title, space_id=nil)
+    def search_dashboards_by_title(title, folder_id=nil)
       data = []
       begin
         req = { :title => title }
-        req[:space_id] = space_id if space_id 
+        req[:folder_id] = folder_id if folder_id 
         data = @sdk.search_dashboards(req)
         req[:deleted] = true
         data = @sdk.search_dashboards(req) if data.empty?
@@ -84,6 +84,7 @@ module Gzr
     def create_dashboard(dash)
       begin
         data = @sdk.create_dashboard(dash)
+        say_error data.inspect if data.respond_to?(:message)
         data&.dashboard_filters&.sort! { |a,b| a.row <=> b.row }
         data&.dashboard_layouts&.sort_by! { |v| (v.active ? 0 : 1) }
       rescue LookerSDK::Error => e
@@ -177,6 +178,18 @@ module Gzr
         data = @sdk.delete_dashboard_layout(id)
       rescue LookerSDK::Error => e
         say_error "Error deleting dashboard_layout(#{id})"
+        say_error e.message
+        raise
+      end
+      data
+    end
+
+    def get_all_dashboard_layout_components(id)
+      begin
+        data = @sdk.dashboard_layout_dashboard_layout_components(id)
+        return nil if data.respond_to?(:message) && data.message == 'Not found'
+      rescue LookerSDK::Error => e
+        say_error "Error getting dashboard_layout_dashboard_layout_components(#{id})"
         say_error e.message
         raise
       end

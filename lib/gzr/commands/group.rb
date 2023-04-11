@@ -32,7 +32,7 @@ module Gzr
       desc 'member_users GROUP_ID', 'List the users that are members of the given group'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
-      method_option :fields, type: :string, default: 'id,email,last_name,first_name,personal_space_id,home_space_id',
+      method_option :fields, type: :string, default: 'id,email,last_name,first_name,personal_folder_id,home_folder_id',
                            desc: 'Fields to display'
       method_option :plain, type: :boolean, default: false,
                            desc: 'print without any extra formatting'

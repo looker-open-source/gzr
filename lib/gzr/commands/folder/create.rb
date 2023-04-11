@@ -19,23 +19,32 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-RSpec.describe "`gzr space export` command", type: :cli do
-  it "executes `space export --help` command successfully" do
-    output = `gzr space export --help`
-    expect(output).to eq <<-OUT
-Usage:
-  gzr space export SPACE_ID
+# frozen_string_literal: true
 
-Options:
-  -h, [--help], [--no-help]    # Display usage information
-      [--plans], [--no-plans]  # Include scheduled plans
-      [--dir=DIR]              # Directory to store output tree
-                               # Default: .
-      [--tar=TAR]              # Tar file to store output
-      [--tgz=TGZ]              # TarGZ file to store output
-      [--zip=ZIP]              # Zip file to store output
+require_relative '../../command'
+require_relative '../../modules/folder'
 
-Export a space, including all child looks, dashboards, and spaces.
-    OUT
+module Gzr
+  module Commands
+    class Folder
+      class Create < Gzr::Command
+        include Gzr::Folder
+        def initialize(name,parent_folder, options)
+          super()
+          @name = name
+          @parent_folder = parent_folder
+          @options = options
+        end
+
+        def execute(input: $stdin, output: $stdout)
+          folder = nil
+          with_session do
+            folder = create_folder(@name, @parent_folder)
+            output.puts "Created folder #{folder.id}" unless @options[:plain] 
+            output.puts folder.id if @options[:plain] 
+          end
+        end
+      end
+    end
   end
 end

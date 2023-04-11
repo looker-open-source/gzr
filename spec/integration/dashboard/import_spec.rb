@@ -24,12 +24,12 @@ RSpec.describe "`gzr dashboard import` command", type: :cli do
     output = `gzr dashboard import --help`
     expect(output).to eq <<-OUT
 Usage:
-  gzr dashboard import FILE DEST_SPACE_ID
+  gzr dashboard import FILE DEST_FOLDER_ID
 
 Options:
   -h, [--help], [--no-help]    # Display usage information
       [--plain], [--no-plain]  # Provide minimal response information
-      [--force]                # Overwrite a dashboard with the same name/slug in the target space
+      [--force]                # Overwrite a dashboard with the same name/slug in the target folder
 
 Import a dashboard from a file
     OUT

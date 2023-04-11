@@ -22,26 +22,32 @@
 # frozen_string_literal: true
 
 require_relative '../../command'
-require_relative '../../modules/space'
+require_relative '../../modules/folder'
 
 module Gzr
   module Commands
-    class Space
-      class Create < Gzr::Command
-        include Gzr::Space
-        def initialize(name,parent_space, options)
+    class Folder
+      class Rm < Gzr::Command
+        include Gzr::Folder
+        def initialize(folder,options)
           super()
-          @name = name
-          @parent_space = parent_space
+          @folder = folder
           @options = options
         end
 
         def execute(input: $stdin, output: $stdout)
-          space = nil
           with_session do
-            space = create_space(@name, @parent_space)
-            output.puts "Created space #{space.id}" unless @options[:plain] 
-            output.puts space.id if @options[:plain] 
+            folder = query_folder(@folder)
+
+            begin
+              puts "Folder #{@folder} not found"
+              return nil
+            end unless folder
+            children = query_folder_children(@folder)
+            unless (folder.looks.length == 0 && folder.dashboards.length == 0 && children.length == 0) || @options[:force] then
+              raise Gzr::CLI::Error, "Folder '#{folder.name}' is not empty. Folder cannot be deleted unless --force is specified"
+            end
+            delete_folder(@folder)
           end
         end
       end

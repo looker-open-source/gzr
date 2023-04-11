@@ -29,7 +29,7 @@ RSpec.describe Gzr::Commands::Dashboard::Import do
     :title => "Original Dash",
     :description => "Description of the Dash",
     :slug => "123xyz",
-    :space_id => 1,
+    :folder_id => 1,
     :deleted => false,
     :dashboard_filters => [],
     :dashboard_elements => [],
@@ -96,9 +96,9 @@ RSpec.describe Gzr::Commands::Dashboard::Import do
               "type": "string",
               "x-looker-nullable": true
             },
-            "space_id": {
+            "folder_id": {
               "type": "string",
-              "description": "Id of Space",
+              "description": "Id of Folder",
               "x-looker-nullable": true
             },
             "show_title": {
@@ -174,24 +174,24 @@ RSpec.describe Gzr::Commands::Dashboard::Import do
       HashResponse.new(doc)
     end
     mock_sdk.define_singleton_method(:search_dashboards) do |req|
-      if req&.fetch(:slug,nil) == dash_response_doc[:slug] && req&.fetch(:space_id,nil) == dash_response_doc[:space_id]
+      if req&.fetch(:slug,nil) == dash_response_doc[:slug] && req&.fetch(:folder_id,nil) == dash_response_doc[:folder_id]
         [HashResponse.new(dash_response_doc)]
-      elsif req&.fetch(:slug,nil) == dash_response_doc[:slug] && !req.has_key?(:space_id)
+      elsif req&.fetch(:slug,nil) == dash_response_doc[:slug] && !req.has_key?(:folder_id)
         [HashResponse.new(dash_response_doc)]
       elsif "DeletedSlug".eql?(req&.fetch(:slug,nil)) && req[:deleted]
         doc = dash_response_doc.dup
         doc[:id] = 201
-        doc[:space_id] = 2
+        doc[:folder_id] = 2
         doc[:slug] = "DeletedSlug"
         doc[:deleted] = true
         [HashResponse.new(doc)]
-      elsif "dupe".eql?(req&.fetch(:slug,nil)) && !req.has_key?(:space_id)
+      elsif "dupe".eql?(req&.fetch(:slug,nil)) && !req.has_key?(:folder_id)
         doc = dash_response_doc.dup
         doc[:id] = 201
-        doc[:space_id] = 2
+        doc[:folder_id] = 2
         doc[:slug] = "dupe"
         [HashResponse.new(doc)]
-      elsif req&.fetch(:title,nil) == dash_response_doc[:title] && req&.fetch(:space_id,nil) == dash_response_doc[:space_id]
+      elsif req&.fetch(:title,nil) == dash_response_doc[:title] && req&.fetch(:folder_id,nil) == dash_response_doc[:folder_id]
         [HashResponse.new(dash_response_doc)]
       else
         []

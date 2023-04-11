@@ -35,11 +35,11 @@ module Gzr
       data
     end
 
-    def search_looks_by_slug(slug, space_id=nil)
+    def search_looks_by_slug(slug, folder_id=nil)
       data = []
       begin
         req = { :slug => slug }
-        req[:space_id] = space_id if space_id 
+        req[:folder_id] = folder_id if folder_id 
         data = @sdk.search_looks(req)
         req[:deleted] = true
         data = @sdk.search_looks(req) if data.empty?
@@ -51,11 +51,11 @@ module Gzr
       data
     end
 
-    def search_looks_by_title(title, space_id=nil)
+    def search_looks_by_title(title, folder_id=nil)
       data = []
       begin
         req = { :title => title }
-        req[:space_id] = space_id if space_id 
+        req[:folder_id] = folder_id if folder_id 
         data = @sdk.search_looks(req)
         req[:deleted] = true
         data = @sdk.search_looks(req) if data.empty?
@@ -69,10 +69,11 @@ module Gzr
 
     def create_look(look)
       begin
+        look[:public] = false unless look[:public]
         data = @sdk.create_look(look)
       rescue LookerSDK::Error => e
         say_error "Error creating look(#{JSON.pretty_generate(look)})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -101,16 +102,16 @@ module Gzr
       data
     end
 
-    def upsert_look(user_id, query_id, space_id, source, output: $stdout)
-      # try to find look by slug in target space
-      existing_look = search_looks_by_slug(source[:slug], space_id).fetch(0,nil) if source[:slug]
-      # check for look of same title in target space
-      title_used = search_looks_by_title(source[:title], space_id).fetch(0,nil)
+    def upsert_look(user_id, query_id, folder_id, source, output: $stdout)
+      # try to find look by slug in target folder
+      existing_look = search_looks_by_slug(source[:slug], folder_id).fetch(0,nil) if source[:slug]
+      # check for look of same title in target folder
+      title_used = search_looks_by_title(source[:title], folder_id).fetch(0,nil)
 
-      # If there is no match by slug in target space or no slug given, then we match by title
+      # If there is no match by slug in target folder or no slug given, then we match by title
       existing_look ||= title_used
 
-      # same_title is now a flag indicating that there is already a look in the same space with
+      # same_title is now a flag indicating that there is already a look in the same folder with
       # that title, and it is the one we are updating.
       same_title = (title_used&.fetch(:id,nil) == existing_look&.fetch(:id,nil))
 
@@ -122,17 +123,17 @@ module Gzr
       same_slug = (slug_used&.fetch(:id,nil) == existing_look&.fetch(:id,nil))
 
       if slug_used && !same_slug then
-        say_warning "slug #{slug_used.slug} already used for look #{slug_used.title} in space #{slug_used.space_id}", output: output
+        say_warning "slug #{slug_used.slug} already used for look #{slug_used.title} in folder #{slug_used.folder_id}", output: output
         say_warning("That look is in the 'Trash' but not fully deleted yet", output: output) if slug_used.deleted
         say_warning "look will be imported with new slug", output: output
       end
 
       if existing_look then
         if title_used && !same_title then
-          raise Gzr::CLI::Error, "Look #{source[:title]} already exists in space #{space_id}\nDelete it before trying to upate another Look to have that title."
+          raise Gzr::CLI::Error, "Look #{source[:title]} already exists in folder #{folder_id}\nDelete it before trying to upate another Look to have that title."
         end
-        raise Gzr::CLI::Error, "Look #{existing_look[:title]} with slug #{existing_look[:slug]} already exists in space #{space_id}\nUse --force if you want to overwrite it" unless @options[:force]
-        say_ok "Modifying existing Look #{existing_look.id} #{existing_look.title} in space #{space_id}", output: output
+        raise Gzr::CLI::Error, "Look #{existing_look[:title]} with slug #{existing_look[:slug]} already exists in folder #{folder_id}\nUse --force if you want to overwrite it" unless @options[:force]
+        say_ok "Modifying existing Look #{existing_look.id} #{existing_look.title} in folder #{folder_id}", output: output
         new_look = source.select do |k,v|
           (keys_to_keep('update_look') - [:space_id,:folder_id,:user_id,:query_id,:slug]).include? k
         end
@@ -147,7 +148,7 @@ module Gzr
         new_look[:slug] = source[:slug] unless slug_used
         new_look[:query_id] = query_id
         new_look[:user_id] = user_id
-        new_look[:space_id] = space_id
+        new_look[:folder_id] = folder_id
 
         find_vis_config_reference(new_look) do |vis_config|
           find_color_palette_reference(vis_config) do |o,default_colors|

@@ -22,32 +22,52 @@
 # frozen_string_literal: true
 
 require_relative '../../command'
-require_relative '../../modules/space'
+require_relative '../../modules/folder'
+require 'tty-table'
 
 module Gzr
   module Commands
-    class Space
-      class Rm < Gzr::Command
-        include Gzr::Space
-        def initialize(space,options)
+    class Folder
+      class Top < Gzr::Command
+        include Gzr::Folder
+        def initialize(options)
           super()
-          @space = space
           @options = options
         end
 
         def execute(input: $stdin, output: $stdout)
+          say_warning("options: #{@options.inspect}") if @options[:debug]
           with_session do
-            space = query_space(@space)
+            extra_fields = %w(is_shared_root is_users_root is_embed_shared_root is_embed_users_root)
+            query_fields = (@options[:fields].split(',') + extra_fields).uniq
+            folders = all_folders(query_fields.join(','))
 
             begin
-              puts "Space #{@space} not found"
+              puts "No folders found"
               return nil
-            end unless space
-            children = query_space_children(@space)
-            unless (space.looks.length == 0 && space.dashboards.length == 0 && children.length == 0) || @options[:force] then
-              raise Gzr::CLI::Error, "Space '#{space.name}' is not empty. Space cannot be deleted unless --force is specified"
+            end unless folders && folders.length > 0
+
+            table_hash = Hash.new
+            fields = field_names(@options[:fields])
+            table_hash[:header] = fields unless @options[:plain]
+            expressions = fields.collect { |fn| field_expression(fn) }
+            rows = []
+            folders.each do |h|
+              if ( h.is_shared_root || h.is_users_root || h.is_embed_shared_root || h.is_embed_users_root) then
+                rows << expressions.collect do |e|
+                  eval "h.#{e}"
+                end
+              end
             end
-            delete_space(@space)
+            table_hash[:rows] = rows
+            table = TTY::Table.new(table_hash)
+            begin
+              if @options[:csv] then
+                output.puts render_csv(table)
+              else
+                output.puts table.render(if @options[:plain] then :basic else :ascii end, alignments: [:right], width: @options[:width] || TTY::Screen.width)
+              end
+            end if table
           end
         end
       end

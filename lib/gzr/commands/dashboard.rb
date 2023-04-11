@@ -29,17 +29,17 @@ module Gzr
 
       namespace :dashboard
 
-      desc 'mv DASHBOARD_ID TARGET_SPACE_ID', 'Move a dashboard to the given space'
+      desc 'mv DASHBOARD_ID TARGET_FOLDER_ID', 'Move a dashboard to the given folder'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :force,  type: :boolean,
-                           desc: 'Overwrite a dashboard with the same name in the target space'
-      def mv(dashboard_id, target_space_id)
+                           desc: 'Overwrite a dashboard with the same name in the target folder'
+      def mv(dashboard_id, target_folder_id)
         if options[:help]
           invoke :help, ['mv']
         else
           require_relative 'dashboard/mv'
-          Gzr::Commands::Dashboard::Mv.new(dashboard_id, target_space_id, options).execute
+          Gzr::Commands::Dashboard::Mv.new(dashboard_id, target_folder_id, options).execute
         end
       end
 
@@ -63,19 +63,19 @@ module Gzr
         end
       end
 
-      desc 'import FILE DEST_SPACE_ID', 'Import a dashboard from a file'
+      desc 'import FILE DEST_FOLDER_ID', 'Import a dashboard from a file'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :plain, type: :boolean,
                            desc: 'Provide minimal response information'
       method_option :force,  type: :boolean,
-                           desc: 'Overwrite a dashboard with the same name/slug in the target space'
-      def import(file,dest_space_id)
+                           desc: 'Overwrite a dashboard with the same name/slug in the target folder'
+      def import(file,dest_folder_id)
         if options[:help]
           invoke :help, ['import']
         else
           require_relative 'dashboard/import'
-          Gzr::Commands::Dashboard::Import.new(file, dest_space_id, options).execute
+          Gzr::Commands::Dashboard::Import.new(file, dest_folder_id, options).execute
         end
       end
 

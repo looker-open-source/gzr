@@ -19,21 +19,18 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-RSpec.describe "`gzr space top` command", type: :cli do
-  it "executes `space top --help` command successfully" do
-    output = `gzr space top --help`
+RSpec.describe "`gzr folder create` command", type: :cli do
+  it "executes `folder create --help` command successfully" do
+    output = `gzr folder create --help`
     expect(output).to eq <<-OUT
 Usage:
-  gzr space top
+  gzr folder create NAME PARENT_FOLDER
 
 Options:
   -h, [--help], [--no-help]    # Display usage information
-      [--fields=FIELDS]        # Fields to display
-                               # Default: id,name,is_shared_root,is_users_root,is_embed_shared_root,is_embed_users_root
-      [--plain], [--no-plain]  # print without any extra formatting
-      [--csv], [--no-csv]      # output in csv format per RFC4180
+      [--plain], [--no-plain]  # Provide minimal response information
 
-Retrieve the top level (or root) spaces
+Command description...
     OUT
   end
 end

@@ -19,17 +19,21 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-RSpec.describe "`gzr space rm` command", type: :cli do
-  it "executes `space rm --help` command successfully" do
-    output = `gzr space rm --help`
+RSpec.describe "`gzr folder top` command", type: :cli do
+  it "executes `folder top --help` command successfully" do
+    output = `gzr folder top --help`
     expect(output).to eq <<-OUT
 Usage:
-  gzr space rm SPACE_ID
+  gzr folder top
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help]    # Display usage information
+      [--fields=FIELDS]        # Fields to display
+                               # Default: id,name,is_shared_root,is_users_root,is_embed_shared_root,is_embed_users_root
+      [--plain], [--no-plain]  # print without any extra formatting
+      [--csv], [--no-csv]      # output in csv format per RFC4180
 
-Delete a space. The space must be empty or the --force flag specified to deleted subspaces, dashboards, and looks.
+Retrieve the top level (or root) folders
     OUT
   end
 end

@@ -19,18 +19,35 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-RSpec.describe "`gzr space create` command", type: :cli do
-  it "executes `space create --help` command successfully" do
-    output = `gzr space create --help`
-    expect(output).to eq <<-OUT
-Usage:
-  gzr space create NAME PARENT_SPACE
+# frozen_string_literal: true
 
-Options:
-  -h, [--help], [--no-help]    # Display usage information
-      [--plain], [--no-plain]  # Provide minimal response information
+require_relative '../../command'
+require_relative '../../modules/folder'
+require_relative '../../modules/filehelper'
+require 'zlib'
 
-Command description...
-    OUT
+module Gzr
+  module Commands
+    class Folder
+      class Cat < Gzr::Command
+        include Gzr::Folder
+        include Gzr::FileHelper
+        def initialize(folder_id, options)
+          super()
+          @folder_id = folder_id
+          @options = options
+        end
+
+        def execute(input: $stdin, output: $stdout)
+          say_warning("options: #{@options.inspect}") if @options[:debug]
+          with_session do
+            data = query_folder(@folder_id)
+            write_file(@options[:dir] ? "Folder_#{data.id}_#{data.name}.json" : nil, @options[:dir], nil, output) do |f|
+              f.puts JSON.pretty_generate(data.to_attrs)
+            end
+          end
+        end
+      end
+    end
   end
 end

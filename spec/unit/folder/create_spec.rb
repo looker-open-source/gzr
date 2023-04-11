@@ -19,10 +19,10 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-require 'gzr/commands/space/cat'
+require 'gzr/commands/folder/create'
 
-RSpec.describe Gzr::Commands::Space::Cat do
-  it "executes `cat` command successfully" do
+RSpec.describe Gzr::Commands::Folder::Create do
+  it "executes `create` command successfully" do
     require 'sawyer'
     resp_hash = {
       :id=>1,
@@ -45,36 +45,18 @@ RSpec.describe Gzr::Commands::Space::Cat do
     allow(mock_response).to receive(:to_attrs).and_return(resp_hash)
     mock_sdk = Object.new
     mock_sdk.define_singleton_method(:logout) { }
-    mock_sdk.define_singleton_method(:space) do |look_id,req|
+    mock_sdk.define_singleton_method(:create_folder) do |req|
       return mock_response
     end
 
     output = StringIO.new
     options = {}
-    command = Gzr::Commands::Space::Cat.new("1", options)
+    command = Gzr::Commands::Folder::Create.new("new folder", 1, options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
 
     command.execute(output: output)
 
-    expect(output.string).to eq <<-OUT
-{
-  "id": 1,
-  "name": "foo",
-  "parent_id": 0,
-  "looks": [
-    {
-      "id": 2,
-      "title": "bar"
-    }
-  ],
-  "dashboards": [
-    {
-      "id": 3,
-      "title": "baz"
-    }
-  ]
-}
-    OUT
+    expect(output.string).to eq("Created folder 1\n")
   end
 end

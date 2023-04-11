@@ -22,14 +22,14 @@
 # frozen_string_literal: true
 
 require_relative '../../command'
-require_relative '../../modules/space'
+require_relative '../../modules/folder'
 require 'tty-table'
 
 module Gzr
   module Commands
-    class Space
+    class Folder
       class Ls < Gzr::Command
-        include Gzr::Space
+        include Gzr::Folder
         def initialize(filter_spec, options)
           super()
           @filter_spec = filter_spec
@@ -61,27 +61,27 @@ module Gzr
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
           with_session do
-            space_ids = process_args([@filter_spec])
+            folder_ids = process_args([@filter_spec])
             begin
-              puts "No spaces match #{@filter_spec}"
+              puts "No folders match #{@filter_spec}"
               return nil
-            end unless space_ids && space_ids.length > 0
+            end unless folder_ids && folder_ids.length > 0
 
             @options[:fields] = 'dashboards(id,title)' if @filter_spec == 'lookml'
             f = @options[:fields]
 
-            data = space_ids.map do |space_id|
-              query_space(space_id, f).to_attrs
+            data = folder_ids.map do |folder_id|
+              query_folder(folder_id, f).to_attrs
             end.compact
-            space_ids.each do |space_id|
-              query_space_children(space_id, 'id,name,parent_id').map {|child| child.to_attrs}.each do |child|
+            folder_ids.each do |folder_id|
+              query_folder_children(folder_id, 'id,name,parent_id').map {|child| child.to_attrs}.each do |child|
                 data.push child
               end
             end
 
 
             begin
-              puts "No data returned for spaces #{space_ids.inspect}"
+              puts "No data returned for folders #{folder_ids.inspect}"
               return nil
             end unless data && data.length > 0
 

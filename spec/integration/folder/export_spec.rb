@@ -19,35 +19,23 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-# frozen_string_literal: true
+RSpec.describe "`gzr folder export` command", type: :cli do
+  it "executes `folder export --help` command successfully" do
+    output = `gzr folder export --help`
+    expect(output).to eq <<-OUT
+Usage:
+  gzr folder export FOLDER_ID
 
-require_relative '../../command'
-require_relative '../../modules/space'
-require_relative '../../modules/filehelper'
-require 'zlib'
+Options:
+  -h, [--help], [--no-help]    # Display usage information
+      [--plans], [--no-plans]  # Include scheduled plans
+      [--dir=DIR]              # Directory to store output tree
+                               # Default: .
+      [--tar=TAR]              # Tar file to store output
+      [--tgz=TGZ]              # TarGZ file to store output
+      [--zip=ZIP]              # Zip file to store output
 
-module Gzr
-  module Commands
-    class Space
-      class Cat < Gzr::Command
-        include Gzr::Space
-        include Gzr::FileHelper
-        def initialize(space_id, options)
-          super()
-          @space_id = space_id
-          @options = options
-        end
-
-        def execute(input: $stdin, output: $stdout)
-          say_warning("options: #{@options.inspect}") if @options[:debug]
-          with_session do
-            data = query_space(@space_id)
-            write_file(@options[:dir] ? "Space_#{data.id}_#{data.name}.json" : nil, @options[:dir], nil, output) do |f|
-              f.puts JSON.pretty_generate(data.to_attrs)
-            end
-          end
-        end
-      end
-    end
+Export a folder, including all child looks, dashboards, and folders.
+    OUT
   end
 end
