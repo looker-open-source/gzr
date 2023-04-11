@@ -24,12 +24,12 @@ RSpec.describe "`gzr look import` command", type: :cli do
     output = `gzr look import --help`
     expect(output).to eq <<-OUT
 Usage:
-  gzr look import FILE DEST_SPACE_ID
+  gzr look import FILE DEST_FOLDER_ID
 
 Options:
   -h, [--help], [--no-help]    # Display usage information
       [--plain], [--no-plain]  # Provide minimal response information
-      [--force]                # Overwrite a look with the same name/slug in the target space
+      [--force]                # Overwrite a look with the same name/slug in the target folder
 
 Import a look from a file
     OUT

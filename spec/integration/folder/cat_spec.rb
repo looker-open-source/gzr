@@ -19,21 +19,18 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-RSpec.describe "`gzr space ls` command", type: :cli do
-  it "executes `space ls --help` command successfully" do
-    output = `gzr space ls --help`
+RSpec.describe "`gzr folder cat` command", type: :cli do
+  it "executes `folder cat --help` command successfully" do
+    output = `gzr folder cat --help`
     expect(output).to eq <<-OUT
 Usage:
-  gzr space ls FILTER_SPEC
+  gzr folder cat FOLDER_ID
 
 Options:
-  -h, [--help], [--no-help]    # Display usage information
-      [--fields=FIELDS]        # Fields to display
-                               # Default: parent_id,id,name,looks(id,title),dashboards(id,title)
-      [--plain], [--no-plain]  # print without any extra formatting
-      [--csv], [--no-csv]      # output in csv format per RFC4180
+  -h, [--help], [--no-help]  # Display usage information
+      [--dir=DIR]            # Directory to get output file
 
-list the contents of a space given by space name, space_id, ~ for the current user's default space, or ~name / ~number for the home space of a user
+Output the JSON representation of a folder to the screen or a file
     OUT
   end
 end

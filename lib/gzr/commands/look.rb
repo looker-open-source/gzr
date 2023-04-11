@@ -59,7 +59,7 @@ module Gzr
         end
       end
 
-      desc 'import FILE DEST_SPACE_ID', 'Import a look from a file'
+      desc 'import FILE DEST_FOLDER_ID', 'Import a look from a file'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       method_option :plain, type: :boolean,

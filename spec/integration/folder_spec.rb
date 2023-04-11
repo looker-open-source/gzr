@@ -19,9 +19,9 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-RSpec.describe "`gzr space` command", type: :cli do
-  it "executes `space --help` command successfully" do
-    output = `gzr space --help`
+RSpec.describe "`gzr folder` command", type: :cli do
+  it "executes `folder --help` command successfully" do
+    output = `gzr folder --help`
     expect(output).to match <<-OUT
 Commands:
     OUT

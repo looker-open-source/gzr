@@ -19,18 +19,17 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-RSpec.describe "`gzr space cat` command", type: :cli do
-  it "executes `space cat --help` command successfully" do
-    output = `gzr space cat --help`
+RSpec.describe "`gzr folder rm` command", type: :cli do
+  it "executes `folder rm --help` command successfully" do
+    output = `gzr folder rm --help`
     expect(output).to eq <<-OUT
 Usage:
-  gzr space cat SPACE_ID
+  gzr folder rm FOLDER_ID
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
-      [--dir=DIR]            # Directory to get output file
 
-Output the JSON representation of a space to the screen or a file
+Delete a folder. The folder must be empty or the --force flag specified to deleted subfolders, dashboards, and looks.
     OUT
   end
 end

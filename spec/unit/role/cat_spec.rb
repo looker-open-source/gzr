@@ -38,7 +38,7 @@ RSpec.describe Gzr::Commands::Role::Cat do
       "develop",
       "download_without_limit",
       "explore",
-      "manage_spaces",
+      "manage_folders",
       "save_content",
       "schedule_look_emails",
       "see_lookml",

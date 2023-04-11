@@ -24,13 +24,13 @@ RSpec.describe "`gzr dashboard mv` command", type: :cli do
     output = `gzr dashboard help mv`
     expected_output = <<-OUT
 Usage:
-  gzr dashboard mv DASHBOARD_ID TARGET_SPACE_ID
+  gzr dashboard mv DASHBOARD_ID TARGET_FOLDER_ID
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
-      [--force]              # Overwrite a dashboard with the same name in the target space
+      [--force]              # Overwrite a dashboard with the same name in the target folder
 
-Move a dashboard to the given space
+Move a dashboard to the given folder
     OUT
 
     expect(output).to eq(expected_output)

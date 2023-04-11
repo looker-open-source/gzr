@@ -19,12 +19,12 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-RSpec.describe "`gzr space export` command", type: :cli do
-  it "executes `space export --help` command successfully" do
-    output = `gzr space export --help`
+RSpec.describe "`gzr folder export` command", type: :cli do
+  it "executes `folder export --help` command successfully" do
+    output = `gzr folder export --help`
     expect(output).to eq <<-OUT
 Usage:
-  gzr space export SPACE_ID
+  gzr folder export FOLDER_ID
 
 Options:
   -h, [--help], [--no-help]    # Display usage information
@@ -35,7 +35,7 @@ Options:
       [--tgz=TGZ]              # TarGZ file to store output
       [--zip=ZIP]              # Zip file to store output
 
-Export a space, including all child looks, dashboards, and spaces.
+Export a folder, including all child looks, dashboards, and folders.
     OUT
   end
 end

@@ -19,44 +19,17 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-require 'gzr/commands/space/create'
+RSpec.describe "`gzr folder tree` command", type: :cli do
+  it "executes `folder tree --help` command successfully" do
+    output = `gzr folder tree --help`
+    expect(output).to eq <<-OUT
+Usage:
+  gzr folder tree STARTING_FOLDER
 
-RSpec.describe Gzr::Commands::Space::Create do
-  it "executes `create` command successfully" do
-    require 'sawyer'
-    resp_hash = {
-      :id=>1,
-      :name=>"foo",
-      :parent_id=>0,
-      :looks=>[
-        {
-          :id=>2,
-          :title=>"bar"
-        }
-      ],
-      :dashboards=>[
-        {
-          :id=>3,
-          :title=>"baz"
-        }
-      ]
-    }
-    mock_response = double(Sawyer::Resource, resp_hash)
-    allow(mock_response).to receive(:to_attrs).and_return(resp_hash)
-    mock_sdk = Object.new
-    mock_sdk.define_singleton_method(:logout) { }
-    mock_sdk.define_singleton_method(:create_space) do |req|
-      return mock_response
-    end
+Options:
+  -h, [--help], [--no-help]  # Display usage information
 
-    output = StringIO.new
-    options = {}
-    command = Gzr::Commands::Space::Create.new("new space", 1, options)
-
-    command.instance_variable_set(:@sdk, mock_sdk)
-
-    command.execute(output: output)
-
-    expect(output.string).to eq("Created space 1\n")
+Display the dashboards, looks, and subfolders of a folder in a tree format
+    OUT
   end
 end

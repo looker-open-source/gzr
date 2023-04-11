@@ -19,17 +19,21 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-RSpec.describe "`gzr space tree` command", type: :cli do
-  it "executes `space tree --help` command successfully" do
-    output = `gzr space tree --help`
+RSpec.describe "`gzr folder ls` command", type: :cli do
+  it "executes `folder ls --help` command successfully" do
+    output = `gzr folder ls --help`
     expect(output).to eq <<-OUT
 Usage:
-  gzr space tree STARTING_SPACE
+  gzr folder ls FILTER_SPEC
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help]    # Display usage information
+      [--fields=FIELDS]        # Fields to display
+                               # Default: parent_id,id,name,looks(id,title),dashboards(id,title)
+      [--plain], [--no-plain]  # print without any extra formatting
+      [--csv], [--no-csv]      # output in csv format per RFC4180
 
-Display the dashbaords, looks, and subspaces or a space in a tree format
+list the contents of a folder given by folder name, folder_id, ~ for the current user's default folder, or ~name / ~number for the home folder of a user
     OUT
   end
 end

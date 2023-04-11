@@ -32,7 +32,7 @@ RSpec.describe Gzr::Commands::Look::Import do
     :description => "Total profit by day for the last 100 days",
     :query_id => 555,
     :user_id => 1000,
-    :space_id => 1,
+    :folder_id => 1,
     :slug => "123xyz"
   }.freeze
 
@@ -232,9 +232,9 @@ RSpec.describe Gzr::Commands::Look::Import do
               "description": "User Id",
               "x-looker-nullable": true
             },
-            "space_id": {
+            "folder_id": {
               "type": "string",
-              "description": "Space Id",
+              "description": "Folder Id",
               "x-looker-nullable": true
             }
           },
@@ -280,24 +280,24 @@ RSpec.describe Gzr::Commands::Look::Import do
       HashResponse.new(doc)
     end
     mock_sdk.define_singleton_method(:search_looks) do |req|
-      if req&.fetch(:slug,nil) == look_response_doc[:slug] && req&.fetch(:space_id,nil) == look_response_doc[:space_id]
+      if req&.fetch(:slug,nil) == look_response_doc[:slug] && req&.fetch(:folder_id,nil) == look_response_doc[:folder_id]
         [HashResponse.new(look_response_doc)]
-      elsif req&.fetch(:slug,nil) == look_response_doc[:slug] && !req.has_key?(:space_id)
+      elsif req&.fetch(:slug,nil) == look_response_doc[:slug] && !req.has_key?(:folder_id)
         [HashResponse.new(look_response_doc)]
       elsif "DeletedSlug".eql?(req&.fetch(:slug,nil)) && req[:deleted]
         doc = look_response_doc.dup
         doc[:id] = 201
-        doc[:space_id] = 2
+        doc[:folder_id] = 2
         doc[:slug] = "DeletedSlug"
         doc[:deleted] = true
         [HashResponse.new(doc)]
-      elsif "dupe".eql?(req&.fetch(:slug,nil)) && !req.has_key?(:space_id)
+      elsif "dupe".eql?(req&.fetch(:slug,nil)) && !req.has_key?(:folder_id)
         doc = look_response_doc.dup
         doc[:id] = 201
-        doc[:space_id] = 2
+        doc[:folder_id] = 2
         doc[:slug] = "dupe"
         [HashResponse.new(doc)]
-      elsif req&.fetch(:title,nil) == look_response_doc[:title] && req&.fetch(:space_id,nil) == look_response_doc[:space_id]
+      elsif req&.fetch(:title,nil) == look_response_doc[:title] && req&.fetch(:folder_id,nil) == look_response_doc[:folder_id]
         [HashResponse.new(look_response_doc)]
       else
         []
@@ -345,8 +345,7 @@ RSpec.describe Gzr::Commands::Look::Import do
     block_hash = {:create_look =>
       Proc.new do |req|
         expect(req).not_to include(:deleted => true)
-        expect(req).to include(:space_id => 1)
-        expect(req).not_to include(:folder_id)
+        expect(req).to include(:folder_id => 1)
       end
     }
     command.instance_variable_set(:@sdk, mock_sdk(block_hash))
@@ -396,8 +395,7 @@ RSpec.describe Gzr::Commands::Look::Import do
     block_hash = {:create_look =>
       Proc.new do |req|
         expect(req).not_to include(:deleted => true)
-        expect(req).to include(:space_id => 1)
-        expect(req).not_to include(:folder_id)
+        expect(req).to include(:folder_id => 1)
         expect(req).not_to include(:slug)
       end
     }
@@ -459,7 +457,7 @@ RSpec.describe Gzr::Commands::Look::Import do
         "id": 198,
         "query_id": 90961,
         "title": "Daily Profit",
-        "space_id": "1",
+        "folder_id": "1",
         "query": {
           "id": 90961,
           "view": "order_items",

@@ -19,17 +19,62 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-RSpec.describe "`gzr space rm` command", type: :cli do
-  it "executes `space rm --help` command successfully" do
-    output = `gzr space rm --help`
-    expect(output).to eq <<-OUT
-Usage:
-  gzr space rm SPACE_ID
+require 'gzr/commands/folder/cat'
 
-Options:
-  -h, [--help], [--no-help]  # Display usage information
+RSpec.describe Gzr::Commands::Folder::Cat do
+  it "executes `cat` command successfully" do
+    require 'sawyer'
+    resp_hash = {
+      :id=>1,
+      :name=>"foo",
+      :parent_id=>0,
+      :looks=>[
+        {
+          :id=>2,
+          :title=>"bar"
+        }
+      ],
+      :dashboards=>[
+        {
+          :id=>3,
+          :title=>"baz"
+        }
+      ]
+    }
+    mock_response = double(Sawyer::Resource, resp_hash)
+    allow(mock_response).to receive(:to_attrs).and_return(resp_hash)
+    mock_sdk = Object.new
+    mock_sdk.define_singleton_method(:logout) { }
+    mock_sdk.define_singleton_method(:folder) do |look_id,req|
+      return mock_response
+    end
 
-Delete a space. The space must be empty or the --force flag specified to deleted subspaces, dashboards, and looks.
+    output = StringIO.new
+    options = {}
+    command = Gzr::Commands::Folder::Cat.new("1", options)
+
+    command.instance_variable_set(:@sdk, mock_sdk)
+
+    command.execute(output: output)
+
+    expect(output.string).to eq <<-OUT
+{
+  "id": 1,
+  "name": "foo",
+  "parent_id": 0,
+  "looks": [
+    {
+      "id": 2,
+      "title": "bar"
+    }
+  ],
+  "dashboards": [
+    {
+      "id": 3,
+      "title": "baz"
+    }
+  ]
+}
     OUT
   end
 end

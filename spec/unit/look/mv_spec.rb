@@ -28,7 +28,7 @@ RSpec.describe Gzr::Commands::Look::Mv do
     :description=>"Total profit by day for the last 100 days",
     :query_id=>555,
     :user_id=>1000,
-    :space_id=>1,
+    :folder_id=>1,
     :slug=>"123xyz"
   }.freeze
 
@@ -52,7 +52,7 @@ RSpec.describe Gzr::Commands::Look::Mv do
       HashResponse.new(doc)
     end
     mock_sdk.define_singleton_method(:search_looks) do |req|
-      if req&.fetch(:space_id,nil) == 2 && req&.fetch(:title,nil) == "Daily Profit"
+      if req&.fetch(:folder_id,nil) == 2 && req&.fetch(:title,nil) == "Daily Profit"
         []
       else
         []
@@ -70,6 +70,6 @@ RSpec.describe Gzr::Commands::Look::Mv do
 
     command.execute(output: output)
 
-    expect(output.string).to eq("Moved look 31415 to space 2\n")
+    expect(output.string).to eq("Moved look 31415 to folder 2\n")
   end
 end
