@@ -13,7 +13,7 @@ jobs:
     steps:
       # Checkout code
       - uses: actions/checkout@v3
-      - uses: GoogleCloudPlatform/release-please-action@v2
+      - uses: GoogleCloudPlatform/release-please-action@v3
         id: release
         with:
           release-type: ruby
