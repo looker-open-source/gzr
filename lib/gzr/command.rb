@@ -266,6 +266,7 @@ module Gzr
       end
     end
 
+
     ##
     # This method accepts the name of an sdk operation, then finds the parameter for that
     # operation in the data structures from the swagger.json file. The parameter is a
@@ -282,6 +283,11 @@ module Gzr
     #   end
 
     def keys_to_keep(operation)
+      @keys_to_keep_cache ||= {}
+      @keys_to_keep_cache[operation] ||= keys_to_keep_internal(operation)
+    end
+
+    def keys_to_keep_internal(operation)
       o = @sdk.operations[operation] || @sdk.operations[operation.to_sym]
       begin
         say_error "Operation #{operation} not found"
