@@ -23,6 +23,7 @@
 
 require 'pathname'
 require 'rubygems/package'
+require 'stringio'
 
 module Gzr
   module FileHelper
