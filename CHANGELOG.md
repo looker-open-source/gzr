@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/looker-open-source/gzr/compare/v0.2.60...v0.3.0) (2023-04-13)
+
+
+### Features
+
+* Misc fixes ([#175](https://github.com/looker-open-source/gzr/issues/175)) ([20b334b](https://github.com/looker-open-source/gzr/commit/20b334b3e4d1a76ecef79d5c686f6cf428cdc47d))
+
+
+### Miscellaneous Chores
+
+* release 0.3.0 ([5ed2182](https://github.com/looker-open-source/gzr/commit/5ed2182b94c20126f59b0678671d7c9b81c1c794))
+
 ### [0.2.60](https://www.github.com/looker-open-source/gzr/compare/v0.2.59...v0.2.60) (2023-04-11)
 
 
