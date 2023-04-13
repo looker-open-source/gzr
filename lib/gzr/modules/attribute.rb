@@ -146,7 +146,7 @@ module Gzr
         new_attr = source.select do |k,v|
           (keys_to_keep('create_user_attribute') - [:hidden_value_domain_whitelist]).include? k
         end
-        new_attr[:hidden_value_domain_whitelist] = source[:hidden_value_domain_whitelist] if source[:value_is_hidden] && source[:hidden_value_domain_whitelist]
+        new_attr[:hidden_value_domain_whitelist] = source[:hidden_value_domain_allowlist] if source[:value_is_hidden] && source[:hidden_value_domain_allowlist]
 
         return create_attribute(new_attr)
       end
