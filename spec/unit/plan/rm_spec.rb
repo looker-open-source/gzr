@@ -26,7 +26,7 @@ RSpec.describe Gzr::Commands::Plan::Rm do
     mock_sdk = Object.new
     mock_sdk.define_singleton_method(:logout) { }
     mock_sdk.define_singleton_method(:delete_scheduled_plan) do |plan_id|
-      return 
+      return
     end
 
     output = StringIO.new

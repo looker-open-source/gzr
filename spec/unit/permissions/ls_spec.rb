@@ -30,7 +30,7 @@ RSpec.describe Gzr::Commands::Permissions::Ls do
     mock_sdk = Object.new
     mock_sdk.define_singleton_method(:authenticated?) { true }
     mock_sdk.define_singleton_method(:logout) { }
-    mock_sdk.define_singleton_method(:all_permissions) do 
+    mock_sdk.define_singleton_method(:all_permissions) do
       return [mock_response]
     end
 
