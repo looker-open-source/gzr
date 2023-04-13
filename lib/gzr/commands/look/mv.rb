@@ -55,7 +55,7 @@ module Gzr
               update_look(matching_title.first[:id],{:deleted=>true})
             end
             update_look(look[:id],{:folder_id=>@target_folder_id})
-            output.puts "Moved look #{look[:id]} to folder #{@target_folder_id}" unless @options[:plain] 
+            output.puts "Moved look #{look[:id]} to folder #{@target_folder_id}" unless @options[:plain]
           end
         end
       end

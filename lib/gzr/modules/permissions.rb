@@ -30,7 +30,7 @@ module Gzr
         data = @sdk.all_permissions()
       rescue LookerSDK::Error => e
           say_error "Error querying all_permissions()"
-          say_error e.message
+          say_error e
           raise
       end
       data

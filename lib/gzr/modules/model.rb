@@ -31,7 +31,7 @@ module Gzr
         data = @sdk.all_lookml_models(req)
       rescue LookerSDK::Error => e
         say_error "Error querying all_lookml_models(#{JSON.pretty_generate(req)})"
-        say_error e.message
+        say_error e
         raise
       end
       data

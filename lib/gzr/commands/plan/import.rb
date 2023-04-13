@@ -46,7 +46,7 @@ module Gzr
           with_session do
 
             @me ||= query_me("id")
-            
+
 
             read_file(@plan_file) do |data|
               plan = nil
@@ -58,8 +58,8 @@ module Gzr
               else
                 raise Gzr::CLI::Error, "Invalid type '#{obj_type}', valid types are look and dashboard"
               end
-              output.puts "Imported plan #{plan.id}" unless @options[:plain] 
-              output.puts plan.id if @options[:plain] 
+              output.puts "Imported plan #{plan.id}" unless @options[:plain]
+              output.puts plan.id if @options[:plain]
             end
           end
         end

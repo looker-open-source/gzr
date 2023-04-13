@@ -80,15 +80,15 @@ module Gzr
                 @sdk.run_query(query_id,@options[:format]) { |data,progress| (f || output).write(data) }
               rescue LookerSDK::Error => e
                 say_error "Error in run_query(#{query_id},#{@options[:format]})})"
-                say_error e.message
+                say_error e
                 raise
               end
             else
               begin
-                @sdk.run_inline_query(@options[:format],query_hash) { |data,progress| (f || output).write(data) } 
+                @sdk.run_inline_query(@options[:format],query_hash) { |data,progress| (f || output).write(data) }
               rescue LookerSDK::Error => e
                 say_error "Error in run_inline_query(#{@options[:format]},#{JSON.pretty_generate(query_hash)})"
-                say_error e.message
+                say_error e
                 raise
               end
             end

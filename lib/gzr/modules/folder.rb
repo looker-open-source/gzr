@@ -37,7 +37,7 @@ module Gzr
         data = @sdk.create_folder(req)
       rescue LookerSDK::Error => e
         say_error "Error creating folder(#{JSON.pretty_generate(req)})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -51,7 +51,7 @@ module Gzr
         data = @sdk.search_folders(req)
       rescue LookerSDK::Error => e
         say_error "Error querying search_folders(#{JSON.pretty_generate(req)})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -61,13 +61,13 @@ module Gzr
       data = nil
       begin
         req = {}
-        req[:fields] = fields if fields 
+        req[:fields] = fields if fields
         data = @sdk.folder(id, req)
       rescue LookerSDK::NotFound
         return nil
       rescue LookerSDK::Error => e
         say_error "Error querying folder(#{id},#{JSON.pretty_generate(req)})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -117,11 +117,11 @@ module Gzr
       data = nil
       begin
         req = {}
-        req[:fields] = fields if fields 
+        req[:fields] = fields if fields
         data = @sdk.all_folders(req)
       rescue LookerSDK::Error => e
         say_error "Error querying all_folders(#{JSON.pretty_generate(req)})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -137,7 +137,7 @@ module Gzr
         return nil
       rescue LookerSDK::Error => e
         say_error "Error querying folder_children(#{folder_id}, #{JSON.pretty_generate(req)})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -151,7 +151,7 @@ module Gzr
         return nil
       rescue LookerSDK::Error => e
         say_error "Error deleting folder #{folder_id}"
-        say_error e.message
+        say_error e
         raise
       end
       data

@@ -29,7 +29,7 @@ module Gzr
         data = @sdk.look(look_id)
       rescue LookerSDK::Error => e
           say_error "Error querying look(#{look_id})"
-          say_error e.message
+          say_error e
           raise
       end
       data
@@ -39,13 +39,13 @@ module Gzr
       data = []
       begin
         req = { :slug => slug }
-        req[:folder_id] = folder_id if folder_id 
+        req[:folder_id] = folder_id if folder_id
         data = @sdk.search_looks(req)
         req[:deleted] = true
         data = @sdk.search_looks(req) if data.empty?
       rescue LookerSDK::Error => e
         say_error "Error search_looks_by_slug(#{JSON.pretty_generate(req)})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -55,13 +55,13 @@ module Gzr
       data = []
       begin
         req = { :title => title }
-        req[:folder_id] = folder_id if folder_id 
+        req[:folder_id] = folder_id if folder_id
         data = @sdk.search_looks(req)
         req[:deleted] = true
         data = @sdk.search_looks(req) if data.empty?
       rescue LookerSDK::Error => e
         say_error "Error search_looks_by_title(#{JSON.pretty_generate(req)})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -84,7 +84,7 @@ module Gzr
         data = @sdk.update_look(id,look)
       rescue LookerSDK::Error => e
         say_error "Error updating look(#{id},#{JSON.pretty_generate(look)})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -96,7 +96,7 @@ module Gzr
         data = @sdk.delete_look(look_id)
       rescue LookerSDK::Error => e
         say_error "Error deleting look(#{look_id})"
-        say_error e.message
+        say_error e
         raise
       end
       data

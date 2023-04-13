@@ -42,8 +42,8 @@ module Gzr
           with_session do
             read_file(@file) do |source|
               attr = upsert_user_attribute(source, @options[:force], output: $stdout)
-              output.puts "Imported attribute #{attr.name} #{attr.id}" unless @options[:plain] 
-              output.puts attr.id if @options[:plain] 
+              output.puts "Imported attribute #{attr.name} #{attr.id}" unless @options[:plain]
+              output.puts attr.id if @options[:plain]
             end
           end
         end

@@ -189,7 +189,7 @@ module Gzr
         raise
       rescue LookerSDK::Error => e
         say_error "Unable to connect"
-        say_error e.message
+        say_error e
         say_error e.errors if e.respond_to?(:errors) && e.errors
         raise
       end
@@ -203,8 +203,8 @@ module Gzr
           @sdk.access_token = @sdk.login_user(@options[:su]).access_token
           say_warning "verify authentication: #{@sdk.authenticated?}" if @options[:debug]
         rescue LookerSDK::Error => e
-          say_error "Unable to su to user #{@options[:su]}" 
-          say_error e.message
+          say_error "Unable to su to user #{@options[:su]}"
+          say_error e
           say_error e.errors if e.respond_to?(:errors) && e.errors
           raise
         end
@@ -219,7 +219,7 @@ module Gzr
         @sdk.logout
       rescue LookerSDK::Error => e
         say_error "Unable to logout"
-        say_error e.message
+        say_error e
         say_error e.errors if e.respond_to?(:errors) && e.errors
       end if @sdk
       loop do
@@ -231,7 +231,7 @@ module Gzr
           @sdk.logout
         rescue LookerSDK::Error => e
           say_error "Unable to logout"
-          say_error e.message
+          say_error e
           say_error e.errors if e.respond_to?(:errors) && e.errors
         end
       end
