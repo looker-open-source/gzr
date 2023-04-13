@@ -30,7 +30,7 @@ module Gzr
         data = @sdk.me(fields ? {:fields=>fields} : nil )
       rescue LookerSDK::Error => e
         say_error "Error querying me({:fields=>\"#{fields}\"})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -42,7 +42,7 @@ module Gzr
         data = @sdk.user(id, fields ? {:fields=>fields} : nil )
       rescue LookerSDK::Error => e
         say_error "Error querying user(#{id},{:fields=>\"#{fields}\"})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -64,7 +64,7 @@ module Gzr
           scratch_data = @sdk.search_users(req)
         rescue LookerSDK::ClientError => e
           say_error "Unable to get search_users(#{JSON.pretty_generate(req)})"
-          say_error e.message
+          say_error e
           raise
         end
         break if scratch_data.length == 0
@@ -89,7 +89,7 @@ module Gzr
           scratch_data = @sdk.all_users(req)
         rescue LookerSDK::ClientError => e
           say_error "Unable to get all_users(#{JSON.pretty_generate(req)})"
-          say_error e.message
+          say_error e
           raise
         end
         break if scratch_data.length == 0
@@ -105,12 +105,12 @@ module Gzr
         data = @sdk.update_user(id,req)
       rescue LookerSDK::Error => e
         say_error "Error updating user(#{id},#{JSON.pretty_generate(req)})"
-        say_error e.message
+        say_error e
         raise
       end
       data
     end
-    
+
     def delete_user(id)
       data = nil
        req = id
@@ -118,7 +118,7 @@ module Gzr
         data = @sdk.delete_user(req)
       rescue LookerSDK::Error => e
         say_error "Error deleting user(#{id},#{JSON.pretty_generate(req)})"
-        say_error e.message
+        say_error e
         raise
       end
       data

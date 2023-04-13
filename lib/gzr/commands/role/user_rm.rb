@@ -38,7 +38,7 @@ module Gzr
 
         def execute(input: $stdin, output: $stdout)
           say_warning(@options) if @options[:debug]
-          
+
           with_session do
             users = query_role_users(@role_id, 'id').collect { |u| u.id }
             users -= @users

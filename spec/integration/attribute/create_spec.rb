@@ -38,7 +38,7 @@ Options:
                                              # Default: true
       [--can-edit], [--no-can-edit]          # can a user change the value themself
                                              # Default: true
-      [--domain-whitelist=DOMAIN-WHITELIST]  # what domains can receive the value of a hidden attribute.
+      [--domain-allowlist=DOMAIN-ALLOWLIST]  # what domains can receive the value of a hidden attribute.
 
 Create or modify an attribute
     OUT

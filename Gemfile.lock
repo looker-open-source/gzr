@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    gazer (0.2.60)
+    gazer (0.3.0)
       faraday (~> 1.10.3)
       looker-sdk (~> 0.1.1)
       net-http-persistent (~> 4.0, >= 4.0.1)

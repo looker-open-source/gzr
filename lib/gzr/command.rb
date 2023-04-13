@@ -58,7 +58,7 @@ module Gzr
         data = @sdk.query(query_id)
       rescue LookerSDK::Error => e
         say_error "Error querying query(#{query_id})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -72,7 +72,7 @@ module Gzr
         end
       rescue LookerSDK::Error => e
         say_error "Error creating query(#{JSON.pretty_generate(query)})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -86,7 +86,7 @@ module Gzr
         say_error "The api endpoint merge_query(#{merge_result_id}) is not implemented on this Looker instance"
       rescue LookerSDK::Error => e
         say_error "Error querying merge_query(#{merge_result_id})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -100,7 +100,7 @@ module Gzr
         raise
       rescue LookerSDK::Error => e
         say_error "Error creating merge_query(#{JSON.pretty_generate(merge_query)})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -111,7 +111,7 @@ module Gzr
         data = @sdk.run_inline_query("json",query)
       rescue LookerSDK::Error => e
         say_error "Error running inline_query(#{JSON.pretty_generate(query)})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -127,7 +127,7 @@ module Gzr
         say_warning "The current user can't query all color collections"
       rescue LookerSDK::Error => e
         say_error "Error querying all_color_collections()"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -145,7 +145,7 @@ module Gzr
         say_warning "The current user can't query the default color collection"
       rescue LookerSDK::Error => e
         say_error "Error querying default_color_collection()"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -161,7 +161,7 @@ module Gzr
         say_warning "The color_collection(#{collection_id}) is not found"
       rescue LookerSDK::Error => e
         say_error "Error querying color_collection(#{collection_id})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -266,6 +266,7 @@ module Gzr
       end
     end
 
+
     ##
     # This method accepts the name of an sdk operation, then finds the parameter for that
     # operation in the data structures from the swagger.json file. The parameter is a
@@ -282,6 +283,11 @@ module Gzr
     #   end
 
     def keys_to_keep(operation)
+      @keys_to_keep_cache ||= {}
+      @keys_to_keep_cache[operation] ||= keys_to_keep_internal(operation)
+    end
+
+    def keys_to_keep_internal(operation)
       o = @sdk.operations[operation] || @sdk.operations[operation.to_sym]
       begin
         say_error "Operation #{operation} not found"
@@ -386,7 +392,7 @@ module Gzr
     ##
     # This method will accept two arrays, a and b, and create a third array
     # like [ [a[0],b[0]], [a[1],b[1]], [a[2],b[2]], ...].
-    # If either array is longer than the other, additional pairs 
+    # If either array is longer than the other, additional pairs
     # will be generated with the shorter array padded out with nil values.
     #
     # Any additional args will be added to each inner array.

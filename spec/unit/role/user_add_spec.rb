@@ -39,7 +39,7 @@ RSpec.describe Gzr::Commands::Role::UserAdd do
     end
     allow(mock_sdk).to receive(:set_role_users) do |role_id,body|
       expect(body).to contain_exactly(100, 101, 102, 103, 104, 105, 106)
-      nil 
+      nil
     end
     output = StringIO.new
     options = {}

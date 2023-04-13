@@ -40,8 +40,8 @@ module Gzr
           folder = nil
           with_session do
             folder = create_folder(@name, @parent_folder)
-            output.puts "Created folder #{folder.id}" unless @options[:plain] 
-            output.puts folder.id if @options[:plain] 
+            output.puts "Created folder #{folder.id}" unless @options[:plain]
+            output.puts folder.id if @options[:plain]
           end
         end
       end

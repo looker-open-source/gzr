@@ -26,7 +26,7 @@ RSpec.describe Gzr::Commands::Look::Rm do
     mock_sdk = Object.new
     mock_sdk.define_singleton_method(:logout) { }
     mock_sdk.define_singleton_method(:delete_look) do |id|
-      return 
+      return
     end
 
     output = StringIO.new

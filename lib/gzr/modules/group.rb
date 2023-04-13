@@ -38,7 +38,7 @@ module Gzr
           scratch_data = @sdk.all_groups(req)
         rescue LookerSDK::ClientError => e
           say_error "Unable to get all_groups(#{JSON.pretty_generate(req)})"
-          say_error e.message
+          say_error e
           raise
         end
         break if scratch_data.length == 0
@@ -47,7 +47,7 @@ module Gzr
       end
       data
     end
-    
+
     def query_group_groups(group_id,fields=nil)
       req = { }
       req[:fields] = fields if fields
@@ -59,7 +59,7 @@ module Gzr
         return []
       rescue LookerSDK::ClientError => e
         say_error "Unable to get all_group_groups(#{group_id},#{JSON.pretty_generate(req)})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -80,7 +80,7 @@ module Gzr
           scratch_data = @sdk.all_group_users(group_id,req)
         rescue LookerSDK::ClientError => e
           say_error "Unable to get all_group_users(#{group_id},#{JSON.pretty_generate(req)})"
-          say_error e.message
+          say_error e
           raise
         end
         break if scratch_data.length == 0
@@ -89,7 +89,7 @@ module Gzr
       end
       data
     end
-    
+
     def search_groups(name)
       req = {:name => name }
       begin
@@ -98,11 +98,11 @@ module Gzr
         return nil
       rescue LookerSDK::ClientError => e
         say_error "Unable to search_groups(#{JSON.pretty_generate(req)})"
-        say_error e.message
+        say_error e
         raise
       end
     end
-    
+
     def query_group(id, fields=nil)
       req = Hash.new
       req[:fields] = fields if fields
@@ -112,11 +112,11 @@ module Gzr
         return nil
       rescue LookerSDK::ClientError => e
         say_error "Unable to find group(#{id},#{JSON.pretty_generate(req)})"
-        say_error e.message
+        say_error e
         raise
       end
     end
-    
+
     def update_user_attribute_group_value(group_id, attr_id, value)
       req = Hash.new
       req[:value] = value
@@ -124,7 +124,7 @@ module Gzr
         return @sdk.update_user_attribute_group_value(group_id,attr_id, req)
       rescue LookerSDK::ClientError => e
         say_error "Unable to update_user_attribute_group_value(#{group_id},#{attr_id},#{JSON.pretty_generate(req)})"
-        say_error e.message
+        say_error e
         raise
       end
     end

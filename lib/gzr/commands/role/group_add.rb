@@ -38,7 +38,7 @@ module Gzr
 
         def execute(input: $stdin, output: $stdout)
           say_warning(@options) if @options[:debug]
-          
+
           with_session do
             groups = query_role_groups(@role_id, 'id').collect { |g| g.id }
             groups += @groups

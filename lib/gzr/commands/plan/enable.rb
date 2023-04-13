@@ -39,8 +39,8 @@ module Gzr
           say_warning("options: #{@options.inspect}") if @options[:debug]
           with_session do
             plan = update_scheduled_plan(@plan_id, { :enabled=>true })
-            output.puts "Enabled plan #{plan.id}" unless @options[:plain] 
-            output.puts plan.id if @options[:plain] 
+            output.puts "Enabled plan #{plan.id}" unless @options[:plain]
+            output.puts plan.id if @options[:plain]
           end
         end
       end

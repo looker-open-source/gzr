@@ -28,7 +28,7 @@ RSpec.describe Gzr::Commands::User::Me do
     allow(mock_response).to receive(:to_attrs).and_return({ :id=>1, :last_name=>"foo", :first_name=>"bar", :email=>"fbar@my.company.com" })
     mock_sdk = Object.new
     mock_sdk.define_singleton_method(:logout) { }
-    mock_sdk.define_singleton_method(:me) do |fields| 
+    mock_sdk.define_singleton_method(:me) do |fields|
       return mock_response
     end
     output = StringIO.new

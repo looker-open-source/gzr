@@ -44,11 +44,11 @@ module Gzr
             source[:'value_is_hidden'] = true if @options[:'is-hidden']
             source[:'user_can_view'] = true if @options[:'can-view']
             source[:'user_can_edit'] = true if @options[:'can-edit']
-            source[:'hidden_value_domain_whitelist'] = @options[:'domain-whitelist'] if @options[:'is-hidden'] && @options[:'domain-whitelist']
+            source[:'hidden_value_domain_allowlist'] = @options[:'domain-allowlist'] if @options[:'is-hidden'] && @options[:'domain-allowlist']
 
             attr = upsert_user_attribute(source, @options[:force], output: $stdout)
-            output.puts "Imported attribute #{attr.name} #{attr.id}" unless @options[:plain] 
-            output.puts attr.id if @options[:plain] 
+            output.puts "Imported attribute #{attr.name} #{attr.id}" unless @options[:plain]
+            output.puts attr.id if @options[:plain]
           end
         end
       end

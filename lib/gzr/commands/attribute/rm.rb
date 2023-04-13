@@ -52,8 +52,8 @@ module Gzr
 
             delete_user_attribute(attr.id)
 
-            output.puts "Deleted attribute #{attr.name} #{attr.id}" unless @options[:plain] 
-            output.puts attr.id if @options[:plain] 
+            output.puts "Deleted attribute #{attr.name} #{attr.id}" unless @options[:plain]
+            output.puts attr.id if @options[:plain]
           end
         end
       end

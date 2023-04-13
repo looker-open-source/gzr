@@ -33,7 +33,7 @@ module Gzr
         # do nothing
       rescue LookerSDK::ClientError => e
         say_error "Unable to get all_roles(#{JSON.pretty_generate(req)})"
-        say_error e.message
+        say_error e
         say_error e.errors if e.errors
         raise
       end
@@ -47,7 +47,7 @@ module Gzr
         # do nothing
       rescue LookerSDK::ClientError => e
         say_error "Unable to get role(#{role_id})"
-        say_error e.message
+        say_error e
         say_error e.errors if e.errors
         raise
       end
@@ -61,7 +61,7 @@ module Gzr
         # do nothing
       rescue LookerSDK::ClientError => e
         say_error "Unable to delete_role(#{role_id})"
-        say_error e.message
+        say_error e
         say_error e.errors if e.errors
         raise
       end
@@ -77,7 +77,7 @@ module Gzr
         # do nothing
       rescue LookerSDK::ClientError => e
         say_error "Unable to get role_groups(#{role_id},#{JSON.pretty_generate(req)})"
-        say_error e.message
+        say_error e
         say_error e.errors if e.errors
         raise
       end
@@ -94,7 +94,7 @@ module Gzr
         # do nothing
       rescue LookerSDK::ClientError => e
         say_error "Unable to get role_users(#{role_id},#{JSON.pretty_generate(req)})"
-        say_error e.message
+        say_error e
         say_error e.errors if e.errors
         raise
       end
@@ -106,7 +106,7 @@ module Gzr
         data = @sdk.set_role_groups(role_id, groups)
       rescue LookerSDK::ClientError => e
         say_error "Unable to call set_role_groups(#{role_id},#{JSON.pretty_generate(groups)})"
-        say_error e.message
+        say_error e
         say_error e.errors if e.errors
         raise
       end
@@ -118,7 +118,7 @@ module Gzr
         data = @sdk.set_role_users(role_id, users)
       rescue LookerSDK::ClientError => e
         say_error "Unable to call set_role_users(#{role_id},#{JSON.pretty_generate(users)})"
-        say_error e.message
+        say_error e
         say_error e.errors if e.errors
         raise
       end

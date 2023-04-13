@@ -128,8 +128,8 @@ RSpec.describe Gzr::Commands::Attribute::SetGroupValue do
         :user_attribute_id=>found_attrs.first[:id],
         :value=>req[:value]
       }
-      HashResponse.new(resp) 
-        
+      HashResponse.new(resp)
+
     end
     mock_sdk
   end

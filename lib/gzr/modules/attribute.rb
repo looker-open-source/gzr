@@ -33,7 +33,7 @@ module Gzr
         # do nothing
       rescue LookerSDK::Error => e
         say_error "Error querying user_attribute(#{attr_id},#{JSON.pretty_generate(req)})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -48,7 +48,7 @@ module Gzr
         data = @sdk.all_user_attributes(req)
       rescue LookerSDK::Error => e
         say_error "Error querying all_user_attributes(#{JSON.pretty_generate(req)})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -72,7 +72,7 @@ module Gzr
         data = @sdk.create_user_attribute(attr)
       rescue LookerSDK::Error => e
         say_error "Error creating user_attribute(#{JSON.pretty_generate(attr)})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -84,7 +84,7 @@ module Gzr
         data = @sdk.update_user_attribute(id,attr)
       rescue LookerSDK::Error => e
         say_error "Error updating user_attribute(#{id},#{JSON.pretty_generate(attr)})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -96,7 +96,7 @@ module Gzr
         data = @sdk.delete_user_attribute(id)
       rescue LookerSDK::Error => e
         say_error "Error deleting user_attribute(#{id})"
-        say_error e.message
+        say_error e
         raise
       end
       data
@@ -111,7 +111,7 @@ module Gzr
         return nil
       rescue LookerSDK::Error => e
         say_error "Error querying all_user_attribute_group_values(#{attr_id},#{JSON.pretty_generate(req)})"
-        say_error e.message
+        say_error e
         raise
       end
     end
@@ -146,7 +146,7 @@ module Gzr
         new_attr = source.select do |k,v|
           (keys_to_keep('create_user_attribute') - [:hidden_value_domain_whitelist]).include? k
         end
-        new_attr[:hidden_value_domain_whitelist] = source[:hidden_value_domain_whitelist] if source[:value_is_hidden] && source[:hidden_value_domain_whitelist]
+        new_attr[:hidden_value_domain_whitelist] = source[:hidden_value_domain_allowlist] if source[:value_is_hidden] && source[:hidden_value_domain_allowlist]
 
         return create_attribute(new_attr)
       end

@@ -100,8 +100,8 @@ module Gzr
                            desc: 'can a non-admin user view the value'
       method_option :'can-edit', type: :boolean, default: true,
                            desc: 'can a user change the value themself'
-      method_option :'domain-whitelist', type: :string,
-                          desc: 'what domains can receive the value of a hidden attribute.' 
+      method_option :'domain-allowlist', type: :string,
+                          desc: 'what domains can receive the value of a hidden attribute.'
       def create(attr_name, attr_label=nil)
         if options[:help]
           invoke :help, ['create']

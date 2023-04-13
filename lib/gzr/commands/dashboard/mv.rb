@@ -48,14 +48,14 @@ module Gzr
             if matching_title.empty? || matching_title.first[:deleted]
               matching_title = false
             end
-            
+
             if matching_title
               raise Gzr::CLI::Error, "Dashboard #{dash[:title]} already exists in folder #{@target_folder_id}\nUse --force if you want to overwrite it" unless @options[:force]
               say_ok "Deleting existing dashboard #{matching_title.first[:id]} #{matching_title.first[:title]} in folder #{@target_folder_id}", output: output
               update_dashboard(matching_title.first[:id],{:deleted=>true})
             end
             update_dashboard(dash[:id],{:folder_id=>@target_folder_id})
-            output.puts "Moved dashboard #{dash[:id]} to folder #{@target_folder_id}" unless @options[:plain] 
+            output.puts "Moved dashboard #{dash[:id]} to folder #{@target_folder_id}" unless @options[:plain]
           end
         end
       end
