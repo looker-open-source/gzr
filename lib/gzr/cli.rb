@@ -58,6 +58,9 @@ module Gzr
     map %w(--version -v) => :version
     map space: :folder  # Alias space command to folder
 
+    require_relative 'commands/alert'
+    register Gzr::Commands::Alert, 'alert', 'alert [SUBCOMMAND]', 'Command description...'
+
     require_relative 'commands/attribute'
     register Gzr::Commands::Attribute, 'attribute', 'attribute [SUBCOMMAND]', 'Command description...'
 
