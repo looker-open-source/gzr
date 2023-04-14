@@ -37,16 +37,30 @@ module Gzr
       data
     end
 
-    def search_alerts(fields=nil)
-      data = nil
+    def search_alerts(group_by: nil, fields: nil, disabled: nil, frequency: nil, condition_met: nil, last_run_start: nil, last_run_end: nil, all_owners: nil)
+      data = []
       begin
         req = {}
-        req[:fields] = fields if fields
-        data = @sdk.search_alerts(req)
+        req[:group_by] = group_by unless group_by.nil?
+        req[:fields] = fields unless fields.nil?
+        req[:disabled] = disabled unless disabled.nil?
+        req[:frequency] = frequency unless frequency.nil?
+        req[:condition_met] = condition_met unless condition_met.nil?
+        req[:last_run_start] = last_run_start unless last_run_start.nil?
+        req[:last_run_end] = last_run_end unless last_run_end.nil?
+        req[:all_owners] = all_owners unless all_owners.nil?
+        say_warning(req)
+        req[:limit] = 64
+        loop do
+          page = @sdk.search_alerts(req)
+          data+=page
+          break unless page.length == req[:limit]
+          req[:offset] = (req[:offset] || 0) + req[:limit]
+        end
       rescue LookerSDK::NotFound => e
         # do nothing
       rescue LookerSDK::Error => e
-        say_error "Error querying alerts(#{JSON.pretty_generate(req)})"
+        say_error "Error querying search_alerts(#{JSON.pretty_generate(req)})"
         say_error e
         raise
       end

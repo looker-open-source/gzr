@@ -38,8 +38,7 @@ module Gzr
         def execute(input: $stdin, output: $stdout)
           say_warning(@options) if @options[:debug]
           with_session do
-            f = @options[:fields]
-            data = search_alerts(f)
+            data = search_alerts(fields: @options[:fields], disabled: @options[:disabled], all_owners: @options[:all])
             begin
               say_ok "No alerts found"
               return nil
