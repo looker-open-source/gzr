@@ -30,9 +30,15 @@ module Gzr
       rescue LookerSDK::NotFound => e
         # do nothing
       rescue LookerSDK::Error => e
-        say_error "Error querying user_attribute(#{attr_id},#{JSON.pretty_generate(req)})"
+        say_error "Error querying get_alert(#{alert_id})"
         say_error e
         raise
+      end
+      if data[:owner_id]
+        owner = get_user_by_id(data[:owner_id])
+        data[:owner] = owner.to_attrs.select do |k,v|
+          [:email,:last_name,:first_name].include?(k) || ( k.to_s.start_with?('credentials')  && !(v.nil? || v.empty?))
+        end
       end
       data
     end
