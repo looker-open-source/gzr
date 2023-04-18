@@ -109,5 +109,15 @@ module Gzr
       end
       data
     end
+
+    def delete_alert(alert_id)
+      begin
+        @sdk.delete_alert(alert_id)
+      rescue LookerSDK::Error => e
+        say_error "Error calling delete_alert(#{alert_id})"
+        say_error e
+        raise
+      end
+    end
   end
 end

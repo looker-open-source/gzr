@@ -124,6 +124,19 @@ module Gzr
           Gzr::Commands::Alert::Threshold.new(alert_id,threshold,options).execute
         end
       end
+
+      desc 'rm ALERT_ID', 'Delete the alert given by ALERT_ID'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def rm(alert_id)
+        if options[:help]
+          invoke :help, ['delete']
+        else
+          require_relative 'alert/delete'
+          Gzr::Commands::Alert::Delete.new(alert_id,options).execute
+        end
+      end
+
     end
   end
 end
