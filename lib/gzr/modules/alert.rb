@@ -91,5 +91,23 @@ module Gzr
         raise
       end
     end
+
+    def update_alert_field(alert_id, owner_id: nil, is_disabled: nil, disabled_reason: nil, is_public: nil, threshold: nil)
+      req = {}
+      req[:owner_id] = owner_id unless owner_id.nil?
+      req[:is_disabled] = is_disabled unless is_disabled.nil?
+      req[:disabled_reason] = disabled_reason unless disabled_reason.nil?
+      req[:is_public] = is_public unless is_public.nil?
+      req[:threshold] = threshold unless threshold.nil?
+      data = nil
+      begin
+        data = @sdk.update_alert_field(alert_id, req)
+      rescue LookerSDK::Error => e
+        say_error "Error calling update_alert_field(#{alert_id},#{JSON.pretty_generate(req)})"
+        say_error e
+        raise
+      end
+      data
+    end
   end
 end

@@ -88,6 +88,30 @@ module Gzr
           Gzr::Commands::Alert::Unfollow.new(alert_id,options).execute
         end
       end
+
+      desc 'enable ALERT_ID', 'Enable the alert given by ALERT_ID'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def enable(alert_id)
+        if options[:help]
+          invoke :help, ['enable']
+        else
+          require_relative 'alert/enable'
+          Gzr::Commands::Alert::Enable.new(alert_id,options).execute
+        end
+      end
+
+      desc 'disable ALERT_ID REASON', 'Disable the alert given by ALERT_ID'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def disable(alert_id,reason)
+        if options[:help]
+          invoke :help, ['disable']
+        else
+          require_relative 'alert/disable'
+          Gzr::Commands::Alert::Disable.new(alert_id,reason,options).execute
+        end
+      end
     end
   end
 end
