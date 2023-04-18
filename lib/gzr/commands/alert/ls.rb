@@ -38,7 +38,11 @@ module Gzr
         def execute(input: $stdin, output: $stdout)
           say_warning(@options) if @options[:debug]
           with_session do
-            data = search_alerts(fields: @options[:fields], disabled: @options[:disabled], all_owners: @options[:all])
+            req = {}
+            req[:fields] = @options[:fields] unless @options[:fields].nil?
+            req[:disabled] = @options[:disabled] unless @options[:disabled].nil?
+            req[:all_owners] = @options[:all] unless @options[:all].nil?
+            data = search_alerts(**req)
             begin
               say_ok "No alerts found"
               return nil

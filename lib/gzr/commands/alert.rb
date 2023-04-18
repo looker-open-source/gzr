@@ -34,9 +34,9 @@ module Gzr
                            desc: 'Display usage information'
       method_option :fields, type: :string, default: 'id,field(title,name),comparison_type,threshold,cron,custom_title,dashboard_element_id,description',
                            desc: 'Fields to display'
-      method_option :disabled, type: :boolean, default: false,
+      method_option :disabled, type: :boolean, default: nil,
                            desc: 'return disabled alerts'
-      method_option :all, type: :boolean, default: false,
+      method_option :all, type: :boolean, default: nil,
                            desc: 'return alerts from all users (must be admin)'
       method_option :plain, type: :boolean, default: false,
                            desc: 'print without any extra formatting'
