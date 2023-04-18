@@ -25,6 +25,7 @@ require 'json'
 require_relative '../../command'
 require_relative '../../modules/dashboard'
 require_relative '../../modules/plan'
+require_relative '../../modules/alert'
 require_relative '../../modules/filehelper'
 
 module Gzr
@@ -33,6 +34,7 @@ module Gzr
       class Cat < Gzr::Command
         include Gzr::Dashboard
         include Gzr::FileHelper
+        include Gzr::Alert
         include Gzr::Plan
         def initialize(dashboard_id,options)
           super()
@@ -45,6 +47,13 @@ module Gzr
           with_session do
             data = cat_dashboard(@dashboard_id)
             data = trim_dashboard(data) if @options[:trim]
+
+            alerts = search_alerts(fields: 'id,dashboard_element_id', group_by: 'dashboard', all_owners: true)
+            alerts.map!{|v| v.to_attrs}
+            say_warning alerts if @options[:debug]
+            data[:dashboard_elements].each do |e|
+              e[:alerts] = alerts.select { |a| a[:dashboard_element_id] == e[:id]}.map { |a| get_alert(a[:id]).to_attrs }
+            end
 
             replacements = {}
             if @options[:transform]
