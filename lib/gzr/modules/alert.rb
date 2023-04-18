@@ -55,7 +55,6 @@ module Gzr
         req[:last_run_start] = last_run_start unless last_run_start.nil?
         req[:last_run_end] = last_run_end unless last_run_end.nil?
         req[:all_owners] = all_owners unless all_owners.nil?
-        say_warning(req)
         req[:limit] = 64
         loop do
           page = @sdk.search_alerts(req)
