@@ -20,9 +20,12 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 # frozen_string_literal: true
+require_relative 'alert'
 
 module Gzr
   module Dashboard
+    include Gzr::Alert
+
     def query_dashboard(dashboard_id)
       data = nil
       begin
@@ -249,6 +252,13 @@ module Gzr
             rewrite_color_palette!(o,default_colors)
           end
         end
+        alerts = search_alerts(fields: 'id,dashboard_element_id', group_by: 'dashboard', all_owners: true)
+        alerts.map!{|v| v.to_attrs}
+        say_warning alerts if @options[:debug]
+        data[:dashboard_elements].each do |e|
+          e[:alerts] = alerts.select { |a| a[:dashboard_element_id] == e[:id]}.map { |a| get_alert(a[:id]).to_attrs }
+        end
+
         merge_result = merge_query(element[:merge_result_id])&.to_attrs if element[:merge_result_id]
         if merge_result
           merge_result[:source_queries].each_index do |j|
