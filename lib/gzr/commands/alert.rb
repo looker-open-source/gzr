@@ -112,6 +112,18 @@ module Gzr
           Gzr::Commands::Alert::Disable.new(alert_id,reason,options).execute
         end
       end
+
+      desc 'threshold ALERT_ID THRESHOLD', 'Change the threshold of the alert given by ALERT_ID'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def threshold(alert_id,threshold)
+        if options[:help]
+          invoke :help, ['threshold']
+        else
+          require_relative 'alert/threshold'
+          Gzr::Commands::Alert::Threshold.new(alert_id,threshold,options).execute
+        end
+      end
     end
   end
 end
