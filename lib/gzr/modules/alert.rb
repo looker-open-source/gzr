@@ -72,5 +72,25 @@ module Gzr
       end
       data
     end
+
+    def follow_alert(alert_id)
+      begin
+        @sdk.follow_alert(alert_id)
+      rescue LookerSDK::Error => e
+        say_error "Error following alert(#{alert_id})"
+        say_error e
+        raise
+      end
+    end
+
+    def unfollow_alert(alert_id)
+      begin
+        @sdk.unfollow_alert(alert_id)
+      rescue LookerSDK::Error => e
+        say_error "Error following alert(#{alert_id})"
+        say_error e
+        raise
+      end
+    end
   end
 end

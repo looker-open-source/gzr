@@ -64,6 +64,30 @@ module Gzr
           Gzr::Commands::Alert::Cat.new(alert_id,options).execute
         end
       end
+
+      desc 'follow ALERT_ID', 'Start following the alert given by ALERT_ID'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def follow_alert(alert_id)
+        if options[:help]
+          invoke :help, ['follow']
+        else
+          require_relative 'alert/follow'
+          Gzr::Commands::Alert::Follow.new(alert_id,options).execute
+        end
+      end
+
+      desc 'unfollow ALERT_ID', 'Stop following the alert given by ALERT_ID'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def unfollow_alert(alert_id)
+        if options[:help]
+          invoke :help, ['unfollow']
+        else
+          require_relative 'alert/unfollow'
+          Gzr::Commands::Alert::Unfollow.new(alert_id,options).execute
+        end
+      end
     end
   end
 end
