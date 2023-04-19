@@ -119,5 +119,39 @@ module Gzr
         raise
       end
     end
+
+    def alert_notifications()
+      data = []
+      req = {}
+      begin
+        req[:limit] = 64
+        loop do
+          page = @sdk.alert_notifications(req)
+          data+=page
+          break unless page.length == req[:limit]
+          req[:offset] = (req[:offset] || 0) + req[:limit]
+        end
+      rescue LookerSDK::NotFound => e
+        # do nothing
+      rescue LookerSDK::Error => e
+        say_error "Error querying alert_notifications()"
+        say_error e
+        raise
+      end
+      data
+    end
+
+    def read_alert_notification(notification_id)
+      data = nil
+      begin
+        data = @sdk.read_alert_notification(notification_id)
+      rescue LookerSDK::Error => e
+        say_error "Error calling read_alert_notification(#{notification_id})"
+        say_error e
+        raise
+      end
+      data.to_attrs
+    end
+
   end
 end

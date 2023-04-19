@@ -149,6 +149,38 @@ module Gzr
         end
       end
 
+      desc 'notifications', 'Get notifications'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      method_option :plain, type: :boolean, default: false,
+                           desc: 'print without any extra formatting'
+      method_option :csv, type: :boolean, default: false,
+                           desc: 'output in csv format per RFC4180'
+      def notifications(*)
+        if options[:help]
+          invoke :help, ['notifications']
+        else
+          require_relative 'alert/notifications'
+          Gzr::Commands::Alert::Notifications.new(options).execute
+        end
+      end
+
+      desc 'read NOTIFICATION_ID', 'Read notification id'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      method_option :plain, type: :boolean, default: false,
+                           desc: 'print without any extra formatting'
+      method_option :csv, type: :boolean, default: false,
+                           desc: 'output in csv format per RFC4180'
+      def read(notification_id)
+        if options[:help]
+          invoke :help, ['read']
+        else
+          require_relative 'alert/read'
+          Gzr::Commands::Alert::Read.new(notification_id,options).execute
+        end
+      end
+
     end
   end
 end
