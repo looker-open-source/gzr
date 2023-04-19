@@ -137,6 +137,18 @@ module Gzr
         end
       end
 
+      desc 'chown ALERT_ID OWNER_ID', 'Change the owner of the alert given by ALERT_ID to OWNER_ID'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def chown(alert_id, owner_id)
+        if options[:help]
+          invoke :help, ['chown']
+        else
+          require_relative 'alert/chown'
+          Gzr::Commands::Alert::Chown.new(alert_id,owner_id,options).execute
+        end
+      end
+
     end
   end
 end
