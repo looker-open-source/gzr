@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/looker-open-source/gzr/compare/v0.3.0...v0.3.1) (2023-04-20)
+
+
+### Features
+
+* Add --trim option for dashboard cat, look cat, and folder export commands ([#178](https://github.com/looker-open-source/gzr/issues/178)) ([3173796](https://github.com/looker-open-source/gzr/commit/317379600803cfb92d223980930c0831fe8c247d))
+
 ## [0.3.0](https://github.com/looker-open-source/gzr/compare/v0.2.60...v0.3.0) (2023-04-13)
 
 
