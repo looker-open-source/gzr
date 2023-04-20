@@ -29,6 +29,7 @@ Usage:
 Options:
   -h, [--help], [--no-help]    # Display usage information
       [--plans], [--no-plans]  # Include scheduled plans
+      [--trim], [--no-trim]    # Trim output to minimal set of fields for later import
       [--dir=DIR]              # Directory to store output tree
                                # Default: .
       [--tar=TAR]              # Tar file to store output

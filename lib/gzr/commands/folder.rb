@@ -66,6 +66,8 @@ module Gzr
                            desc: 'Display usage information'
       method_option :plans,  type: :boolean,
                            desc: 'Include scheduled plans'
+      method_option :trim,  type: :boolean,
+                           desc: 'Trim output to minimal set of fields for later import'
       method_option :dir, type: :string, default: '.',
                            desc: 'Directory to store output tree'
       method_option :tar, type: :string,

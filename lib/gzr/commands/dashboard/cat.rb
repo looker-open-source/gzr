@@ -44,6 +44,7 @@ module Gzr
           say_warning("options: #{@options.inspect}") if @options[:debug]
           with_session do
             data = cat_dashboard(@dashboard_id)
+            data = trim_dashboard(data) if @options[:trim]
 
             replacements = {}
             if @options[:transform]

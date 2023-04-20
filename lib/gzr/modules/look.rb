@@ -198,8 +198,25 @@ module Gzr
         end
       end
 
-      data[:scheduled_plans] = query_scheduled_plans_for_look(@look_id,"all")&.to_attrs if @options[:plans]
+      data[:scheduled_plans] = query_scheduled_plans_for_look(@look_id,"all").map { |e| e.to_attrs }  if @options[:plans]
       data
+    end
+
+    def trim_look(data)
+      trimmed = data.select do |k,v|
+        (keys_to_keep('update_look') + [:id,:query]).include? k
+      end
+      trimmed[:query] = data[:query].select do |k,v|
+        (keys_to_keep('create_query') + [:id]).include? k
+      end
+
+      trimmed[:scheduled_plans] = data[:scheduled_plans].map do |sp|
+        sp.select do |k,v|
+          (keys_to_keep('create_scheduled_plan') + [:id]).include? k
+        end
+      end if data[:scheduled_plans]
+
+      trimmed
     end
   end
 end
