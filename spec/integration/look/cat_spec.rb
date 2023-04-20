@@ -31,6 +31,7 @@ Options:
       [--dir=DIR]                                  # Directory to store output file
       [--plans], [--no-plans]                      # Include scheduled plans
       [--simple-filename], [--no-simple-filename]  # Use simple filename for output (Look_<id>.json)
+      [--trim], [--no-trim]                        # Trim output to minimal set of fields for later import
 
 Output the JSON representation of a look to the screen or a file
     OUT

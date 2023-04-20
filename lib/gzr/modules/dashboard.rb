@@ -269,7 +269,7 @@ module Gzr
 
     def trim_dashboard(data)
       trimmed = data.select do |k,v|
-        (keys_to_keep('update_dashboard') + [:id,:dashboard_elements,:dashboard_filters,:dashboard_layouts]).include? k
+        (keys_to_keep('update_dashboard') + [:id,:dashboard_elements,:dashboard_filters,:dashboard_layouts,:scheduled_plans]).include? k
       end
 
       trimmed[:dashboard_elements] = data[:dashboard_elements].map do |de|
@@ -324,6 +324,12 @@ module Gzr
         end
         new_dl
       end
+
+      trimmed[:scheduled_plans] = data[:scheduled_plans].map do |sp|
+        sp.select do |k,v|
+          (keys_to_keep('create_scheduled_plan') + [:id]).include? k
+        end
+      end if data[:scheduled_plans]
 
       trimmed
     end

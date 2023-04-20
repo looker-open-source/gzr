@@ -84,6 +84,8 @@ module Gzr
                            desc: 'Include scheduled plans'
       method_option :simple_filename,  type: :boolean,
                            desc: 'Use simple filename for output (Look_<id>.json)'
+      method_option :trim, type: :boolean,
+                           desc: 'Trim output to minimal set of fields for later import'
       def cat(look_id)
         if options[:help]
           invoke :help, ['cat']

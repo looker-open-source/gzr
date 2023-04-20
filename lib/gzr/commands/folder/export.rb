@@ -99,12 +99,14 @@ module Gzr
           end
           folder[:looks].each do |l|
             look = cat_look(l[:id])
+            look = trim_look(look) if @options[:trim]
             write_file("Look_#{look[:id]}_#{look[:title]}.json", base, path) do |f|
               f.write JSON.pretty_generate(look)
             end
           end
           folder[:dashboards].each do |d|
             data = cat_dashboard(d[:id])
+            data = trim_dashboard(data) if @options[:trim]
             write_file("Dashboard_#{data[:id]}_#{data[:title]}.json", base, path) do |f|
               f.write JSON.pretty_generate(data)
             end

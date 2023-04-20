@@ -43,6 +43,7 @@ module Gzr
           say_warning("options: #{@options.inspect}") if @options[:debug]
           with_session do
             data = cat_look(@look_id)
+            data = trim_look(data) if @options[:trim]
             file_name = if @options[:dir]
                           @options[:simple_filename] ? "Look_#{data[:id]}.json" : "Look_#{data[:id]}_#{data[:title]}.json"
                         else
