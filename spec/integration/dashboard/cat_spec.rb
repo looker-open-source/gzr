@@ -32,6 +32,7 @@ Options:
       [--plans], [--no-plans]                      # Include scheduled plans
       [--transform=TRANSFORM]                      # Fully-qualified path to a JSON file describing the transformations to apply
       [--simple-filename], [--no-simple-filename]  # Use simple filename for output (Dashboard_<id>.json)
+      [--trim], [--no-trim]                        # Trim output to minimal set of fields for later import
 
 Output the JSON representation of a dashboard to the screen or a file
     OUT

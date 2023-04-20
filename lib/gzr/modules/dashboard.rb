@@ -266,5 +266,66 @@ module Gzr
       data[:scheduled_plans] = query_scheduled_plans_for_dashboard(@dashboard_id,"all") if @options[:plans]
       data
     end
+
+    def trim_dashboard(data)
+      trimmed = data.select do |k,v|
+        (keys_to_keep('update_dashboard') + [:id,:dashboard_elements,:dashboard_filters,:dashboard_layouts]).include? k
+      end
+
+      trimmed[:dashboard_elements] = data[:dashboard_elements].map do |de|
+        new_de = de.select do |k,v|
+          (keys_to_keep('update_dashboard_element') + [:id,:look,:query,:merge_result]).include? k
+        end
+        if de[:look]
+          new_de[:look] = de[:look].select do |k,v|
+            (keys_to_keep('update_look') + [:id,:query]).include? k
+          end
+          if de[:look][:query]
+            new_de[:look][:query] = de[:look][:query].select do |k,v|
+              (keys_to_keep('create_query') + [:id]).include? k
+            end
+          end
+        end
+        if de[:query]
+          new_de[:query] = de[:query].select do |k,v|
+            (keys_to_keep('create_query') + [:id]).include? k
+          end
+        end
+        if de[:merge_result]
+          new_de[:merge_result] = de[:merge_result].select do |k,v|
+            (keys_to_keep('update_merge_query') + [:id]).include? k
+          end
+          new_de[:merge_result][:source_queries] = de[:merge_result][:source_queries].map do |sq|
+            sq.select do |k,v|
+              (keys_to_keep('create_query') + [:id]).include? k
+            end
+          end
+        end
+        new_de
+      end
+
+      trimmed[:dashboard_filters] = data[:dashboard_filters].map do |df|
+        new_df = df.select do |k,v|
+          keys_to_keep('update_dashboard_filter').include? k
+        end
+        new_df
+      end
+
+      trimmed[:dashboard_layouts] = data[:dashboard_layouts].map do |dl|
+        new_dl = dl.select do |k,v|
+          (keys_to_keep('update_dashboard_layout') + [:id]).include? k
+        end
+        if dl[:dashboard_layout_components]
+          new_dl[:dashboard_layout_components] = dl[:dashboard_layout_components].map do |dlc|
+            dlc.select do |k,v|
+              (keys_to_keep('update_dashboard_layout_component') + [:id]).include? k
+            end
+          end
+        end
+        new_dl
+      end
+
+      trimmed
+    end
   end
 end

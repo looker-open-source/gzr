@@ -53,7 +53,9 @@ module Gzr
       method_option :transform,  type: :string,
                            desc: 'Fully-qualified path to a JSON file describing the transformations to apply'
       method_option :simple_filename, type: :boolean,
-                    desc: 'Use simple filename for output (Dashboard_<id>.json)'
+                           desc: 'Use simple filename for output (Dashboard_<id>.json)'
+      method_option :trim, type: :boolean,
+                           desc: 'Trim output to minimal set of fields for later import'
       def cat(dashboard_id)
         if options[:help]
           invoke :help, ['cat']
