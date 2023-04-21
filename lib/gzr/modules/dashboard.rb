@@ -256,7 +256,11 @@ module Gzr
         alerts.map!{|v| v.to_attrs}
         say_warning alerts if @options[:debug]
         data[:dashboard_elements].each do |e|
-          e[:alerts] = alerts.select { |a| a[:dashboard_element_id] == e[:id]}.map { |a| get_alert(a[:id]).to_attrs }
+          alerts_found = alerts.select { |a| a[:dashboard_element_id] == e[:id]}
+          say_warning "Found alerts #{alerts_found}" if @options[:debug]
+          alerts_entries = alerts_found.map { |a| get_alert(a[:id]).to_attrs }
+          say_warning "Looked up alerts entries #{alerts_entries}" if @options[:debug]
+          e[:alerts] = alerts_entries
         end
 
         merge_result = merge_query(element[:merge_result_id])&.to_attrs if element[:merge_result_id]
@@ -284,7 +288,7 @@ module Gzr
 
       trimmed[:dashboard_elements] = data[:dashboard_elements].map do |de|
         new_de = de.select do |k,v|
-          (keys_to_keep('update_dashboard_element') + [:id,:look,:query,:merge_result]).include? k
+          (keys_to_keep('update_dashboard_element') + [:id,:look,:query,:merge_result,:alerts]).include? k
         end
         if de[:look]
           new_de[:look] = de[:look].select do |k,v|
@@ -308,6 +312,13 @@ module Gzr
           new_de[:merge_result][:source_queries] = de[:merge_result][:source_queries].map do |sq|
             sq.select do |k,v|
               (keys_to_keep('create_query') + [:id]).include? k
+            end
+          end
+        end
+        if de[:alerts]
+          new_de[:alerts] = de[:alerts].map do |a|
+            a.select do |k,v|
+              (keys_to_keep('update_alert') + [:id,:owner]).include? k
             end
           end
         end

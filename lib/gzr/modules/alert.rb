@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Looker Data Sciences, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -37,7 +37,7 @@ module Gzr
       if data[:owner_id]
         owner = get_user_by_id(data[:owner_id])
         data[:owner] = owner.to_attrs.select do |k,v|
-          [:email,:last_name,:first_name].include?(k) || ( k.to_s.start_with?('credentials')  && !(v.nil? || v.empty?))
+          [:email,:last_name,:first_name].include?(k) && !(v.nil? || v.empty?)
         end
       end
       data
