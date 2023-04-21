@@ -1,6 +1,6 @@
 # The MIT icense (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -50,6 +50,18 @@ module Gzr
         NotImplementedError,
         "#{self.class}##{__method__} must be implemented"
       )
+    end
+
+    def get_user_by_id(user_id, req=nil)
+      user = nil
+      begin
+        user = @sdk.user(user_id, req)
+      rescue LookerSDK::Error => e
+        say_error "Error querying get_user_by_id(#{user_id})"
+        say_error e
+        raise
+      end
+      user
     end
 
     def query(query_id)
@@ -387,6 +399,66 @@ module Gzr
     def field_expression(name)
       parts = name.split(/\./)
       parts.join('&.')
+    end
+
+
+    # This version of field names yields an expression that can be evaluated against a hash structure
+    # like this one...
+    #
+    # data&.fetch(:a,nil)
+    # val1
+    # data&.fetch(:b,nil)
+    # val2
+    # data&.fetch(:c,nil)&.fetch(:d,nil)
+    # val3
+    # data&.fetch(:c,nil)&.fetch(:e,nil)&.fetch(:f,nil)
+    # val4
+    # data&.fetch(:c,nil)&.fetch(:e,nil)&.fetch(:g,nil)
+    # val5
+    # data&.fetch(:h,nil)
+    # val6
+    #
+    # data =
+    # {
+    #   a: "val",
+    #   b: "val",
+    #   c: {
+    #     d: "val",
+    #     e: {
+    #       f: "val",
+    #       g: "val"
+    #     }
+    #   },
+    #   h: "val"
+    # }
+    #
+    # field_names_hash(fields).each do |field|
+    #   puts "data#{field}"
+    #   puts eval "data#{field}"
+    # end
+
+    def field_names_hash(opt_fields)
+      fields = []
+      token_stack = []
+      last_token = false
+      tokens = opt_fields.split /(\(|,|\))/
+      tokens << nil
+      tokens.each do |t|
+        if t == '(' then
+          token_stack.push(last_token)
+        elsif t.nil? || t == ',' then
+          fields << "&.fetch(:#{(token_stack + [last_token]).join(',nil)&.fetch(:')},nil)" if last_token
+        elsif t.empty? then
+          next
+        elsif t == ')' then
+          fields << "&.fetch(:#{(token_stack + [last_token]).join(',nil)&.fetch(:')},nil)" if last_token
+          token_stack.pop
+          last_token = false
+        else
+          last_token = t
+        end
+      end
+      fields
     end
 
     ##

@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -20,9 +20,12 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 # frozen_string_literal: true
+require_relative 'alert'
 
 module Gzr
   module Dashboard
+    include Gzr::Alert
+
     def query_dashboard(dashboard_id)
       data = nil
       begin
@@ -249,6 +252,17 @@ module Gzr
             rewrite_color_palette!(o,default_colors)
           end
         end
+        alerts = search_alerts(fields: 'id,dashboard_element_id', group_by: 'dashboard', all_owners: true)
+        alerts.map!{|v| v.to_attrs}
+        say_warning alerts if @options[:debug]
+        data[:dashboard_elements].each do |e|
+          alerts_found = alerts.select { |a| a[:dashboard_element_id] == e[:id]}
+          say_warning "Found alerts #{alerts_found}" if @options[:debug]
+          alerts_entries = alerts_found.map { |a| get_alert(a[:id]).to_attrs }
+          say_warning "Looked up alerts entries #{alerts_entries}" if @options[:debug]
+          e[:alerts] = alerts_entries
+        end
+
         merge_result = merge_query(element[:merge_result_id])&.to_attrs if element[:merge_result_id]
         if merge_result
           merge_result[:source_queries].each_index do |j|
@@ -274,7 +288,7 @@ module Gzr
 
       trimmed[:dashboard_elements] = data[:dashboard_elements].map do |de|
         new_de = de.select do |k,v|
-          (keys_to_keep('update_dashboard_element') + [:id,:look,:query,:merge_result]).include? k
+          (keys_to_keep('update_dashboard_element') + [:id,:look,:query,:merge_result,:alerts]).include? k
         end
         if de[:look]
           new_de[:look] = de[:look].select do |k,v|
@@ -298,6 +312,13 @@ module Gzr
           new_de[:merge_result][:source_queries] = de[:merge_result][:source_queries].map do |sq|
             sq.select do |k,v|
               (keys_to_keep('create_query') + [:id]).include? k
+            end
+          end
+        end
+        if de[:alerts]
+          new_de[:alerts] = de[:alerts].map do |a|
+            a.select do |k,v|
+              (keys_to_keep('update_alert') + [:id,:owner]).include? k
             end
           end
         end

@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -89,6 +89,17 @@ module Gzr
                 element[:result_maker] = result_maker if result_maker
                 dashboard_element = create_dashboard_element(element)
                 say_warning "dashboard_element #{dashboard_element.inspect}" if @options[:debug]
+                if new_element[:alerts]
+                  new_element[:alerts].each do |a|
+                    a.select! do |k,v|
+                      (keys_to_keep('create_alert') - [:owner_id, :dashboard_element_id]).include? k
+                    end
+                    a[:dashboard_element_id] = dashboard_element[:id]
+                    a[:owner_id] = @me[:id]
+                    new_alert = create_alert(a)
+                    say_warning "alert #{JSON.pretty_generate(new_alert)}" if @options[:debug]
+                  end
+                end
                 dashboard[:dashboard_elements].push dashboard_element
                 [new_element[:id], dashboard_element.id]
               end
