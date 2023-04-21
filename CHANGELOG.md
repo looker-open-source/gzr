@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/looker-open-source/gzr/compare/v0.3.1...v0.3.2) (2023-04-21)
+
+
+### Features
+
+* Alerts management through gazer ([#180](https://github.com/looker-open-source/gzr/issues/180)) ([74d0307](https://github.com/looker-open-source/gzr/commit/74d0307d63602df5efad98e7c8e92b91740a4afc))
+
 ## [0.3.1](https://github.com/looker-open-source/gzr/compare/v0.3.0...v0.3.1) (2023-04-20)
 
 
