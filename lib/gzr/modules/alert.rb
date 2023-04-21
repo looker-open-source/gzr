@@ -153,5 +153,17 @@ module Gzr
       data.to_attrs
     end
 
+    def create_alert(req)
+      data = nil
+      begin
+        data = @sdk.create_alert(req)
+      rescue LookerSDK::Error => e
+        say_error "Error calling create_alert(#{JSON.pretty_generate(req)})"
+        say_error e
+        raise
+      end
+      data.to_attrs
+    end
+
   end
 end

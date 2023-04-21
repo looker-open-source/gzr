@@ -181,6 +181,20 @@ module Gzr
         end
       end
 
+      desc 'import FILE [DASHBOARD_ELEMENT_ID]', 'Import an alert from a file'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      method_option :plain, type: :boolean,
+                           desc: 'Provide minimal response information'
+      def import(file,dashboard_element_id=nil)
+        if options[:help]
+          invoke :help, ['import']
+        else
+          require_relative 'alert/import'
+          Gzr::Commands::Alert::Import.new(file, dashboard_element_id, options).execute
+        end
+      end
+
     end
   end
 end
