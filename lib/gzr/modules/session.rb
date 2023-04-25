@@ -55,6 +55,38 @@ module Gzr
       !versions.drop_while {|v| v < minimum_version}.reverse.drop_while {|v| v > given_version}.empty?
     end
 
+    def token_file
+      "#{ENV["HOME"]}/.gzr_auth"
+    end
+
+    def read_token_data
+      return nil unless File.exist?(token_file)
+      s = File.stat(token_file)
+      if !(s.mode.to_s(8)[3..5] == "600")
+        say_error "#{token_file} mode is #{s.mode.to_s(8)[3..5]}. It must be 600. Ignoring."
+        return nil
+      end
+      token_data = nil
+      file = nil
+      begin
+        file = File.open(token_file)
+        token_data = JSON.parse(file.read,{:symbolize_names => true})
+      ensure
+        file.close if file
+      end
+      token_data
+    end
+
+    def write_token_data(token_data)
+      file = nil
+      begin
+        file = File.new(token_file, "wt")
+        file.chmod(0600)
+        file.write JSON.pretty_generate(token_data)
+      ensure
+        file.close if file
+      end
+    end
 
     def build_connection_hash(api_version=nil)
       conn_hash = Hash.new
@@ -86,6 +118,9 @@ module Gzr
         }
       end
       conn_hash[:user_agent] = "Gazer #{Gzr::VERSION}"
+
+      return conn_hash if @options[:token] || @options[:token_file]
+
       if @options[:client_id] then
         conn_hash[:client_id] = @options[:client_id]
         if @options[:client_secret] then
@@ -103,12 +138,14 @@ module Gzr
     end
 
     def login(min_api_version="4.0")
-      if (@options[:client_id].nil? && ENV["LOOKERSDK_CLIENT_ID"])
-        @options[:client_id] = ENV["LOOKERSDK_CLIENT_ID"]
-      end
+      if !@options[:token] && !@options[:token_file]
+        if (@options[:client_id].nil? && ENV["LOOKERSDK_CLIENT_ID"])
+          @options[:client_id] = ENV["LOOKERSDK_CLIENT_ID"]
+        end
 
-      if (@options[:client_secret].nil? && ENV["LOOKERSDK_CLIENT_SECRET"])
-        @options[:client_secret] = ENV["LOOKERSDK_CLIENT_SECRET"]
+        if (@options[:client_secret].nil? && ENV["LOOKERSDK_CLIENT_SECRET"])
+          @options[:client_secret] = ENV["LOOKERSDK_CLIENT_SECRET"]
+        end
       end
 
       if (@options[:verify_ssl] && ENV["LOOKERSDK_VERIFY_SSL"])
@@ -183,6 +220,11 @@ module Gzr
         @sdk = LookerSDK::Client.new(conn_hash.merge(faraday: faraday)) unless @sdk
 
         say_ok "check for connectivity: #{@sdk.alive?}" if @options[:debug]
+        if @options[:token_file]
+          @sdk.access_token = read_token_data&.fetch(@options[:host].to_sym,nil)&.fetch(:default,nil)
+        elsif @options[:token]
+          @sdk.access_token = @options[:token]
+        end
         say_ok "verify authentication: #{@sdk.authenticated?}" if @options[:debug]
       rescue LookerSDK::Unauthorized => e
         say_error "Unauthorized - credentials are not valid"
@@ -247,7 +289,7 @@ module Gzr
         e.backtrace.each { |b| say_error b } if @options[:debug]
         raise Gzr::CLI::Error, e.message
       ensure
-        logout_all
+        logout_all unless @options[:token] || @options[:token_file]
       end
     end
   end
