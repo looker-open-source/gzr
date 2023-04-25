@@ -46,6 +46,8 @@ module Gzr
     class_option :su, type: :string, desc: 'After connecting, change to user_id given'
     class_option :width, type: :numeric, default: nil, desc: 'Width of rendering for tables'
     class_option :persistent, type: :boolean, default: false, desc: 'Use persistent connection to communicate with host'
+    class_option :token, type: :string, default: nil, desc: "Access token to use for authentication"
+    class_option :token_file, type: :boolean, default: false, desc: "Use access token stored in file for authentication"
 
     # Error raised by this runner
     Error = Class.new(StandardError)
@@ -96,5 +98,8 @@ module Gzr
 
     require_relative 'commands/folder'
     register Gzr::Commands::Folder, 'folder', 'folder [SUBCOMMAND]', 'Commands pertaining to folders'
+
+    require_relative 'commands/session'
+    register Gzr::Commands::Session, 'session', 'session [SUBCOMMAND]', 'Commands pertaining to sessions'
   end
 end
