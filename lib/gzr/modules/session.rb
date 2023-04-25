@@ -222,14 +222,23 @@ module Gzr
         say_ok "check for connectivity: #{@sdk.alive?}" if @options[:debug]
         if @options[:token_file]
           entry = read_token_data&.fetch(@options[:host].to_sym,nil)&.fetch(@options[:su]&.to_sym || :default,nil)
+          if entry.nil?
+            say_error "No token found for host #{@options[:host]} and user #{@options[:su] || "default"}"
+            say_error "login with `gzr session login --host #{@options[:host]}` to set a token"
+            raise LookerSDK::Unauthorized.new
+          end
           (day, time, tz) = entry[:expiration].split(' ')
           day_parts = day.split('-')
           time_parts = time.split(':')
           date_time_parts = day_parts + time_parts + [tz]
           expiration = Time.new(*date_time_parts)
           if expiration < (Time.now + 300)
-            say_error "token expires at #{expiration}, which is in the past or the next 5 minutes"
-            say_error "login again with gzr session login"
+            if expiration < Time.now
+              say_error "token expired at #{expiration}"
+            else
+              say_error "token expires at #{expiration}, which is in the next 5 minutes"
+            end
+            say_error "login again with `gzr session login --host #{@options[:host]}`"
             raise LookerSDK::Unauthorized.new
           end
           @sdk.access_token = entry[:token]
@@ -249,7 +258,7 @@ module Gzr
       raise Gzr::CLI::Error, "Invalid credentials" unless @sdk.authenticated?
 
 
-      if @options[:su] then
+      if @options[:su] && !(@options[:token] || @options[:token_file])then
         say_ok "su to user #{@options[:su]}" if @options[:debug]
         @access_token_stack.push(@sdk.access_token)
         begin
