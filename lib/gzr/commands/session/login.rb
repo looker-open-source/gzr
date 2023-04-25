@@ -41,7 +41,7 @@ module Gzr
           end
           token_data = read_token_data || {}
           token_data[@options[:host].to_sym] ||= {}
-          token_data[@options[:host].to_sym][@options[:su]&.to_sym || :default] = @sdk.access_token
+          token_data[@options[:host].to_sym][@options[:su]&.to_sym || :default] = { token: @sdk.access_token, expiration: @sdk.access_token_expires_at }
           write_token_data(token_data)
         end
       end

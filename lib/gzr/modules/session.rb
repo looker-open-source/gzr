@@ -221,7 +221,18 @@ module Gzr
 
         say_ok "check for connectivity: #{@sdk.alive?}" if @options[:debug]
         if @options[:token_file]
-          @sdk.access_token = read_token_data&.fetch(@options[:host].to_sym,nil)&.fetch(:default,nil)
+          entry = read_token_data&.fetch(@options[:host].to_sym,nil)&.fetch(@options[:su]&.to_sym || :default,nil)
+          (day, time, tz) = entry[:expiration].split(' ')
+          day_parts = day.split('-')
+          time_parts = time.split(':')
+          date_time_parts = day_parts + time_parts + [tz]
+          expiration = Time.new(*date_time_parts)
+          if expiration < Time.now
+            say_error "token expired at #{expiration}"
+            say_error "login again with gzr session login"
+            raise LookerSDK::Unauthorized.new
+          end
+          @sdk.access_token = entry[:token]
         elsif @options[:token]
           @sdk.access_token = @options[:token]
         end
