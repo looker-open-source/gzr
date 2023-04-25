@@ -227,8 +227,8 @@ module Gzr
           time_parts = time.split(':')
           date_time_parts = day_parts + time_parts + [tz]
           expiration = Time.new(*date_time_parts)
-          if expiration < Time.now
-            say_error "token expired at #{expiration}"
+          if expiration < (Time.now + 300)
+            say_error "token expires at #{expiration}, which is in the past or the next 5 minutes"
             say_error "login again with gzr session login"
             raise LookerSDK::Unauthorized.new
           end
