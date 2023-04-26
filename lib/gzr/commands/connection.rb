@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -62,6 +62,24 @@ module Gzr
         else
           require_relative 'connection/ls'
           Gzr::Commands::Connection::Ls.new(options).execute
+        end
+      end
+
+      desc 'cat CONNECTION_ID', 'Output the JSON representation of a connection to the screen or a file'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      method_option :dir,  type: :string,
+                           desc: 'Directory to store output file'
+      method_option :simple_filename, type: :boolean,
+                           desc: 'Use simple filename for output (Connection_<id>.json)'
+      method_option :trim, type: :boolean,
+                           desc: 'Trim output to minimal set of fields for later import'
+      def cat(connection_id)
+        if options[:help]
+          invoke :help, ['cat']
+        else
+          require_relative 'connection/cat'
+          Gzr::Commands::Connection::Cat.new(connection_id, options).execute
         end
       end
     end

@@ -48,5 +48,24 @@ module Gzr
       data
     end
 
+    def cat_connection(name)
+      data = nil
+      begin
+        data = @sdk.connection(name).to_attrs
+      rescue LookerSDK::NotFound => e
+        say_warning "Connection #{name} not found"
+      rescue LookerSDK::Error => e
+        say_error "Error executing connection(#{name})"
+        say_error e
+        raise
+      end
+      data
+    end
+
+    def trim_connection(data)
+      data.select do |k,v|
+        (keys_to_keep('create_connection') + [:pdt_context_override]).include? k
+      end
+    end
   end
 end
