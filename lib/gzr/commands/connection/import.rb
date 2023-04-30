@@ -46,6 +46,7 @@ module Gzr
             if @options[:prompt]
               reader = TTY::Reader.new
               @secret = reader.read_line("Enter your connection password:", echo: false)
+              @secret.chomp!
             end
 
             read_file(@file) do |data|
