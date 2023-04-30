@@ -29,35 +29,19 @@ require_relative '../../modules/filehelper'
 module Gzr
   module Commands
     class Connection
-      class Cat < Gzr::Command
+      class Rm < Gzr::Command
         include Gzr::Connection
         include Gzr::FileHelper
-        def initialize(connection_id,options)
+        def initialize(connection_name,options)
           super()
-          @connection_id = connection_id
+          @connection_name = connection_name
           @options = options
         end
 
         def execute(*args, input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
           with_session do
-            data = cat_connection(@connection_id)
-            if data.nil?
-              say_warning "Connection #{@connection_id} not found"
-              return
-            end
-            data = trim_connection(data) if @options[:trim]
-
-            outputJSON = JSON.pretty_generate(data)
-
-            file_name = if @options[:dir]
-                          @options[:simple_filename] ? "Connection_#{data[:name]}.json" : "Connection_#{data[:name]}_#{data[:dialect_name]}.json"
-                        else
-                          nil
-                        end
-            write_file(file_name, @options[:dir], nil, output) do |f|
-              f.puts outputJSON
-            end
+            delete_connection(@connection_name)
           end
         end
       end

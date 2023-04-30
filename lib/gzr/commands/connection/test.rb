@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2023 Mike DeAngelo Google, Inc.
+# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -21,43 +21,46 @@
 
 # frozen_string_literal: true
 
-require 'json'
 require_relative '../../command'
 require_relative '../../modules/connection'
-require_relative '../../modules/filehelper'
+require 'tty-table'
 
 module Gzr
   module Commands
     class Connection
-      class Cat < Gzr::Command
+      class Test < Gzr::Command
         include Gzr::Connection
-        include Gzr::FileHelper
-        def initialize(connection_id,options)
+        def initialize(connection_name,options)
           super()
-          @connection_id = connection_id
+          @connection_name = connection_name
           @options = options
         end
 
-        def execute(*args, input: $stdin, output: $stdout)
-          say_warning("options: #{@options.inspect}") if @options[:debug]
+        def execute(input: $stdin, output: $stdout)
+          say_warning(@options) if @options[:debug]
           with_session do
-            data = cat_connection(@connection_id)
-            if data.nil?
-              say_warning "Connection #{@connection_id} not found"
-              return
-            end
-            data = trim_connection(data) if @options[:trim]
+            data = test_connection(@connection_name)
 
-            outputJSON = JSON.pretty_generate(data)
-
-            file_name = if @options[:dir]
-                          @options[:simple_filename] ? "Connection_#{data[:name]}.json" : "Connection_#{data[:name]}_#{data[:dialect_name]}.json"
-                        else
-                          nil
-                        end
-            write_file(file_name, @options[:dir], nil, output) do |f|
-              f.puts outputJSON
+            table_hash = Hash.new
+            fields = field_names(@options[:fields])
+            table_hash[:header] = fields unless @options[:plain]
+            expressions = fields.collect { |fn| field_expression(fn) }
+            table_hash[:rows] = data.map do |row|
+              expressions.collect do |e|
+                eval "row.#{e}"
+              end
             end
+            table = TTY::Table.new(table_hash)
+            alignments = fields.collect do |k|
+              (k =~ /id$/) ? :right : :left
+            end
+            begin
+              if @options[:csv] then
+                output.puts render_csv(table)
+              else
+                output.puts table.render(if @options[:plain] then :basic else :ascii end, alignments: alignments, multiline: if @options[:plain] then false else true end, width: @options[:width] || TTY::Screen.width)
+              end
+            end if table
           end
         end
       end

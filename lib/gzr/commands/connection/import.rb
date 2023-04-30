@@ -21,7 +21,7 @@
 
 # frozen_string_literal: true
 
-require 'json'
+require_relative '../../../gzr'
 require_relative '../../command'
 require_relative '../../modules/connection'
 require_relative '../../modules/filehelper'
@@ -29,34 +29,45 @@ require_relative '../../modules/filehelper'
 module Gzr
   module Commands
     class Connection
-      class Cat < Gzr::Command
+      class Import < Gzr::Command
         include Gzr::Connection
         include Gzr::FileHelper
-        def initialize(connection_id,options)
+        def initialize(file, options)
           super()
-          @connection_id = connection_id
+          @file = file
           @options = options
         end
 
-        def execute(*args, input: $stdin, output: $stdout)
-          say_warning("options: #{@options.inspect}") if @options[:debug]
+        def execute(input: $stdin, output: $stdout)
+          say_warning("options: #{@options.inspect}", output: output) if @options[:debug]
           with_session do
-            data = cat_connection(@connection_id)
-            if data.nil?
-              say_warning "Connection #{@connection_id} not found"
-              return
+            connection = nil
+
+            if @options[:prompt]
+              reader = TTY::Reader.new
+              @secret = reader.read_line("Enter your connection password:", echo: false)
             end
-            data = trim_connection(data) if @options[:trim]
 
-            outputJSON = JSON.pretty_generate(data)
-
-            file_name = if @options[:dir]
-                          @options[:simple_filename] ? "Connection_#{data[:name]}.json" : "Connection_#{data[:name]}_#{data[:dialect_name]}.json"
-                        else
-                          nil
-                        end
-            write_file(file_name, @options[:dir], nil, output) do |f|
-              f.puts outputJSON
+            read_file(@file) do |data|
+              if !!cat_connection(data[:name])
+                name = data[:name]
+                if !@options[:force]
+                  raise Gzr::CLI::Error, "Connection #{name} already exists\nUse --force if you want to overwrite it"
+                end
+                data.select! do |k,v|
+                  keys_to_keep('update_connection').include? k
+                end
+                data[:password] = @secret if @secret
+                connection = update_connection(name, data)
+              else
+                data.select! do |k,v|
+                  keys_to_keep('create_connection').include? k
+                end
+                data[:password] = @secret if @secret
+                connection = create_connection(data)
+              end
+              output.puts "Imported connection #{connection[:name]}" unless @options[:plain]
+              output.puts connection[:id] if @options[:name]
             end
           end
         end

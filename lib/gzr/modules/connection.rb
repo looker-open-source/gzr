@@ -48,12 +48,73 @@ module Gzr
       data
     end
 
+    def test_connection(name, tests=nil)
+      data = nil
+
+      if tests.nil?
+        connection = cat_connection(name)
+        if connection.nil?
+          return nil
+        end
+        tests = connection[:dialect][:connection_tests]
+      end
+
+      begin
+        data = @sdk.test_connection(name, {}, tests: tests)
+      rescue LookerSDK::NotFound => e
+        return nil
+      rescue LookerSDK::Error => e
+        say_error "Error executing test_connection(#{name},#{tests})"
+        say_error e
+        raise
+      end
+      data
+    end
+
+    def delete_connection(name)
+      begin
+        @sdk.delete_connection(name)
+      rescue LookerSDK::NotFound => e
+        say_warning "Connection #{name} not found"
+      rescue LookerSDK::Error => e
+        say_error "Error executing delete_connection(#{name})"
+        say_error e
+        raise
+      end
+    end
+
+    def create_connection(body)
+      data = nil
+      begin
+        data = @sdk.create_connection(body).to_attrs
+      rescue LookerSDK::Error => e
+        say_error "Error executing create_connection(#{JSON.pretty_generate(body)})"
+        say_error e
+        raise
+      end
+      data
+    end
+
+    def update_connection(name,body)
+      data = nil
+      begin
+        data = @sdk.connection(name,body).to_attrs
+      rescue LookerSDK::NotFound => e
+        say_warning "Connection #{name} not found"
+      rescue LookerSDK::Error => e
+        say_error "Error executing update_connection(#{name},#{JSON.pretty_generate(body)})"
+        say_error e
+        raise
+      end
+      data
+    end
+
     def cat_connection(name)
       data = nil
       begin
         data = @sdk.connection(name).to_attrs
       rescue LookerSDK::NotFound => e
-        say_warning "Connection #{name} not found"
+        return nil
       rescue LookerSDK::Error => e
         say_error "Error executing connection(#{name})"
         say_error e
