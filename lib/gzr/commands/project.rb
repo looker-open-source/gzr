@@ -48,6 +48,22 @@ module Gzr
         end
       end
 
+      desc 'cat PROJECT_ID', 'Output json information about a project to screen or file'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      method_option :dir,  type: :string,
+                           desc: 'Directory to store output file'
+      method_option :trim, type: :boolean,
+                           desc: 'Trim output to minimal set of fields for later import'
+      def cat(project_id)
+        if options[:help]
+          invoke :help, ['cat']
+        else
+          require_relative 'project/cat'
+          Gzr::Commands::Project::Cat.new(project_id,options).execute
+        end
+      end
+
     end
   end
 end
