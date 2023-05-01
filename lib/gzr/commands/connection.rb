@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -62,6 +62,72 @@ module Gzr
         else
           require_relative 'connection/ls'
           Gzr::Commands::Connection::Ls.new(options).execute
+        end
+      end
+
+      desc 'cat CONNECTION_NAME', 'Output the JSON representation of a connection to the screen or a file'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      method_option :dir,  type: :string,
+                           desc: 'Directory to store output file'
+      method_option :simple_filename, type: :boolean,
+                           desc: 'Use simple filename for output (Connection_<id>.json)'
+      method_option :trim, type: :boolean,
+                           desc: 'Trim output to minimal set of fields for later import'
+      def cat(connection_name)
+        if options[:help]
+          invoke :help, ['cat']
+        else
+          require_relative 'connection/cat'
+          Gzr::Commands::Connection::Cat.new(connection_name, options).execute
+        end
+      end
+
+      desc 'rm CONNECTION_NAME', 'Delete a connection'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def rm(connection_name)
+        if options[:help]
+          invoke :help, ['rm']
+        else
+          require_relative 'connection/rm'
+          Gzr::Commands::Connection::Rm.new(connection_name, options).execute
+        end
+      end
+
+      desc 'import FILE', 'Import a connection from a file'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      method_option :force, type: :boolean,
+                           desc: 'Overwrite an existing connection'
+      method_option :prompt, type: :boolean,
+                           desc: 'Prompt for the password'
+      method_option :plain, type: :boolean, default: false,
+                           desc: 'print without any extra formatting'
+      def import(file)
+        if options[:help]
+          invoke :help, ['import']
+        else
+          require_relative 'connection/import'
+          Gzr::Commands::Connection::Import.new(file, options).execute
+        end
+      end
+
+      desc 'test CONNECTION_NAME', 'Test the given connection'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      method_option :fields, type: :string, default: 'name,status,message',
+                           desc: 'Fields to display'
+      method_option :plain, type: :boolean, default: false,
+                           desc: 'print without any extra formatting'
+      method_option :csv, type: :boolean, default: false,
+                           desc: 'output in csv format per RFC4180'
+      def test(connection_name)
+        if options[:help]
+          invoke :help, ['test']
+        else
+          require_relative 'connection/test'
+          Gzr::Commands::Connection::Test.new(connection_name,options).execute
         end
       end
     end
