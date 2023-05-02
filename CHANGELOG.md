@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.3.3](https://github.com/looker-open-source/gzr/compare/v0.3.2...v0.3.3) (2023-05-02)
+
+
+### Features
+
+* Connection handling with Gazer ([#184](https://github.com/looker-open-source/gzr/issues/184)) ([346c9b7](https://github.com/looker-open-source/gzr/commit/346c9b7ea846acd604dbe929fab71e2ae0a5cf71))
+* get and create deplpy keys for git. ([7b4a9e2](https://github.com/looker-open-source/gzr/commit/7b4a9e225596f54b6ec58d4923ac9e3d73106bd6))
+* import and update a project ([#186](https://github.com/looker-open-source/gzr/issues/186)) ([825ab29](https://github.com/looker-open-source/gzr/commit/825ab297e99b4c09721bda3c72fce969fd16c5e8))
+* Persistent tokens for login ([#182](https://github.com/looker-open-source/gzr/issues/182)) ([482c00f](https://github.com/looker-open-source/gzr/commit/482c00f4cb40519a3d3e7aac771e3b52c553e5d1))
+* Project management and session management additions ([#185](https://github.com/looker-open-source/gzr/issues/185)) ([0093a60](https://github.com/looker-open-source/gzr/commit/0093a6057bd953773939fdf901631bab0e9109c6))
+
+
+### Bug Fixes
+
+* wrong method called in project update ([165630d](https://github.com/looker-open-source/gzr/commit/165630d3dabbe2947a22a439e54f6692d21e013a))
+
 ## [0.3.2](https://github.com/looker-open-source/gzr/compare/v0.3.1...v0.3.2) (2023-04-21)
 
 
