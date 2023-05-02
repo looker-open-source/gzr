@@ -51,6 +51,26 @@ module Gzr
         end
       end
 
+      desc 'get', 'Get data about current session'
+      def get(*)
+        if options[:help]
+          invoke :help, ['get']
+        else
+          require_relative 'session/get'
+          Gzr::Commands::Session::Get.new(options).execute
+        end
+      end
+
+      desc 'update WORKSPACE_ID', 'change the workspace_id of the current session'
+      def update(workspace_id)
+        if options[:help]
+          invoke :help, ['update']
+        else
+          require_relative 'session/update'
+          Gzr::Commands::Session::Update.new(workspace_id,options).execute
+        end
+      end
+
     end
   end
 end

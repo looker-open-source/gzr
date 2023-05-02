@@ -101,5 +101,8 @@ module Gzr
 
     require_relative 'commands/session'
     register Gzr::Commands::Session, 'session', 'session [SUBCOMMAND]', 'Commands pertaining to sessions'
+
+    require_relative 'commands/project'
+    register Gzr::Commands::Project, 'project', 'project [SUBCOMMAND]', 'Commands pertaining to projects'
   end
 end
