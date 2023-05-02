@@ -64,6 +64,30 @@ module Gzr
         end
       end
 
+      desc 'import PROJECT_FILE', 'Import a project from a file containing json information'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def import(project_file)
+        if options[:help]
+          invoke :help, ['import']
+        else
+          require_relative 'project/import'
+          Gzr::Commands::Project::Import.new(project_file,options).execute
+        end
+      end
+
+      desc 'update PROJECT_ID PROJECT_FILE', 'Update the given project from a file containing json information'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def update(project_id,project_file)
+        if options[:help]
+          invoke :help, ['update']
+        else
+          require_relative 'project/update'
+          Gzr::Commands::Project::Update.new(project_id,project_file,options).execute
+        end
+      end
+
     end
   end
 end

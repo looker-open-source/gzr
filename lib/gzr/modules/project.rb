@@ -56,5 +56,27 @@ module Gzr
       end
     end
 
+    def create_project(body)
+      begin
+        return @sdk.create_project(body)&.to_attrs
+      rescue LookerSDK::Error => e
+        say_error "Error running create_project(#{JSON.pretty_generate(body)})"
+        say_error e
+        raise
+      end
+    end
+
+    def update_project(id,body)
+      begin
+        return @sdk.project(id,body)&.to_attrs
+      rescue LookerSDK::NotFound => e
+        return nil
+      rescue LookerSDK::Error => e
+        say_error "Error running create_project(#{id},#{JSON.pretty_generate(body)})"
+        say_error e
+        raise
+      end
+    end
+
   end
 end

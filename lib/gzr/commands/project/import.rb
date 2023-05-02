@@ -21,6 +21,7 @@
 
 # frozen_string_literal: true
 
+require_relative '../../../gzr'
 require_relative '../../command'
 require_relative '../../modules/project'
 require_relative '../../modules/filehelper'
@@ -28,27 +29,25 @@ require_relative '../../modules/filehelper'
 module Gzr
   module Commands
     class Project
-      class Cat < Gzr::Command
+      class Import < Gzr::Command
         include Gzr::Project
         include Gzr::FileHelper
-        def initialize(project_id,options)
+        def initialize(file, options)
           super()
-          @project_id = project_id
+          @file = file
           @options = options
         end
 
         def execute(input: $stdin, output: $stdout)
-          say_warning(@options) if @options[:debug]
+          say_warning("options: #{@options.inspect}", output: output) if @options[:debug]
           with_session do
-            data = cat_project(@project_id)
-            if data.nil?
-              say_warning "Project #{@project_id} not found"
-              return
-            end
-            data = trim_project(data) if @options[:trim]
-
-            write_file(@options[:dir] ? "Project_#{data[:id]}.json" : nil, @options[:dir],nil, output) do |f|
-              f.puts JSON.pretty_generate(data)
+            read_file(@file) do |data|
+              data.select! do |k,v|
+                (keys_to_keep('create_project') - [:git_remote_url]).include? k
+              end
+              project = create_project(data)
+              output.puts "Created project #{project[:id]}" unless @options[:plain]
+              output.puts project[:id] if @options[:plain]
             end
           end
         end
