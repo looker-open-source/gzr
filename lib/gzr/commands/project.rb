@@ -87,6 +87,17 @@ module Gzr
           Gzr::Commands::Project::Update.new(project_id,project_file,options).execute
         end
       end
+      desc 'deploy_key PROJECT_ID', 'Generate a git deploy public key for the given project'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def deploy_key(project_id)
+        if options[:help]
+          invoke :help, ['deploy_key']
+        else
+          require_relative 'project/deploy_key'
+          Gzr::Commands::Project::DeployKey.new(project_id,options).execute
+        end
+      end
 
     end
   end

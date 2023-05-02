@@ -41,6 +41,17 @@ module Gzr
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}", output: output) if @options[:debug]
           with_session do
+            if get_auth()[:workspace_id] == 'production'
+              say_warning %Q(
+This command only works in dev mode. Use persistent sessions and
+change to dev mode before running this command.
+
+$ gzr session login --host looker.example.com
+$ gzr session update dev --token_file --host looker.example.com
+$ # run the command requiring dev mode here with the --token_file switch
+$ gzr session logout --token_file --host looker.example.com
+              )
+            end
             read_file(@file) do |data|
               data.select! do |k,v|
                 (keys_to_keep('create_project') - [:git_remote_url]).include? k

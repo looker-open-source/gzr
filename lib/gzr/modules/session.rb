@@ -313,15 +313,6 @@ module Gzr
       end
     end
 
-    def get_auth()
-      begin
-        return @sdk.session()&.to_attrs
-      rescue LookerSDK::Error => e
-        say_error "Unable to run session()"
-        say_error e
-      end
-    end
-
     def update_auth(workspace_id)
       body = {}
       body[:workspace_id] = workspace_id

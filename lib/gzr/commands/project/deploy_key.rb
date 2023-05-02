@@ -24,18 +24,15 @@
 require_relative '../../../gzr'
 require_relative '../../command'
 require_relative '../../modules/project'
-require_relative '../../modules/filehelper'
 
 module Gzr
   module Commands
     class Project
-      class Update < Gzr::Command
+      class DeployKey < Gzr::Command
         include Gzr::Project
-        include Gzr::FileHelper
-        def initialize(id,file, options)
+        def initialize(id,options)
           super()
           @id = id
-          @file = file
           @options = options
         end
 
@@ -53,14 +50,8 @@ $ # run the command requiring dev mode here with the --token_file switch
 $ gzr session logout --token_file --host looker.example.com
               )
             end
-            read_file(@file) do |data|
-              data.select! do |k,v|
-                keys_to_keep('update_project').include? k
-              end
-              project = update_project(@id, data)
-              output.puts "Updated project #{project[:id]}" unless @options[:plain]
-              output.puts project[:id] if @options[:plain]
-            end
+            key = git_deploy_key(@id) || create_git_deploy_key(@id)
+            output.puts key
           end
         end
       end

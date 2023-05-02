@@ -78,5 +78,29 @@ module Gzr
       end
     end
 
+    def git_deploy_key(id)
+      begin
+        return @sdk.git_deploy_key(id)
+      rescue LookerSDK::NotFound => e
+        return nil
+      rescue LookerSDK::Error => e
+        say_error "Error running git_deploy_key(#{id})"
+        say_error e
+        raise
+      end
+    end
+
+    def create_git_deploy_key(id)
+      begin
+        return @sdk.create_git_deploy_key(id)
+      rescue LookerSDK::NotFound => e
+        return nil
+      rescue LookerSDK::Error => e
+        say_error "Error running create_git_deploy_key(#{id})"
+        say_error e
+        raise
+      end
+    end
+
   end
 end
