@@ -312,5 +312,26 @@ module Gzr
         logout_all unless @options[:token] || @options[:token_file]
       end
     end
+
+    def get_auth()
+      begin
+        return @sdk.session()&.to_attrs
+      rescue LookerSDK::Error => e
+        say_error "Unable to run session()"
+        say_error e
+      end
+    end
+
+    def update_auth(workspace_id)
+      body = {}
+      body[:workspace_id] = workspace_id
+      begin
+        return @sdk.update_session(body)&.to_attrs
+      rescue LookerSDK::Error => e
+        say_error "Unable to run update_session(#{JSON.pretty_generate(body)})"
+        say_error e
+      end
+    end
+
   end
 end
