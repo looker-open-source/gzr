@@ -99,6 +99,27 @@ module Gzr
         end
       end
 
+      desc 'branch PROJECT_ID', 'List the active branch or all branches of PROJECT_ID'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      method_option :all, type: :boolean, default: false,
+                           desc: 'List all branches, not just the active branch'
+      method_option :fields, type: :string, default: 'name,error,message',
+                           desc: 'Fields to display'
+      method_option :plain, type: :boolean, default: false,
+                           desc: 'print without any extra formatting'
+      method_option :csv, type: :boolean, default: false,
+                           desc: 'output in csv format per RFC4180'
+
+      def branch(project_id)
+        if options[:help]
+          invoke :help, ['branch']
+        else
+          require_relative 'project/branch'
+          Gzr::Commands::Project::Branch.new(project_id, options).execute
+        end
+      end
+
     end
   end
 end

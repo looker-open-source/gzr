@@ -102,5 +102,29 @@ module Gzr
       end
     end
 
+    def all_git_branches(proj_id)
+      begin
+        return @sdk.all_git_branches(proj_id)
+      rescue LookerSDK::NotFound => e
+        return nil
+      rescue LookerSDK::Error => e
+        say_error "Error running all_git_branches(#{proj_id})"
+        say_error e
+        raise
+      end
+    end
+
+    def git_branch(proj_id)
+      begin
+        return @sdk.git_branch(proj_id)
+      rescue LookerSDK::NotFound => e
+        return nil
+      rescue LookerSDK::Error => e
+        say_error "Error running git_branch(#{proj_id})"
+        say_error e
+        raise
+      end
+    end
+
   end
 end
