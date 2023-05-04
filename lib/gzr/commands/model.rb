@@ -63,7 +63,7 @@ module Gzr
         end
       end
 
-      desc 'import MODEL_FILE', 'Import a model configuation from a file containing json information'
+      desc 'import MODEL_FILE', 'Import a model configuration from a file containing json information'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       def import(model_file)
