@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.4](https://github.com/looker-open-source/gzr/compare/v0.3.3...v0.3.4) (2023-05-04)
+
+
+### Features
+
+* More project and model commands ([#190](https://github.com/looker-open-source/gzr/issues/190)) ([2d05d00](https://github.com/looker-open-source/gzr/commit/2d05d00a13721fdde733aecb6c99985ee5a1b081))
+
 ## [0.3.3](https://github.com/looker-open-source/gzr/compare/v0.3.2...v0.3.3) (2023-05-02)
 
 
