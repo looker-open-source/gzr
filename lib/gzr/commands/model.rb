@@ -63,6 +63,18 @@ module Gzr
         end
       end
 
+      desc 'import MODEL_FILE', 'Import a model configuation from a file containing json information'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def import(model_file)
+        if options[:help]
+          invoke :help, ['import']
+        else
+          require_relative 'model/import'
+          Gzr::Commands::Model::Import.new(model_file,options).execute
+        end
+      end
+
     end
   end
 end
