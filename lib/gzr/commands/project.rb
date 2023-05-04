@@ -120,6 +120,32 @@ module Gzr
         end
       end
 
+      desc 'deploy PROJECT_ID', 'Deploy the active branch of PROJECT_ID to production'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+
+      def deploy(project_id)
+        if options[:help]
+          invoke :help, ['deploy']
+        else
+          require_relative 'project/deploy'
+          Gzr::Commands::Project::Deploy.new(project_id, options).execute
+        end
+      end
+
+      desc 'checkout PROJECT_ID NAME', 'Change the active branch of PROJECT_ID to NAME'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+
+      def checkout(project_id,name)
+        if options[:help]
+          invoke :help, ['checkout']
+        else
+          require_relative 'project/checkout'
+          Gzr::Commands::Project::Checkout.new(project_id, name, options).execute
+        end
+      end
+
     end
   end
 end

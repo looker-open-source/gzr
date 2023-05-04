@@ -126,5 +126,30 @@ module Gzr
       end
     end
 
+    def deploy_to_production(proj_id)
+      begin
+        return @sdk.deploy_to_production(proj_id)
+      rescue LookerSDK::NotFound => e
+        return nil
+      rescue LookerSDK::Error => e
+        say_error "Error running deploy_to_production(#{proj_id})"
+        say_error e
+        raise
+      end
+    end
+
+    def update_git_branch(proj_id, name)
+      body = { name: name }
+      begin
+        return @sdk.update_git_branch(proj_id, body)&.to_attrs
+      rescue LookerSDK::NotFound => e
+        return nil
+      rescue LookerSDK::Error => e
+        say_error "Error running update_git_branch(#{proj_id},#{JSON.pretty_generate(body)})"
+        say_error e
+        raise
+      end
+    end
+
   end
 end
