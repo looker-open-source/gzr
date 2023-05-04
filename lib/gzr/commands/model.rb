@@ -46,6 +46,35 @@ module Gzr
           Gzr::Commands::Model::Ls.new(options).execute
         end
       end
+
+      desc 'cat MODEL_ID', 'Output json information about a model to screen or file'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      method_option :dir,  type: :string,
+                           desc: 'Directory to store output file'
+      method_option :trim, type: :boolean,
+                           desc: 'Trim output to minimal set of fields for later import'
+      def cat(model_id)
+        if options[:help]
+          invoke :help, ['cat']
+        else
+          require_relative 'model/cat'
+          Gzr::Commands::Model::Cat.new(model_id,options).execute
+        end
+      end
+
+      desc 'import MODEL_FILE', 'Import a model configuration from a file containing json information'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def import(model_file)
+        if options[:help]
+          invoke :help, ['import']
+        else
+          require_relative 'model/import'
+          Gzr::Commands::Model::Import.new(model_file,options).execute
+        end
+      end
+
     end
   end
 end
