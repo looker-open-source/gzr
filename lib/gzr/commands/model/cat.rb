@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -21,39 +21,38 @@
 
 # frozen_string_literal: true
 
+require_relative '../../command'
+require_relative '../../modules/model'
+require_relative '../../modules/filehelper'
+
 module Gzr
-  module Model
-    def query_all_lookml_models(fields=nil)
-      data = nil
-      begin
-        req = Hash.new
-        req[:fields] = fields if fields
-        data = @sdk.all_lookml_models(req)
-      rescue LookerSDK::Error => e
-        say_error "Error querying all_lookml_models(#{JSON.pretty_generate(req)})"
-        say_error e
-        raise
-      end
-      data
-    end
+  module Commands
+    class Model
+      class Cat < Gzr::Command
+        include Gzr::Model
+        include Gzr::FileHelper
+        def initialize(model_name,options)
+          super()
+          @model_name = model_name
+          @options = options
+        end
 
-    def cat_model(model_name)
-      begin
-        return @sdk.lookml_model(model_name)&.to_attrs
-      rescue LookerSDK::NotFound => e
-        return nil
-      rescue LookerSDK::Error => e
-        say_error "Error getting lookml_model(#{model_name})"
-        say_error e
-        raise
-      end
-    end
+        def execute(input: $stdin, output: $stdout)
+          say_warning(@options) if @options[:debug]
+          with_session do
+            data = cat_model(@model_name)
+            if data.nil?
+              say_warning "Model #{@model_name} not found"
+              return
+            end
+            data = trim_model(data) if @options[:trim]
 
-    def trim_model(data)
-      data.select do |k,v|
-        keys_to_keep('create_lookml_model').include? k
+            write_file(@options[:dir] ? "Model_#{data[:name]}.json" : nil, @options[:dir],nil, output) do |f|
+              f.puts JSON.pretty_generate(data)
+            end
+          end
+        end
       end
     end
-
   end
 end
