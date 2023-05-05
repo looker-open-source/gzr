@@ -96,6 +96,22 @@ module Gzr
           Gzr::Commands::Dashboard::Rm.new(id, options).execute
         end
       end
+
+      desc 'import_lookml DASHBOARD_ID TARGET_FOLDER_ID', 'Create a UDD from a lookml dashboard in the given folder'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      method_option :unlink,  type: :boolean,
+                           desc: 'Unlink the new user defined dashboard from the LookML dashboard'
+      method_option :force,  type: :boolean,
+                           desc: 'Overwrite a dashboard with the same name in the target folder'
+      def import_lookml(dashboard_id, target_folder_id)
+        if options[:help]
+          invoke :help, ['import_lookml']
+        else
+          require_relative 'dashboard/import_lookml'
+          Gzr::Commands::Dashboard::ImportLookml.new(dashboard_id, target_folder_id, options).execute
+        end
+      end
     end
   end
 end

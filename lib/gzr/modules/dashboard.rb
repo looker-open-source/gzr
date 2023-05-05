@@ -354,5 +354,15 @@ module Gzr
 
       trimmed
     end
+
+    def import_lookml_dashboard(id,folder)
+      begin
+        return @sdk.import_lookml_dashboard(id,folder)&.to_attrs
+      rescue LookerSDK::Error => e
+        say_error "Error import_lookml_dashboard(#{id},#{folder})"
+        say_error e
+        raise
+      end
+    end
   end
 end
