@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.5](https://github.com/looker-open-source/gzr/compare/v0.3.4...v0.3.5) (2023-05-05)
+
+
+### Features
+
+* dashboard import_lookml ([#192](https://github.com/looker-open-source/gzr/issues/192)) ([248d5eb](https://github.com/looker-open-source/gzr/commit/248d5eb4b9e1c9ae302ab1b598784dd5065e9bf0))
+
 ## [0.3.4](https://github.com/looker-open-source/gzr/compare/v0.3.3...v0.3.4) (2023-05-04)
 
 
