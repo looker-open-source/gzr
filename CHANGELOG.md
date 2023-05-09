@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.6](https://github.com/looker-open-source/gzr/compare/v0.3.5...v0.3.6) (2023-05-09)
+
+
+### Features
+
+* dashboard sync_lookml to sync UDDs with their associated lookml dashboards ([#194](https://github.com/looker-open-source/gzr/issues/194)) ([7b94a79](https://github.com/looker-open-source/gzr/commit/7b94a7962d36d865759b105b481f602aac87523e))
+
 ## [0.3.5](https://github.com/looker-open-source/gzr/compare/v0.3.4...v0.3.5) (2023-05-05)
 
 
