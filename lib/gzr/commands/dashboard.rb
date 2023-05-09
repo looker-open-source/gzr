@@ -112,6 +112,18 @@ module Gzr
           Gzr::Commands::Dashboard::ImportLookml.new(dashboard_id, target_folder_id, options).execute
         end
       end
+
+      desc 'sync_lookml DASHBOARD_ID', 'Sync any UDD from a lookml dashboard'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def sync_lookml(dashboard_id)
+        if options[:help]
+          invoke :help, ['sync_lookml']
+        else
+          require_relative 'dashboard/sync_lookml'
+          Gzr::Commands::Dashboard::SyncLookml.new(dashboard_id, options).execute
+        end
+      end
     end
   end
 end
