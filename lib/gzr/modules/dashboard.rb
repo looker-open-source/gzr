@@ -364,5 +364,15 @@ module Gzr
         raise
       end
     end
+
+    def sync_lookml_dashboard(id)
+      begin
+        return @sdk.sync_lookml_dashboard(id, {})
+      rescue LookerSDK::Error => e
+        say_error "Error sync_lookml_dashboard(#{id})"
+        say_error e
+        raise
+      end
+    end
   end
 end
