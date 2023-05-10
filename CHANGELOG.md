@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.7](https://github.com/looker-open-source/gzr/compare/v0.3.6...v0.3.7) (2023-05-10)
+
+
+### Features
+
+* option to sync lookml dashboard on import_lookml if it exists already ([#196](https://github.com/looker-open-source/gzr/issues/196)) ([c8ec619](https://github.com/looker-open-source/gzr/commit/c8ec619186c6a0ce81633d701f78444f4e488a5b))
+
+
+### Bug Fixes
+
+* Update connection calling wrong API method ([#197](https://github.com/looker-open-source/gzr/issues/197)) ([e122b47](https://github.com/looker-open-source/gzr/commit/e122b47fca9f2ff218cff0904c147cf94d54fe69))
+
 ## [0.3.6](https://github.com/looker-open-source/gzr/compare/v0.3.5...v0.3.6) (2023-05-09)
 
 
