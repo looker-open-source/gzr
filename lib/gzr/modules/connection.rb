@@ -98,7 +98,7 @@ module Gzr
     def update_connection(name,body)
       data = nil
       begin
-        data = @sdk.connection(name,body).to_attrs
+        data = @sdk.update_connection(name,body).to_attrs
       rescue LookerSDK::NotFound => e
         say_warning "Connection #{name} not found"
       rescue LookerSDK::Error => e
