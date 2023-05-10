@@ -49,10 +49,17 @@ module Gzr
               matching_title = false
             end
 
-            if matching_title
+            if matching_title && !(matching_title.first[:lookml_link_id] == @dashboard_id)
               raise Gzr::CLI::Error, "Dashboard #{dash[:title]} already exists in folder #{@target_folder_id}\nUse --force if you want to overwrite it" unless @options[:force]
               say_ok "Deleting existing dashboard #{matching_title.first[:id]} #{matching_title.first[:title]} in folder #{@target_folder_id}", output: output
               update_dashboard(matching_title.first[:id],{:deleted=>true})
+            end
+
+            if matching_title && (matching_title.first[:lookml_link_id] == @dashboard_id)
+              raise Gzr::CLI::Error, "Linked Dashboard #{dash[:title]} already exists in folder #{@target_folder_id}\nUse --sync if you want to synchronize it" unless @options[:sync]
+              say_ok "Syncing existing dashboard #{matching_title.first[:id]} #{matching_title.first[:title]} in folder #{@target_folder_id}", output: output
+              output.puts sync_lookml_dashboard(@dashboard_id)
+              return
             end
 
             new_dash = import_lookml_dashboard(@dashboard_id,@target_folder_id)

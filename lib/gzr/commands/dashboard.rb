@@ -104,6 +104,8 @@ module Gzr
                            desc: 'Unlink the new user defined dashboard from the LookML dashboard'
       method_option :force,  type: :boolean,
                            desc: 'Overwrite a dashboard with the same name in the target folder'
+      method_option :sync,  type: :boolean,
+                           desc: 'If linked dashboard already exists, sync it with LookML dashboard'
       def import_lookml(dashboard_id, target_folder_id)
         if options[:help]
           invoke :help, ['import_lookml']
