@@ -27,6 +27,9 @@ module Gzr
   module Commands
     class Model < SubCommandBase
 
+      require_relative 'model/set'
+      register Gzr::Commands::Model::Set, 'set', 'set [SUBCOMMAND]', 'Commands pertaining to model sets'
+
       namespace :model
 
       desc 'ls', 'List the models in this server.'

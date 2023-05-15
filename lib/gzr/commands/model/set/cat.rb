@@ -21,15 +21,40 @@
 
 # frozen_string_literal: true
 
-require 'thor'
+require_relative '../../../command'
+require_relative '../../../modules/model/set'
+require_relative '../../../modules/filehelper'
 
 module Gzr
   module Commands
-    class SubCommandBase < Thor
-      # Workaround so that help displays the right name
-      # base on this link
-      # https://github.com/erikhuda/thor/issues/261#issuecomment-69327685
-      # No longer needed
+    class Model
+      class Set
+        class Cat < Gzr::Command
+          include Gzr::Model::Set
+          include Gzr::FileHelper
+          def initialize(model_set_id,options)
+            super()
+            @model_set_id = model_set_id
+            @options = options
+          end
+
+          def execute(input: $stdin, output: $stdout)
+            say_warning(@options) if @options[:debug]
+            with_session do
+              data = cat_model_set(@model_set_id)
+              if data.nil?
+                say_warning "Model Set #{@model_set_id} not found"
+                return
+              end
+              data = trim_model_set(data) if @options[:trim]
+
+              write_file(@options[:dir] ? "Model_Set_#{data[:name]}.json" : nil, @options[:dir],nil, output) do |f|
+                f.puts JSON.pretty_generate(data)
+              end
+            end
+          end
+        end
+      end
     end
   end
 end

@@ -21,15 +21,29 @@
 
 # frozen_string_literal: true
 
-require 'thor'
+require_relative '../../../command'
+require_relative '../../../modules/model/set'
 
 module Gzr
   module Commands
-    class SubCommandBase < Thor
-      # Workaround so that help displays the right name
-      # base on this link
-      # https://github.com/erikhuda/thor/issues/261#issuecomment-69327685
-      # No longer needed
+    class Model
+      class Set
+        class Delete < Gzr::Command
+          include Gzr::Model::Set
+          def initialize(model_set_id,options)
+            super()
+            @model_set_id = model_set_id
+            @options = options
+          end
+
+          def execute(input: $stdin, output: $stdout)
+            say_warning(@options) if @options[:debug]
+            with_session do
+             delete_model_set(@model_set_id)
+            end
+          end
+        end
+      end
     end
   end
 end
