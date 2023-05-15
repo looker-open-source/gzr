@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -44,6 +44,19 @@ module Gzr
           Gzr::Commands::Permissions::Ls.new(options).execute
         end
       end
+
+      desc 'tree', 'List all available permissions in a tree'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      def tree(*)
+        if options[:help]
+          invoke :help, ['tree']
+        else
+          require_relative 'permissions/tree'
+          Gzr::Commands::Permissions::Tree.new(options).execute
+        end
+      end
+
     end
   end
 end
