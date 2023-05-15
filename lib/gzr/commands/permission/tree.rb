@@ -22,16 +22,16 @@
 # frozen_string_literal: true
 
 require_relative '../../command'
-require_relative '../../modules/permissions'
+require_relative '../../modules/permission'
 require 'tty-tree'
 
 require_relative '../../command'
 
 module Gzr
   module Commands
-    class Permissions
+    class Permission
       class Tree < Gzr::Command
-        include Gzr::Permissions
+        include Gzr::Permission
         def initialize(options)
           super()
           @options = options

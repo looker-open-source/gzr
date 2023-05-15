@@ -19,13 +19,17 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-RSpec.describe "`gzr permissions` command", type: :cli do
-  it "executes `gzr help permissions` command successfully" do
-    output = `gzr help permissions`
+RSpec.describe "`gzr permission` command", type: :cli do
+  it "executes `gzr help permission` command successfully" do
+    output = `gzr help permission`
     expected_output = <<-OUT
 Commands:
-  gzr permissions help [COMMAND]  # Describe subcommands or one specific subcommand
-  gzr permissions ls              # List all available permissions
+  gzr permission help [COMMAND]    # Describe subcommands or one specific subcommand
+  gzr permission ls                # List all available permissions
+  gzr permission set [SUBCOMMAND]  # Commands pertaining to permission sets
+  gzr permission tree              # List all available permissions in a tree
+  gzr set help [COMMAND]           # Describe subcommands or one specific subcommand
+  gzr set ls                       # List the permission sets in this server.
 
     OUT
 

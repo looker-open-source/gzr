@@ -25,9 +25,12 @@ require 'thor'
 
 module Gzr
   module Commands
-    class Permissions < Thor
+    class Permission < Thor
 
-      namespace :permissions
+      require_relative 'permission/set'
+      register Gzr::Commands::Permission::Set, 'set', 'set [SUBCOMMAND]', 'Commands pertaining to permission sets'
+
+      namespace :permission
 
       desc 'ls', 'List all available permissions'
       method_option :help, aliases: '-h', type: :boolean,
@@ -40,8 +43,8 @@ module Gzr
         if options[:help]
           invoke :help, ['ls']
         else
-          require_relative 'permissions/ls'
-          Gzr::Commands::Permissions::Ls.new(options).execute
+          require_relative 'permission/ls'
+          Gzr::Commands::Permission::Ls.new(options).execute
         end
       end
 
@@ -52,8 +55,8 @@ module Gzr
         if options[:help]
           invoke :help, ['tree']
         else
-          require_relative 'permissions/tree'
-          Gzr::Commands::Permissions::Tree.new(options).execute
+          require_relative 'permission/tree'
+          Gzr::Commands::Permission::Tree.new(options).execute
         end
       end
 

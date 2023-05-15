@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -19,21 +19,36 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-RSpec.describe "`gzr permissions ls` command", type: :cli do
-  it "executes `gzr permissions help ls` command successfully" do
-    output = `gzr permissions help ls`
-    expected_output = <<-OUT
-Usage:
-  gzr permissions ls
+# frozen_string_literal: true
 
-Options:
-  -h, [--help], [--no-help]    # Display usage information
-      [--plain], [--no-plain]  # print without any extra formatting
-      [--csv], [--no-csv]      # output in csv format per RFC4180
+require_relative '../subcommandbase'
 
-List all available permissions
-    OUT
+module Gzr
+  module Commands
+    class Permission
+      class Set < SubCommandBase
 
-    expect(output).to eq(expected_output)
+        namespace :'permission set'
+
+        desc 'ls', 'List the permission sets in this server.'
+        method_option :help, aliases: '-h', type: :boolean,
+                             desc: 'Display usage information'
+        method_option :fields, type: :string, default: 'id,name,models',
+                             desc: 'Fields to display'
+        method_option :plain, type: :boolean, default: false,
+                             desc: 'print without any extra formatting'
+        method_option :csv, type: :boolean, default: false,
+                             desc: 'output in csv format per RFC4180'
+        def ls(*)
+          if options[:help]
+            invoke :help, ['ls']
+          else
+            require_relative 'set/ls'
+            Gzr::Commands::Permission::Set::Ls.new(options).execute
+          end
+        end
+
+      end
+    end
   end
 end
