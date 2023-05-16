@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.8](https://github.com/looker-open-source/gzr/compare/v0.3.7...v0.3.8) (2023-05-16)
+
+
+### Features
+
+* create role command ([#204](https://github.com/looker-open-source/gzr/issues/204)) ([cba4a80](https://github.com/looker-open-source/gzr/commit/cba4a803af8298915ca0e2189919d542bfd9f982))
+* management of model sets ([#200](https://github.com/looker-open-source/gzr/issues/200)) ([1b964ca](https://github.com/looker-open-source/gzr/commit/1b964ca25cf7eb55ff211dab6ae48c174ad3f4b6))
+* Permission Set management ([#203](https://github.com/looker-open-source/gzr/issues/203)) ([ef7355c](https://github.com/looker-open-source/gzr/commit/ef7355c41234928996540f2c6ed50ba358e197b7))
+* show available permissions in tree format ([#202](https://github.com/looker-open-source/gzr/issues/202)) ([c702a64](https://github.com/looker-open-source/gzr/commit/c702a64a5247fb151b155d1c6d1116cb20cccc0f))
+
 ## [0.3.7](https://github.com/looker-open-source/gzr/compare/v0.3.6...v0.3.7) (2023-05-10)
 
 
