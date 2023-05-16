@@ -53,6 +53,18 @@ module Gzr
       end
       data
     end
+    def trim_role(data)
+      trimmed = data.select do |k,v|
+        (keys_to_keep('create_role') + [:id]).include? k
+      end
+      trimmed[:permission_set] = data[:permission_set].select do |k,v|
+        (keys_to_keep('create_permission_set') + [:id,:built_in,:all_access]).include? k
+      end
+      trimmed[:model_set] = data[:model_set].select do |k,v|
+        (keys_to_keep('create_model_set') + [:id,:built_in,:all_access]).include? k
+      end
+      trimmed
+    end
     def delete_role(role_id)
       data = nil
       begin
@@ -124,5 +136,16 @@ module Gzr
       end
       data
     end
+    def create_role(name,pset,mset)
+      req = { name: name, permission_set_id: pset, model_set_id: mset }
+      begin
+        return @sdk.create_role(req)&.to_attrs
+      rescue LookerSDK::Error => e
+        say_error "Unable to call create_role(#{JSON.pretty_generate(req)})"
+        say_error e
+        raise
+      end
+    end
+
   end
 end

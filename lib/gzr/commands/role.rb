@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -132,6 +132,8 @@ module Gzr
                            desc: 'Display usage information'
       method_option :dir,  type: :string,
                            desc: 'Directory to get output file'
+      method_option :trim, type: :boolean,
+                           desc: 'Trim output to minimal set of fields for later import'
       def cat(role_id)
         if options[:help]
           invoke :help, ['cat']
@@ -158,6 +160,22 @@ module Gzr
           Gzr::Commands::Role::Ls.new(options).execute
         end
       end
+
+      desc 'create ROLE_NAME PERMISSION_SET_ID MODEL_SET_ID', "Create new role with the given permission and model sets"
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      method_option :plain, type: :boolean, default: false,
+                           desc: 'print without any extra formatting'
+
+      def create(name, pset, mset)
+        if options[:help]
+          invoke :help, ['create']
+        else
+          require_relative 'role/create'
+          Gzr::Commands::Role::Create.new(name, pset, mset, options).execute
+        end
+      end
+
     end
   end
 end
