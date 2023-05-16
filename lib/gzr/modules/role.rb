@@ -124,5 +124,16 @@ module Gzr
       end
       data
     end
+    def create_role(name,pset,mset)
+      req = { name: name, permission_set_id: pset, model_set_id: mset }
+      begin
+        return @sdk.create_role(req)&.to_attrs
+      rescue LookerSDK::Error => e
+        say_error "Unable to call create_role(#{JSON.pretty_generate(req)})"
+        say_error e
+        raise
+      end
+    end
+
   end
 end
