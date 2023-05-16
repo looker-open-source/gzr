@@ -45,7 +45,6 @@ module Gzr
     class_option :force, type: :boolean, default: false, desc: 'Overwrite objects on server'
     class_option :su, type: :string, desc: 'After connecting, change to user_id given'
     class_option :width, type: :numeric, default: nil, desc: 'Width of rendering for tables'
-    class_option :persistent, type: :boolean, default: false, desc: 'Use persistent connection to communicate with host'
     class_option :token, type: :string, default: nil, desc: "Access token to use for authentication"
     class_option :token_file, type: :boolean, default: false, desc: "Use access token stored in file for authentication"
 
@@ -59,6 +58,8 @@ module Gzr
     end
     map %w(--version -v) => :version
     map space: :folder  # Alias space command to folder
+#    map permissions: :permission  # Alias permissions command to permission
+
 
     require_relative 'commands/alert'
     register Gzr::Commands::Alert, 'alert', 'alert [SUBCOMMAND]', 'Command description...'
@@ -66,8 +67,8 @@ module Gzr
     require_relative 'commands/attribute'
     register Gzr::Commands::Attribute, 'attribute', 'attribute [SUBCOMMAND]', 'Command description...'
 
-    require_relative 'commands/permissions'
-    register Gzr::Commands::Permissions, 'permissions', 'permissions [SUBCOMMAND]', 'Command to retrieve available permissions'
+    require_relative 'commands/permission'
+    register Gzr::Commands::Permission, 'permission', 'permission [SUBCOMMAND]', 'Command to retrieve available permission'
 
     require_relative 'commands/query'
     register Gzr::Commands::Query, 'query', 'query [SUBCOMMAND]', 'Commands to retrieve and run queries'

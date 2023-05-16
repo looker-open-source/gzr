@@ -21,42 +21,29 @@
 
 # frozen_string_literal: true
 
-require 'thor'
+require_relative '../../../command'
+require_relative '../../../modules/permission/set'
 
 module Gzr
   module Commands
-    class Permissions < Thor
+    class Permission
+      class Set
+        class Delete < Gzr::Command
+          include Gzr::Permission::Set
+          def initialize(permission_set_id,options)
+            super()
+            @permission_set_id = permission_set_id
+            @options = options
+          end
 
-      namespace :permissions
-
-      desc 'ls', 'List all available permissions'
-      method_option :help, aliases: '-h', type: :boolean,
-                           desc: 'Display usage information'
-      method_option :plain, type: :boolean, default: false,
-                           desc: 'print without any extra formatting'
-      method_option :csv, type: :boolean, default: false,
-                           desc: 'output in csv format per RFC4180'
-      def ls(*)
-        if options[:help]
-          invoke :help, ['ls']
-        else
-          require_relative 'permissions/ls'
-          Gzr::Commands::Permissions::Ls.new(options).execute
+          def execute(input: $stdin, output: $stdout)
+            say_warning(@options) if @options[:debug]
+            with_session do
+             delete_permission_set(@permission_set_id)
+            end
+          end
         end
       end
-
-      desc 'tree', 'List all available permissions in a tree'
-      method_option :help, aliases: '-h', type: :boolean,
-                           desc: 'Display usage information'
-      def tree(*)
-        if options[:help]
-          invoke :help, ['tree']
-        else
-          require_relative 'permissions/tree'
-          Gzr::Commands::Permissions::Tree.new(options).execute
-        end
-      end
-
     end
   end
 end

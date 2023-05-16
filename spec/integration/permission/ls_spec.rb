@@ -19,23 +19,21 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-# frozen_string_literal: true
+RSpec.describe "`gzr permission ls` command", type: :cli do
+  it "executes `gzr permission help ls` command successfully" do
+    output = `gzr permission help ls`
+    expected_output = <<-OUT
+Usage:
+  gzr permission ls
 
-module Gzr
-  module Permissions
+Options:
+  -h, [--help], [--no-help]    # Display usage information
+      [--plain], [--no-plain]  # print without any extra formatting
+      [--csv], [--no-csv]      # output in csv format per RFC4180
 
-    def query_all_permissions()
-      data = nil
-      begin
-        data = @sdk.all_permissions()
-      rescue LookerSDK::Error => e
-          say_error "Error querying all_permissions()"
-          say_error e
-          raise
-      end
-      data
-    end
+List all available permissions
+    OUT
 
+    expect(output).to eq(expected_output)
   end
 end
-

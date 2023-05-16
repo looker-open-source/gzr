@@ -19,19 +19,21 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-RSpec.describe "`gzr permissions ls` command", type: :cli do
-  it "executes `gzr permissions help ls` command successfully" do
-    output = `gzr permissions help ls`
+RSpec.describe "`gzr permission` command", type: :cli do
+  it "executes `gzr help permission` command successfully" do
+    output = `gzr help permission`
     expected_output = <<-OUT
-Usage:
-  gzr permissions ls
+Commands:
+  gzr permission help [COMMAND]             # Describe subcommands or one specific subcommand
+  gzr permission ls                         # List all available permissions
+  gzr permission set [SUBCOMMAND]           # Commands pertaining to permission sets
+  gzr permission set cat PERMISSION_SET_ID  # Output json information about a permission set to screen or file
+  gzr permission set help [COMMAND]         # Describe subcommands or one specific subcommand
+  gzr permission set import FILE            # Import a permission set from a file
+  gzr permission set ls                     # List the permission sets in this server.
+  gzr permission set rm PERMISSION_SET_ID   # Delete the permission_set given by PERMISSION_SET_ID
+  gzr permission tree                       # List all available permissions in a tree
 
-Options:
-  -h, [--help], [--no-help]    # Display usage information
-      [--plain], [--no-plain]  # print without any extra formatting
-      [--csv], [--no-csv]      # output in csv format per RFC4180
-
-List all available permissions
     OUT
 
     expect(output).to eq(expected_output)

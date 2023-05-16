@@ -21,49 +21,38 @@
 
 # frozen_string_literal: true
 
-require_relative '../../command'
-require_relative '../../modules/permissions'
-require 'tty-tree'
-
-require_relative '../../command'
+require_relative '../../../command'
+require_relative '../../../modules/permission/set'
+require_relative '../../../modules/filehelper'
 
 module Gzr
   module Commands
-    class Permissions
-      class Tree < Gzr::Command
-        include Gzr::Permissions
-        def initialize(options)
-          super()
-          @options = options
-        end
+    class Permission
+      class Set
+        class Cat < Gzr::Command
+          include Gzr::Permission::Set
+          include Gzr::FileHelper
+          def initialize(permission_set_id,options)
+            super()
+            @permission_set_id = permission_set_id
+            @options = options
+          end
 
-        def execute(input: $stdin, output: $stdout)
-          say_warning(@options) if @options[:debug]
-          with_session do
-            data = query_all_permissions()
-            begin
-              say_ok "No permissions found"
-              return nil
-            end unless data && data.length > 0
+          def execute(input: $stdin, output: $stdout)
+            say_warning(@options) if @options[:debug]
+            with_session do
+              data = cat_permission_set(@permission_set_id)
+              if data.nil?
+                say_warning "Permission Set #{permission_set_id} not found"
+                return
+              end
+              data = trim_permission_set(data) if @options[:trim]
 
-            tree_data = Hash.new
-
-            data.sort! { |a,b| a[:permission] <=> b[:permission] }
-            data.select {|e| e[:parent] == nil}.each do |e|
-              tree_data[e[:permission]] = [recurse_permissions(e[:permission], data)]
+              write_file(@options[:dir] ? "Permission_Set_#{data[:name]}.json" : nil, @options[:dir],nil, output) do |f|
+                f.puts JSON.pretty_generate(data)
+              end
             end
-
-            tree = TTY::Tree.new(tree_data)
-            output.puts tree.render
           end
-        end
-
-        def recurse_permissions(permission, data)
-          tree_branch = Hash.new
-          data.select { |e| e[:parent] == permission }.each do |e|
-            tree_branch[e[:permission]] = [recurse_permissions(e[:permission], data)]
-          end
-          tree_branch
         end
       end
     end
