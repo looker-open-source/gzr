@@ -21,34 +21,24 @@
 
 # frozen_string_literal: true
 
-require_relative '../subcommandbase'
-
 module Gzr
-  module Commands
-    class Permission
-      class Set < SubCommandBase
+  module Permission
+    module Set
 
-        namespace :'permission set'
-
-        desc 'ls', 'List the permission sets in this server.'
-        method_option :help, aliases: '-h', type: :boolean,
-                             desc: 'Display usage information'
-        method_option :fields, type: :string, default: 'id,name,permissions,built_in,all_access',
-                             desc: 'Fields to display'
-        method_option :plain, type: :boolean, default: false,
-                             desc: 'print without any extra formatting'
-        method_option :csv, type: :boolean, default: false,
-                             desc: 'output in csv format per RFC4180'
-        def ls(*)
-          if options[:help]
-            invoke :help, ['ls']
-          else
-            require_relative 'set/ls'
-            Gzr::Commands::Permission::Set::Ls.new(options).execute
-          end
+      def all_permission_sets(fields=nil)
+        req = {}
+        req[:fields] = fields if fields
+        begin
+          return @sdk.all_permission_sets(req)
+        rescue LookerSDK::NotFound => e
+          return nil
+        rescue LookerSDK::Error => e
+          say_error "Error querying all_permission_sets(#{JSON.pretty_generate(req)})"
+          say_error e
+          raise
         end
-
       end
+
     end
   end
 end
