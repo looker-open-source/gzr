@@ -21,11 +21,11 @@
 
 # frozen_string_literal: true
 
-require 'thor'
+require_relative 'subcommandbase'
 
 module Gzr
   module Commands
-    class Permission < Thor
+    class Permission < SubCommandBase
 
       require_relative 'permission/set'
       register Gzr::Commands::Permission::Set, 'set', 'set [SUBCOMMAND]', 'Commands pertaining to permission sets'

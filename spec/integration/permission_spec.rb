@@ -24,15 +24,15 @@ RSpec.describe "`gzr permission` command", type: :cli do
     output = `gzr help permission`
     expected_output = <<-OUT
 Commands:
-  gzr permission help [COMMAND]    # Describe subcommands or one specific subcommand
-  gzr permission ls                # List all available permissions
-  gzr permission set [SUBCOMMAND]  # Commands pertaining to permission sets
-  gzr permission tree              # List all available permissions in a tree
-  gzr set cat PERMISSION_SET_ID    # Output json information about a permission set to screen or file
-  gzr set help [COMMAND]           # Describe subcommands or one specific subcommand
-  gzr set import FILE              # Import a permission set from a file
-  gzr set ls                       # List the permission sets in this server.
-  gzr set rm PERMISSION_SET_ID     # Delete the permission_set given by PERMISSION_SET_ID
+  gzr permission help [COMMAND]             # Describe subcommands or one specific subcommand
+  gzr permission ls                         # List all available permissions
+  gzr permission set [SUBCOMMAND]           # Commands pertaining to permission sets
+  gzr permission set cat PERMISSION_SET_ID  # Output json information about a permission set to screen or file
+  gzr permission set help [COMMAND]         # Describe subcommands or one specific subcommand
+  gzr permission set import FILE            # Import a permission set from a file
+  gzr permission set ls                     # List the permission sets in this server.
+  gzr permission set rm PERMISSION_SET_ID   # Delete the permission_set given by PERMISSION_SET_ID
+  gzr permission tree                       # List all available permissions in a tree
 
     OUT
 
