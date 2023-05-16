@@ -53,6 +53,18 @@ module Gzr
       end
       data
     end
+    def trim_role(data)
+      trimmed = data.select do |k,v|
+        (keys_to_keep('create_role') + [:id]).include? k
+      end
+      trimmed[:permission_set] = data[:permission_set].select do |k,v|
+        (keys_to_keep('create_permission_set') + [:id,:built_in,:all_access]).include? k
+      end
+      trimmed[:model_set] = data[:model_set].select do |k,v|
+        (keys_to_keep('create_model_set') + [:id,:built_in,:all_access]).include? k
+      end
+      trimmed
+    end
     def delete_role(role_id)
       data = nil
       begin

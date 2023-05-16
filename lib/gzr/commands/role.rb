@@ -132,6 +132,8 @@ module Gzr
                            desc: 'Display usage information'
       method_option :dir,  type: :string,
                            desc: 'Directory to get output file'
+      method_option :trim, type: :boolean,
+                           desc: 'Trim output to minimal set of fields for later import'
       def cat(role_id)
         if options[:help]
           invoke :help, ['cat']

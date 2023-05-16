@@ -29,6 +29,7 @@ Usage:
 Options:
   -h, [--help], [--no-help]  # Display usage information
       [--dir=DIR]            # Directory to get output file
+      [--trim], [--no-trim]  # Trim output to minimal set of fields for later import
 
 Output the JSON representation of a role to screen/file
     OUT
