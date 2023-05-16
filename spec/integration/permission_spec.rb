@@ -28,8 +28,11 @@ Commands:
   gzr permission ls                # List all available permissions
   gzr permission set [SUBCOMMAND]  # Commands pertaining to permission sets
   gzr permission tree              # List all available permissions in a tree
+  gzr set cat PERMISSION_SET_ID    # Output json information about a permission set to screen or file
   gzr set help [COMMAND]           # Describe subcommands or one specific subcommand
+  gzr set import FILE              # Import a permission set from a file
   gzr set ls                       # List the permission sets in this server.
+  gzr set rm PERMISSION_SET_ID     # Delete the permission_set given by PERMISSION_SET_ID
 
     OUT
 
