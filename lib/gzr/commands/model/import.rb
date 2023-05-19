@@ -42,12 +42,25 @@ module Gzr
           say_warning("options: #{@options.inspect}", output: output) if @options[:debug]
           with_session do
             read_file(@file) do |data|
-              data.select! do |k,v|
-                keys_to_keep('create_lookml_model').include? k
+              if !!cat_model(data[:name])
+                name = data[:name]
+                if !@options[:force]
+                  raise Gzr::CLI::Error, "Model #{name} already exists\nUse --force if you want to overwrite it"
+                end
+                data.select! do |k,v|
+                  keys_to_keep('update_lookml_model').include? k
+                end
+                model = update_model(data[:name],data)
+                output.puts "Updated model #{model[:name]}" unless @options[:plain]
+                output.puts model[:name] if @options[:plain]
+              else
+                data.select! do |k,v|
+                  keys_to_keep('create_lookml_model').include? k
+                end
+                model = create_model(data)
+                output.puts "Created model #{model[:name]}" unless @options[:plain]
+                output.puts model[:name] if @options[:plain]
               end
-              model = create_model(data)
-              output.puts "Created model #{model[:name]}" unless @options[:plain]
-              output.puts model[:name] if @options[:plain]
             end
           end
         end
