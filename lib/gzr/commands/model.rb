@@ -67,6 +67,8 @@ module Gzr
       end
 
       desc 'import MODEL_FILE', 'Import a model configuration from a file containing json information'
+      method_option :force, type: :boolean,
+                           desc: 'Overwrite an existing connection'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'
       def import(model_file)

@@ -19,7 +19,8 @@ jobs:
 
   test:
     name: Test - Looker.${{ matrix.looker }} / Ruby.${{ matrix.ruby-version }}
-    runs-on: ubuntu-latest
+    runs-on:
+      group: large-ubuntu
     needs: setup
     strategy:
       matrix:

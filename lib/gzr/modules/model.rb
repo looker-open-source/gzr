@@ -65,5 +65,15 @@ module Gzr
       end
     end
 
+    def update_model(model_name,body)
+      begin
+        return @sdk.update_lookml_model(model_name,body)&.to_attrs
+      rescue LookerSDK::Error => e
+        say_error "Error running update_lookml_model(#{model_name},#{JSON.pretty_generate(body)})"
+        say_error e
+        raise
+      end
+    end
+
   end
 end
