@@ -1,0 +1,687 @@
+{
+  "description": "",
+  "hidden": false,
+  "query_timezone": null,
+  "refresh_interval": null,
+  "title": "FAA KPIs",
+  "slug": "DdT8Pnsg6kAB63KqoqgCza",
+  "preferred_viewer": null,
+  "alert_sync_with_dashboard_filter_enabled": false,
+  "background_color": null,
+  "crossfilter_enabled": false,
+  "dashboard_elements": [
+    {
+      "body_text": null,
+      "dashboard_id": "17",
+      "id": "58",
+      "look": null,
+      "look_id": null,
+      "merge_result_id": null,
+      "note_display": null,
+      "note_state": null,
+      "note_text": null,
+      "query": {
+        "id": "138",
+        "view": "airports",
+        "fields": [
+          "airports.count"
+        ],
+        "pivots": null,
+        "fill_fields": null,
+        "filters": null,
+        "filter_expression": null,
+        "sorts": [
+
+        ],
+        "limit": "500",
+        "column_limit": "50",
+        "total": null,
+        "row_total": null,
+        "subtotals": null,
+        "vis_config": {
+          "custom_color_enabled": true,
+          "custom_color": "#239f23",
+          "show_single_value_title": true,
+          "show_comparison": false,
+          "comparison_type": "value",
+          "comparison_reverse_colors": false,
+          "show_comparison_label": true,
+          "show_view_names": true,
+          "show_row_numbers": true,
+          "truncate_column_names": false,
+          "hide_totals": false,
+          "hide_row_totals": false,
+          "table_theme": "editable",
+          "limit_displayed_rows": false,
+          "enable_conditional_formatting": false,
+          "conditional_formatting_include_totals": false,
+          "conditional_formatting_include_nulls": false,
+          "type": "single_value",
+          "series_types": {
+          },
+          "hidden_fields": [
+
+          ],
+          "y_axes": [
+
+          ]
+        },
+        "filter_config": null,
+        "visible_ui_sections": null,
+        "client_id": "TCBsruUX7essTBavT7aRXD",
+        "model": "aviation",
+        "dynamic_fields": null,
+        "query_timezone": null
+      },
+      "query_id": "138",
+      "refresh_interval": null,
+      "result_maker_id": "54",
+      "subtitle_text": null,
+      "title": "Total number of airport facilities in US",
+      "title_hidden": false,
+      "title_text": null,
+      "type": "vis",
+      "rich_content_json": null,
+      "extension_id": null,
+      "alerts": [
+
+      ]
+    },
+    {
+      "body_text": null,
+      "dashboard_id": "17",
+      "id": "59",
+      "look": null,
+      "look_id": null,
+      "merge_result_id": null,
+      "note_display": null,
+      "note_state": null,
+      "note_text": null,
+      "query": {
+        "id": "139",
+        "view": "airports",
+        "fields": [
+          "airports.average_elevation"
+        ],
+        "pivots": null,
+        "fill_fields": null,
+        "filters": null,
+        "filter_expression": null,
+        "sorts": [
+
+        ],
+        "limit": "500",
+        "column_limit": "50",
+        "total": null,
+        "row_total": null,
+        "subtotals": null,
+        "vis_config": {
+          "type": "single_value",
+          "custom_color_enabled": true,
+          "custom_color": "#841984",
+          "show_single_value_title": true,
+          "show_comparison": false,
+          "comparison_type": "value",
+          "comparison_reverse_colors": false,
+          "show_comparison_label": true,
+          "single_value_title": "Average Airport Elevation",
+          "hidden_fields": [
+
+          ],
+          "y_axes": [
+
+          ]
+        },
+        "filter_config": null,
+        "visible_ui_sections": null,
+        "client_id": "sX3WEVdUqMeRRt4xYIKWZT",
+        "model": "aviation",
+        "dynamic_fields": null,
+        "query_timezone": "America/Los_Angeles"
+      },
+      "query_id": "139",
+      "refresh_interval": null,
+      "result_maker_id": "55",
+      "subtitle_text": null,
+      "title": "Average Airport Elevation",
+      "title_hidden": false,
+      "title_text": null,
+      "type": "vis",
+      "rich_content_json": null,
+      "extension_id": null,
+      "alerts": [
+
+      ]
+    },
+    {
+      "body_text": null,
+      "dashboard_id": "17",
+      "id": "60",
+      "look": null,
+      "look_id": null,
+      "merge_result_id": null,
+      "note_display": null,
+      "note_state": null,
+      "note_text": null,
+      "query": {
+        "id": "140",
+        "view": "airports",
+        "fields": [
+          "airports.count",
+          "airports.state"
+        ],
+        "pivots": null,
+        "fill_fields": null,
+        "filters": null,
+        "filter_expression": null,
+        "sorts": [
+          "airports.count desc"
+        ],
+        "limit": "5",
+        "column_limit": "50",
+        "total": null,
+        "row_total": null,
+        "subtotals": null,
+        "vis_config": {
+          "stacking": "",
+          "show_value_labels": true,
+          "label_density": 25,
+          "legend_position": "center",
+          "x_axis_gridlines": false,
+          "y_axis_gridlines": true,
+          "show_view_names": true,
+          "limit_displayed_rows": false,
+          "y_axis_combined": true,
+          "show_y_axis_labels": true,
+          "show_y_axis_ticks": true,
+          "y_axis_tick_density": "default",
+          "y_axis_tick_density_custom": 5,
+          "show_x_axis_label": true,
+          "show_x_axis_ticks": true,
+          "x_axis_scale": "auto",
+          "y_axis_scale_mode": "linear",
+          "x_axis_reversed": false,
+          "y_axis_reversed": false,
+          "ordering": "none",
+          "show_null_labels": false,
+          "show_totals_labels": false,
+          "show_silhouette": false,
+          "totals_color": "#808080",
+          "type": "looker_column",
+          "map": "auto",
+          "map_projection": "",
+          "quantize_colors": false,
+          "series_types": {
+          },
+          "limit_displayed_rows_values": {
+            "show_hide": "show",
+            "first_last": "first",
+            "num_rows": "10"
+          },
+          "y_axes": [
+            {
+              "label": "Number of Airports",
+              "orientation": "left",
+              "series": [
+                {
+                  "id": "airports.count",
+                  "name": "Airports Count",
+                  "axisId": "airports.count"
+                }
+              ],
+              "showLabels": true,
+              "showValues": true,
+              "unpinAxis": false,
+              "tickDensity": "default",
+              "tickDensityCustom": 8,
+              "type": "linear"
+            }
+          ],
+          "x_axis_label": "State",
+          "hidden_fields": [
+
+          ]
+        },
+        "filter_config": null,
+        "visible_ui_sections": null,
+        "client_id": "47uUmVNOmKSNiigru7sYv9",
+        "model": "aviation",
+        "dynamic_fields": null,
+        "query_timezone": "America/Los_Angeles"
+      },
+      "query_id": "140",
+      "refresh_interval": null,
+      "result_maker_id": "56",
+      "subtitle_text": null,
+      "title": "Top states with airports",
+      "title_hidden": false,
+      "title_text": null,
+      "type": "vis",
+      "rich_content_json": null,
+      "extension_id": null,
+      "alerts": [
+
+      ]
+    },
+    {
+      "body_text": null,
+      "dashboard_id": "17",
+      "id": "61",
+      "look": null,
+      "look_id": null,
+      "merge_result_id": null,
+      "note_display": null,
+      "note_state": null,
+      "note_text": null,
+      "query": {
+        "id": "141",
+        "view": "airports",
+        "fields": [
+          "airports.facility_type",
+          "airports.average_elevation",
+          "airports.count"
+        ],
+        "pivots": null,
+        "fill_fields": null,
+        "filters": null,
+        "filter_expression": null,
+        "sorts": [
+          "airports.average_elevation desc"
+        ],
+        "limit": "5",
+        "column_limit": "50",
+        "total": null,
+        "row_total": null,
+        "subtotals": null,
+        "vis_config": {
+          "stacking": "",
+          "show_value_labels": true,
+          "label_density": 25,
+          "legend_position": "center",
+          "x_axis_gridlines": false,
+          "y_axis_gridlines": true,
+          "show_view_names": true,
+          "limit_displayed_rows": false,
+          "y_axis_combined": true,
+          "show_y_axis_labels": true,
+          "show_y_axis_ticks": true,
+          "y_axis_tick_density": "default",
+          "y_axis_tick_density_custom": 5,
+          "show_x_axis_label": true,
+          "show_x_axis_ticks": true,
+          "x_axis_scale": "auto",
+          "y_axis_scale_mode": "linear",
+          "x_axis_reversed": false,
+          "y_axis_reversed": false,
+          "ordering": "none",
+          "show_null_labels": false,
+          "show_totals_labels": false,
+          "show_silhouette": false,
+          "totals_color": "#808080",
+          "type": "looker_bar",
+          "series_types": {
+          },
+          "limit_displayed_rows_values": {
+            "show_hide": "show",
+            "first_last": "first",
+            "num_rows": "10"
+          },
+          "y_axes": [
+            {
+              "label": null,
+              "orientation": "top",
+              "series": [
+                {
+                  "id": "airports.count",
+                  "name": "Airports Count",
+                  "axisId": "airports.count"
+                }
+              ],
+              "showLabels": true,
+              "showValues": true,
+              "unpinAxis": false,
+              "tickDensity": "default",
+              "tickDensityCustom": 8,
+              "type": "linear"
+            },
+            {
+              "label": "Number of airports",
+              "orientation": "bottom",
+              "series": [
+                {
+                  "id": "airports.average_elevation",
+                  "name": "Airports Average Elevation",
+                  "axisId": "airports.average_elevation"
+                }
+              ],
+              "showLabels": true,
+              "showValues": true,
+              "valueFormat": "",
+              "unpinAxis": false,
+              "tickDensity": "default",
+              "tickDensityCustom": 8,
+              "type": "linear"
+            }
+          ],
+          "x_axis_label": "Facility Type",
+          "hidden_fields": [
+
+          ]
+        },
+        "filter_config": null,
+        "visible_ui_sections": null,
+        "client_id": "ePYKdWwylnHenjMx3x2tg3",
+        "model": "aviation",
+        "dynamic_fields": null,
+        "query_timezone": null
+      },
+      "query_id": "141",
+      "refresh_interval": null,
+      "result_maker_id": "57",
+      "subtitle_text": null,
+      "title": "Top 5 airport facilities by average elevation",
+      "title_hidden": false,
+      "title_text": null,
+      "type": "vis",
+      "rich_content_json": null,
+      "extension_id": null,
+      "alerts": [
+
+      ]
+    },
+    {
+      "body_text": null,
+      "dashboard_id": "17",
+      "id": "68",
+      "look": {
+        "id": "6",
+        "title": "Average Elevation",
+        "user_id": "1",
+        "description": "Average Airport Elevation",
+        "is_run_on_load": true,
+        "query_id": "148",
+        "query": {
+          "id": "148",
+          "view": "airports",
+          "fields": [
+            "airports.average_elevation"
+          ],
+          "pivots": null,
+          "fill_fields": null,
+          "filters": null,
+          "filter_expression": null,
+          "sorts": [
+
+          ],
+          "limit": "500",
+          "column_limit": null,
+          "total": null,
+          "row_total": null,
+          "subtotals": null,
+          "vis_config": {
+            "custom_color_enabled": true,
+            "show_single_value_title": true,
+            "show_comparison": false,
+            "comparison_type": "value",
+            "comparison_reverse_colors": false,
+            "show_comparison_label": true,
+            "enable_conditional_formatting": false,
+            "conditional_formatting_include_totals": false,
+            "conditional_formatting_include_nulls": false,
+            "custom_color": "#e0e629",
+            "type": "single_value",
+            "defaults_version": 1,
+            "hidden_fields": [
+
+            ],
+            "y_axes": [
+
+            ]
+          },
+          "filter_config": {
+          },
+          "visible_ui_sections": null,
+          "client_id": "paGrX9Hy3le4Z3neIAxNsg",
+          "model": "aviation",
+          "dynamic_fields": null,
+          "query_timezone": null
+        },
+        "folder_id": "5",
+        "deleted": false,
+        "public": false
+      },
+      "look_id": "6",
+      "merge_result_id": null,
+      "note_display": null,
+      "note_state": null,
+      "note_text": null,
+      "query": null,
+      "query_id": null,
+      "refresh_interval": null,
+      "result_maker_id": "64",
+      "subtitle_text": null,
+      "title": null,
+      "title_hidden": false,
+      "title_text": null,
+      "type": "vis",
+      "rich_content_json": null,
+      "extension_id": null,
+      "alerts": [
+
+      ]
+    },
+    {
+      "body_text": null,
+      "dashboard_id": "17",
+      "id": "70",
+      "look": {
+        "id": "8",
+        "title": "Airports",
+        "user_id": "1",
+        "description": "",
+        "is_run_on_load": true,
+        "query_id": "150",
+        "query": {
+          "id": "150",
+          "view": "airports",
+          "fields": [
+            "airports.count"
+          ],
+          "pivots": null,
+          "fill_fields": null,
+          "filters": null,
+          "filter_expression": null,
+          "sorts": [
+
+          ],
+          "limit": "500",
+          "column_limit": null,
+          "total": null,
+          "row_total": null,
+          "subtotals": null,
+          "vis_config": {
+            "color_application": {
+              "collection_id": "b43731d5-dc87-4a8e-b807-635bef3948e7",
+              "palette_id": "fb7bb53e-b77b-4ab6-8274-9d420d3d73f3",
+              "collection_default": true,
+              "collection_label": "Boardwalk",
+              "palette_label": "Mixed categorical",
+              "palette_type": "Categorical",
+              "palette_colors": [
+                "#3EB0D5",
+                "#B1399E",
+                "#C2DD67",
+                "#592EC2",
+                "#4276BE",
+                "#72D16D",
+                "#FFD95F",
+                "#B32F37",
+                "#9174F0",
+                "#E57947",
+                "#75E2E2",
+                "#FBB555"
+              ]
+            },
+            "custom_color_enabled": true,
+            "custom_color": "#B1399E",
+            "show_single_value_title": true,
+            "show_comparison": false,
+            "comparison_type": "value",
+            "comparison_reverse_colors": false,
+            "show_comparison_label": true,
+            "type": "single_value",
+            "hidden_fields": [
+
+            ],
+            "y_axes": [
+
+            ]
+          },
+          "filter_config": null,
+          "visible_ui_sections": null,
+          "client_id": "4gUuOieukytTiuWigEBn7C",
+          "model": "aviation",
+          "dynamic_fields": null,
+          "query_timezone": "America/New_York"
+        },
+        "folder_id": "5",
+        "deleted": false,
+        "public": false
+      },
+      "look_id": "8",
+      "merge_result_id": null,
+      "note_display": null,
+      "note_state": null,
+      "note_text": null,
+      "query": null,
+      "query_id": null,
+      "refresh_interval": null,
+      "result_maker_id": "66",
+      "subtitle_text": null,
+      "title": null,
+      "title_hidden": false,
+      "title_text": null,
+      "type": "vis",
+      "rich_content_json": null,
+      "extension_id": null,
+      "alerts": [
+
+      ]
+    }
+  ],
+  "dashboard_filters": [
+    {
+      "name": "Date",
+      "title": "Date",
+      "type": "date_filter",
+      "explore": "",
+      "dimension": "",
+      "row": 0,
+      "allow_multiple_values": true,
+      "required": false,
+      "ui_config": null,
+      "model": "",
+      "listens_to_filters": [
+
+      ],
+      "default_value": "1 years"
+    },
+    {
+      "name": "State",
+      "title": "State",
+      "type": "field_filter",
+      "explore": "flights",
+      "dimension": "aircraft.state",
+      "row": 1,
+      "allow_multiple_values": true,
+      "required": false,
+      "ui_config": null,
+      "model": "aviation",
+      "listens_to_filters": [
+
+      ],
+      "default_value": ""
+    }
+  ],
+  "dashboard_layouts": [
+    {
+      "id": "17",
+      "dashboard_id": "17",
+      "type": "newspaper",
+      "active": true,
+      "column_width": null,
+      "width": null,
+      "dashboard_layout_components": [
+        {
+          "id": "58",
+          "dashboard_layout_id": "17",
+          "dashboard_element_id": "58",
+          "row": 0,
+          "column": 0,
+          "width": 8,
+          "height": 6
+        },
+        {
+          "id": "59",
+          "dashboard_layout_id": "17",
+          "dashboard_element_id": "59",
+          "row": 0,
+          "column": 8,
+          "width": 8,
+          "height": 6
+        },
+        {
+          "id": "60",
+          "dashboard_layout_id": "17",
+          "dashboard_element_id": "60",
+          "row": 0,
+          "column": 16,
+          "width": 8,
+          "height": 6
+        },
+        {
+          "id": "61",
+          "dashboard_layout_id": "17",
+          "dashboard_element_id": "61",
+          "row": 6,
+          "column": 0,
+          "width": 24,
+          "height": 12
+        },
+        {
+          "id": "68",
+          "dashboard_layout_id": "17",
+          "dashboard_element_id": "68",
+          "row": 18,
+          "column": 8,
+          "width": 8,
+          "height": 6
+        },
+        {
+          "id": "70",
+          "dashboard_layout_id": "17",
+          "dashboard_element_id": "70",
+          "row": 18,
+          "column": 0,
+          "width": 8,
+          "height": 6
+        }
+      ]
+    }
+  ],
+  "enable_viz_full_screen": true,
+  "filters_bar_collapsed": false,
+  "filters_location_top": true,
+  "load_configuration": "cache_run",
+  "lookml_link_id": null,
+  "show_filters_bar": null,
+  "show_title": null,
+  "text_tile_text_color": null,
+  "tile_background_color": null,
+  "tile_text_color": null,
+  "title_color": null,
+  "folder_id": "5",
+  "id": "17",
+  "deleted": false,
+  "appearance": null
+}
