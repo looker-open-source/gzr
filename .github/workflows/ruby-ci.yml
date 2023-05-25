@@ -209,6 +209,13 @@ jobs:
           HERE
           exe/gzr query runquery "$(cat query.json)"
 
+      - name: Load a dashboard
+        run: |
+          me=$(exe/gzr user me --csv --plain)
+          echo $me
+          dest_folder=$(cut -d, -f5 <<< $me | sed 's/"//g')
+          exe/gzr dashboard import examples/Dashboard_17_FAA_KPIs.json $dest_folder
+
       - name: Remove the deploy key from the github repo
         if: ${{ always() }}
         run: |
