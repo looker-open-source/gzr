@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.9](https://github.com/looker-open-source/gzr/compare/v0.3.8...v0.3.9) (2023-05-25)
+
+
+### Bug Fixes
+
+* model import handles case where model already exists ([302b4db](https://github.com/looker-open-source/gzr/commit/302b4db60ecf0a3b5fc92c34f1fd36f9afaf8f40))
+
 ## [0.3.8](https://github.com/looker-open-source/gzr/compare/v0.3.7...v0.3.8) (2023-05-16)
 
 
