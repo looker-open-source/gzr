@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.10](https://github.com/looker-open-source/gzr/compare/v0.3.9...v0.3.10) (2023-06-28)
+
+
+### Bug Fixes
+
+* Faraday 2.x ([bdc5e52](https://github.com/looker-open-source/gzr/commit/bdc5e5205c1be21d76b93624f193fadb8a1b32b3))
+
 ## [0.3.9](https://github.com/looker-open-source/gzr/compare/v0.3.8...v0.3.9) (2023-05-25)
 
 
