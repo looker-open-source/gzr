@@ -60,8 +60,8 @@ module Gzr
                 raise Gzr::CLI::Error, "import file is not a valid look"
               end
 
-              look = upsert_look(@me.id,create_fetch_query(data[:query]).id,@dest_folder_id,data,output: output)
-              upsert_plans_for_look(look.id,@me.id,data[:scheduled_plans]) if data[:scheduled_plans]
+              look = upsert_look(@me[:id],create_fetch_query(data[:query]).id,@dest_folder_id,data,output: output)
+              upsert_plans_for_look(look.id,@me[:id],data[:scheduled_plans]) if data[:scheduled_plans]
               output.puts "Imported look #{look.id}" unless @options[:plain]
               output.puts look.id if @options[:plain]
             end

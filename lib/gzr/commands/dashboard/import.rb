@@ -134,7 +134,7 @@ module Gzr
                   update_dashboard_layout_component(target.id,component)
                 end
               end
-              upsert_plans_for_dashboard(dashboard.id,@me.id,data[:scheduled_plans]) if data[:scheduled_plans]
+              upsert_plans_for_dashboard(dashboard.id,@me[:id],data[:scheduled_plans]) if data[:scheduled_plans]
               output.puts "Imported dashboard #{dashboard.id}" unless @options[:plain]
               output.puts dashboard.id if @options[:plain]
             end
@@ -203,7 +203,7 @@ module Gzr
             end
             new_dash[:slug] = source[:slug] unless slug_used
             new_dash[:folder_id] = target_folder_id
-            new_dash[:user_id] = @me.id
+            new_dash[:user_id] = @me[:id]
             new_dash.select!{|k,v| !v.nil?}
             say_warning "new dashboard request #{new_dash.inspect}" if @options[:debug]
             d = create_dashboard(new_dash)
@@ -227,7 +227,7 @@ module Gzr
         end
 
         def process_dashboard_element(dash_elem)
-          return [nil, upsert_look(@me.id, create_fetch_query(dash_elem[:look][:query]).id, @dest_folder_id, dash_elem[:look]).id, nil] if dash_elem[:look]
+          return [nil, upsert_look(@me[:id], create_fetch_query(dash_elem[:look][:query]).id, @dest_folder_id, dash_elem[:look]).id, nil] if dash_elem[:look]
 
           query = dash_elem[:result_maker]&.fetch(:query, false) || dash_elem[:query]
           return [create_fetch_query(query).id, nil, nil] if query

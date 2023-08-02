@@ -41,9 +41,11 @@ module Gzr
           say_warning("options: #{@options.inspect}") if @options[:debug]
           with_session do
             data = query_user(@user_id,@options[:fields])
-            write_file(@options[:dir] ? "User_#{data.id}_#{data.display_name}.json" : nil, @options[:dir],nil, output) do |f|
-              f.puts JSON.pretty_generate(data.to_attrs)
-            end
+            data = trim_user(data) if @options[:trim]
+            write_file(@options[:dir] ? "User_#{data[:id]}_#{data[:first_name]}_#{data[:last_name]}.json" : nil, @options[:dir],nil, output) do |f|
+              f.puts JSON.pretty_generate(data)
+            end if data
+            say_error "user #{@user_id} not found" unless data
           end
         end
       end

@@ -24,28 +24,26 @@
 module Gzr
   module User
 
-    def query_me(fields=nil)
-      data = nil
+    def query_me(fields='id')
       begin
-        data = @sdk.me(fields ? {:fields=>fields} : nil )
+        @sdk.me(fields ? {:fields=>fields} : nil ).to_attrs
       rescue LookerSDK::Error => e
         say_error "Error querying me({:fields=>\"#{fields}\"})"
         say_error e
         raise
       end
-      data
     end
 
-    def query_user(id,fields=nil)
-      data = nil
+    def query_user(id,fields='id')
       begin
-        data = @sdk.user(id, fields ? {:fields=>fields} : nil )
+        @sdk.user(id, fields ? {:fields=>fields} : nil ).to_attrs
+      rescue LookerSDK::NotFound => e
+        nil
       rescue LookerSDK::Error => e
         say_error "Error querying user(#{id},{:fields=>\"#{fields}\"})"
         say_error e
         raise
       end
-      data
     end
 
     def search_users(filter, fields=nil, sorts=nil)
@@ -122,6 +120,12 @@ module Gzr
         raise
       end
       data
+    end
+
+    def trim_user(data)
+      data.select do |k,v|
+        (keys_to_keep('create_user') + [:id]).include? k
+      end
     end
   end
 end

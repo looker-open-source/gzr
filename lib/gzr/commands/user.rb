@@ -72,6 +72,8 @@ module Gzr
                            desc: 'Fields to display'
       method_option :dir,  type: :string,
                            desc: 'Directory to store output file'
+      method_option :trim, type: :boolean,
+                           desc: 'Trim output to minimal set of fields for later import'
       def cat(user_id)
         if options[:help]
           invoke :help, ['cat']

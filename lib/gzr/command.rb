@@ -410,6 +410,11 @@ module Gzr
       parts.join('&.')
     end
 
+    def field_expression_hash(name)
+      parts = name.split(/\./)
+      parts.collect { |p| "&.fetch(:#{p},nil)" }.join('')
+    end
+
 
     # This version of field names yields an expression that can be evaluated against a hash structure
     # like this one...

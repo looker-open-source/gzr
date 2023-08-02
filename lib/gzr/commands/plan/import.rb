@@ -52,9 +52,9 @@ module Gzr
               plan = nil
               case @obj_type
               when /dashboard/i
-                plan = upsert_plan_for_dashboard(@obj_id,@me.id,data)
+                plan = upsert_plan_for_dashboard(@obj_id,@me[:id],data)
               when /look/i
-                plan = upsert_plan_for_look(@obj_id,@me.id,data)
+                plan = upsert_plan_for_look(@obj_id,@me[:id],data)
               else
                 raise Gzr::CLI::Error, "Invalid type '#{obj_type}', valid types are look and dashboard"
               end

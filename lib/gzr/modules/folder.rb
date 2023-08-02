@@ -78,7 +78,7 @@ module Gzr
 
       begin
         user = query_me("home_folder_id")
-        folder_ids << user.home_folder_id
+        folder_ids << user[:home_folder_id]
       end unless args && args.length > 0 && !(args[0].nil?)
 
       if args[0] == 'lookml'
@@ -87,10 +87,10 @@ module Gzr
         folder_ids << args[0].to_i
       elsif args[0] == "~" then
         user = query_me("personal_folder_id")
-        folder_ids << user.personal_folder_id
+        folder_ids << user[:personal_folder_id]
       elsif args[0] =~ /^~[0-9]+$/ then
         user = query_user(args[0].sub('~',''), "personal_folder_id")
-        folder_ids << user.personal_folder_id
+        folder_ids << user[:personal_folder_id]
       elsif args[0] =~ /^~.+@.+$/ then
         search_results = search_users( { :email=>args[0].sub('~','') },"personal_folder_id" )
         folder_ids += search_results.map { |r| r.personal_folder_id }
