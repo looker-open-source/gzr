@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -59,13 +59,15 @@ module Gzr
       loop do
         begin
           req[:page] = page
-          scratch_data = @sdk.search_users(req)
+          scratch_data = @sdk.search_users(req).collect { |r| r.to_attrs }
+        rescue LookerSDK::NotFound => e
+          nil
         rescue LookerSDK::ClientError => e
           say_error "Unable to get search_users(#{JSON.pretty_generate(req)})"
           say_error e
           raise
         end
-        break if scratch_data.length == 0
+        break if scratch_data and scratch_data.length == 0
         page += 1
         data += scratch_data
       end
@@ -84,13 +86,15 @@ module Gzr
       loop do
         begin
           req[:page] = page
-          scratch_data = @sdk.all_users(req)
+          scratch_data = @sdk.all_users(req).collect { |r| r.to_attrs }
+        rescue LookerSDK::NotFound => e
+          nil
         rescue LookerSDK::ClientError => e
           say_error "Unable to get all_users(#{JSON.pretty_generate(req)})"
           say_error e
           raise
         end
-        break if scratch_data.length == 0
+        break if scratch_data and scratch_data.length == 0
         page += 1
         data += scratch_data
       end
@@ -98,28 +102,27 @@ module Gzr
     end
 
     def update_user(id,req)
-      data = nil
       begin
-        data = @sdk.update_user(id,req)
+        @sdk.update_user(id,req)&.to_attrs
+      rescue LookerSDK::NotFound => e
+        nil
       rescue LookerSDK::Error => e
         say_error "Error updating user(#{id},#{JSON.pretty_generate(req)})"
         say_error e
         raise
       end
-      data
     end
 
     def delete_user(id)
-      data = nil
-       req = id
       begin
-        data = @sdk.delete_user(req)
+        @sdk.delete_user(id)&.to_attrs
+      rescue LookerSDK::NotFound => e
+        nil
       rescue LookerSDK::Error => e
-        say_error "Error deleting user(#{id},#{JSON.pretty_generate(req)})"
+        say_error "Error deleting user(#{id})"
         say_error e
         raise
       end
-      data
     end
 
     def trim_user(data)
