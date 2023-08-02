@@ -93,11 +93,11 @@ module Gzr
         folder_ids << user[:personal_folder_id]
       elsif args[0] =~ /^~.+@.+$/ then
         search_results = search_users( { :email=>args[0].sub('~','') },"personal_folder_id" )
-        folder_ids += search_results.map { |r| r.personal_folder_id }
+        folder_ids += search_results.map { |r| r[:personal_folder_id] }
       elsif args[0] =~ /^~.+$/ then
         first_name, last_name = args[0].sub('~','').split(' ')
         search_results = search_users( { :first_name=>first_name, :last_name=>last_name },"personal_folder_id" )
-        folder_ids += search_results.map { |r| r.personal_folder_id }
+        folder_ids += search_results.map { |r| r[:personal_folder_id] }
       else
         search_results = search_folders(args[0],"id")
         folder_ids += search_results.map { |r| r.id }
