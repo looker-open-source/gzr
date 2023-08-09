@@ -29,9 +29,13 @@ module Gzr
     def query_dashboard(dashboard_id)
       data = nil
       begin
-        data = @sdk.dashboard(dashboard_id)
+        data = @sdk.dashboard(dashboard_id).to_attrs
         data&.dashboard_filters&.sort! { |a,b| a.row <=> b.row }
         data&.dashboard_layouts&.sort_by! { |v| (v.active ? 0 : 1) }
+      rescue LookerSDK::Error => e
+        say_error "dashboard #{dashboard_id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error querying dashboard(#{dashboard_id})"
         say_error e
@@ -41,15 +45,17 @@ module Gzr
     end
 
     def delete_dashboard(dash)
-      data = nil
       begin
-        data = @sdk.delete_dashboard(dash)
+        @sdk.delete_dashboard(dash)
+      rescue LookerSDK::Error => e
+        say_error "dashboard #{dash} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error deleting dashboard(#{dash})"
         say_error e
         raise
       end
-      data
     end
 
     def search_dashboards_by_slug(slug, folder_id=nil)
@@ -57,9 +63,9 @@ module Gzr
       begin
         req = { :slug => slug }
         req[:folder_id] = folder_id if folder_id
-        data = @sdk.search_dashboards(req)
+        data = @sdk.search_dashboards(req).collect { |e| e.to_attrs }
         req[:deleted] = true
-        data = @sdk.search_dashboards(req) if data.empty?
+        data = @sdk.search_dashboards(req).collect { |e| e.to_attrs } if data.empty?
       rescue LookerSDK::Error => e
         say_error "Error search_dashboards_by_slug(#{JSON.pretty_generate(req)})"
         say_error e
@@ -73,9 +79,9 @@ module Gzr
       begin
         req = { :title => title }
         req[:folder_id] = folder_id if folder_id
-        data = @sdk.search_dashboards(req)
+        data = @sdk.search_dashboards(req).collect { |e| e.to_attrs }
         req[:deleted] = true
-        data = @sdk.search_dashboards(req) if data.empty?
+        data = @sdk.search_dashboards(req).collect { |e| e.to_attrs } if data.empty?
       rescue LookerSDK::Error => e
         say_error "Error search_dashboards_by_title(#{JSON.pretty_generate(req)})"
         say_error e
@@ -85,8 +91,9 @@ module Gzr
     end
 
     def create_dashboard(dash)
+      data = nil
       begin
-        data = @sdk.create_dashboard(dash)
+        data = @sdk.create_dashboard(dash).to_attrs
         say_error data.inspect if data.respond_to?(:message)
         data&.dashboard_filters&.sort! { |a,b| a.row <=> b.row }
         data&.dashboard_layouts&.sort_by! { |v| (v.active ? 0 : 1) }
@@ -99,9 +106,14 @@ module Gzr
     end
 
     def update_dashboard(dash_id,dash)
+      data = nil
       begin
-        data = @sdk.update_dashboard(dash_id,dash)
+        data = @sdk.update_dashboard(dash_id,dash).to_attrs
         data&.dashboard_filters&.sort! { |a,b| a.row <=> b.row }
+      rescue LookerSDK::NotFound => e
+        say_error "dashboard #{dash_id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error updating dashboard(#{dash_id},#{JSON.pretty_generate(dash)})"
         say_error e
@@ -111,8 +123,9 @@ module Gzr
     end
 
     def create_dashboard_element(dash_elem)
+      data = nil
       begin
-        data = @sdk.create_dashboard_element(dash_elem)
+        data = @sdk.create_dashboard_element(dash_elem).to_attrs
       rescue LookerSDK::Error => e
         say_error "Error creating dashboard_element(#{JSON.pretty_generate(dash_elem)})"
         say_error e
@@ -122,8 +135,13 @@ module Gzr
     end
 
     def update_dashboard_element(id,dash_elem)
+      data = nil
       begin
-        data = @sdk.update_dashboard_element(id,dash_elem)
+        data = @sdk.update_dashboard_element(id,dash_elem).to_attrs
+      rescue LookerSDK::NotFound => e
+        say_error "dashboard_element #{id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error updating dashboard_element(#{id},#{JSON.pretty_generate(dash_elem)})"
         say_error e
@@ -134,117 +152,138 @@ module Gzr
 
     def delete_dashboard_element(id)
       begin
-        data = @sdk.delete_dashboard_element(id)
+        @sdk.delete_dashboard_element(id)
+      rescue LookerSDK::NotFound => e
+        say_error "dashboard_element #{id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error deleting dashboard_element(#{id})})"
         say_error e
         raise
       end
-      data
     end
 
     def get_dashboard_layout(id)
       begin
-        data = @sdk.dashboard_layout(id)
+        @sdk.dashboard_layout(id).to_attrs
+      rescue LookerSDK::NotFound => e
+        say_error "dashboard_layout #{id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error getting dashboard_layout(#{id})"
         say_error e
         raise
       end
-      data
     end
 
     def create_dashboard_layout(dash_layout)
       begin
-        data = @sdk.create_dashboard_layout(dash_layout)
+        @sdk.create_dashboard_layout(dash_layout).to_attrs
       rescue LookerSDK::Error => e
         say_error "Error creating dashboard_layout(#{JSON.pretty_generate(dash_layout)})"
         say_error e
         raise
       end
-      data
     end
 
     def update_dashboard_layout(id,dash_layout)
       begin
-        data = @sdk.update_dashboard_layout(id,dash_layout)
+        @sdk.update_dashboard_layout(id,dash_layout).to_attrs
+      rescue LookerSDK::NotFound => e
+        say_error "dashboard_layout #{id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error updating dashboard_layout(#{id},#{JSON.pretty_generate(dash_layout)})"
         say_error e
         raise
       end
-      data
     end
 
     def delete_dashboard_layout(id)
       begin
-        data = @sdk.delete_dashboard_layout(id)
+        @sdk.delete_dashboard_layout(id)
+      rescue LookerSDK::NotFound => e
+        say_error "dashboard_layout #{id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error deleting dashboard_layout(#{id})"
         say_error e
         raise
       end
-      data
     end
 
     def get_all_dashboard_layout_components(id)
       begin
-        data = @sdk.dashboard_layout_dashboard_layout_components(id)
-        return nil if data.respond_to?(:message) && data.message == 'Not found'
+        @sdk.dashboard_layout_dashboard_layout_components(id).collect { |e| e.to_attrs }
+      rescue LookerSDK::NotFound => e
+        say_error "dashboard_layout #{id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error getting dashboard_layout_dashboard_layout_components(#{id})"
         say_error e
         raise
       end
-      data
     end
 
     def update_dashboard_layout_component(id,component)
       begin
-        data = @sdk.update_dashboard_layout_component(id,component)
+        @sdk.update_dashboard_layout_component(id,component).to_attrs
+      rescue LookerSDK::NotFound => e
+        say_error "dashboard_layout #{id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error updating dashboard_layout_component(#{id},#{JSON.pretty_generate(component)})"
         say_error e
         raise
       end
-      data
     end
 
     def create_dashboard_filter(dash_filter)
       begin
-        data = @sdk.create_dashboard_filter(dash_filter)
+        @sdk.create_dashboard_filter(dash_filter).to_attrs
       rescue LookerSDK::Error => e
         say_error "Error creating dashboard_filter(#{JSON.pretty_generate(dash_filter)})"
         say_error e
         raise
       end
-      data
     end
 
     def update_dashboard_filter(id,dash_filter)
       begin
-        data = @sdk.update_dashboard_filter(id,dash_filter)
+        @sdk.update_dashboard_filter(id,dash_filter).to_attrs
+      rescue LookerSDK::NotFound => e
+        say_error "dashboard_filter #{id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error updating dashboard_filter(#{id},#{JSON.pretty_generate(dash_filter)})"
         say_error e
         raise
       end
-      data
     end
 
     def delete_dashboard_filter(id)
       begin
-        data = @sdk.delete_dashboard_filter(id)
+        @sdk.delete_dashboard_filter(id)
+      rescue LookerSDK::NotFound => e
+        say_error "dashboard_filter #{id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error deleting dashboard_filter(#{id})})"
         say_error e
         raise
       end
-      data
     end
 
     def cat_dashboard(dashboard_id)
-      data = query_dashboard(dashboard_id).to_attrs
+      data = query_dashboard(dashboard_id)
       data[:dashboard_elements].each_index do |i|
         element = data[:dashboard_elements][i]
         find_vis_config_reference(element) do |vis_config|
@@ -357,7 +396,11 @@ module Gzr
 
     def import_lookml_dashboard(id,folder)
       begin
-        return @sdk.import_lookml_dashboard(id,folder)&.to_attrs
+        return @sdk.import_lookml_dashboard(id,folder).to_attrs
+      rescue LookerSDK::NotFound => e
+        say_error "lookml_dashboard #{id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error import_lookml_dashboard(#{id},#{folder})"
         say_error e
@@ -368,6 +411,10 @@ module Gzr
     def sync_lookml_dashboard(id)
       begin
         return @sdk.sync_lookml_dashboard(id, {})
+      rescue LookerSDK::NotFound => e
+        say_error "lookml_dashboard #{id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error sync_lookml_dashboard(#{id})"
         say_error e

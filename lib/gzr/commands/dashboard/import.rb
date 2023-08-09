@@ -72,7 +72,7 @@ module Gzr
                 filter = new_filter.select do |k,v|
                   (keys_to_keep('create_dashboard_filter') + [:row]).include? k
                 end
-                filter[:dashboard_id] = dashboard.id
+                filter[:dashboard_id] = dashboard[:id]
                 say_warning "Creating filter" if @options[:debug]
                 dashboard[:dashboard_filters].push create_dashboard_filter(filter)
               end
@@ -84,7 +84,7 @@ module Gzr
                 end
                 (element[:query_id],element[:look_id],element[:merge_result_id]) = process_dashboard_element(new_element)
                 say_warning "Creating dashboard element #{element.select {|k,v| !v.nil?}.inspect}" if @options[:debug]
-                element[:dashboard_id] = dashboard.id
+                element[:dashboard_id] = dashboard[:id]
                 result_maker = copy_result_maker_filterables(new_element)
                 element[:result_maker] = result_maker if result_maker
                 dashboard_element = create_dashboard_element(element)
@@ -101,19 +101,19 @@ module Gzr
                   end
                 end
                 dashboard[:dashboard_elements].push dashboard_element
-                [new_element[:id], dashboard_element.id]
+                [new_element[:id], dashboard_element[:id]]
               end
 
               source_dashboard_layouts = data[:dashboard_layouts].map do |new_layout|
                 layout_obj = nil
                 if new_layout[:active]
-                  layout_obj = get_dashboard_layout(dashboard[:dashboard_layouts].first.id)
-                  say_warning "Updating layout #{layout_obj.id}" if @options[:debug]
+                  layout_obj = get_dashboard_layout(dashboard[:dashboard_layouts].first[:id])
+                  say_warning "Updating layout #{layout_obj[:id]}" if @options[:debug]
                 else
                   layout = new_layout.select do |k,v|
                     (keys_to_keep('create_dashboard_layout') - [:dashboard_id]).include? k
                   end
-                  layout[:dashboard_id] = dashboard.id
+                  layout[:dashboard_id] = dashboard[:id]
                   say_warning "Creating dashboard layout #{layout}" if @options[:debug]
                   layout_obj = create_dashboard_layout(layout)
                   say_warning "Created dashboard layout #{JSON.pretty_generate layout_obj.map(&:to_a).to_json}" if @options[:debug]
@@ -123,19 +123,19 @@ module Gzr
                   component = keys_to_keep('update_dashboard_layout_component').collect do |e|
                     [e,nil]
                   end.to_h
-                  component[:dashboard_layout_id] = target.dashboard_layout_id
+                  component[:dashboard_layout_id] = target[:dashboard_layout_id]
 
                   component.merge!(source.select do |k,v|
                     (keys_to_keep('update_dashboard_layout_component') - [:id,:dashboard_layout_id]).include? k
                   end)
 
                   component[:dashboard_element_id] = elem_table.assoc(source[:dashboard_element_id])[1]
-                  say_warning "Updating dashboard layout component #{target.id}" if @options[:debug]
-                  update_dashboard_layout_component(target.id,component)
+                  say_warning "Updating dashboard layout component #{target[:id]}" if @options[:debug]
+                  update_dashboard_layout_component(target[:id],component)
                 end
               end
               upsert_plans_for_dashboard(dashboard.id,@me[:id],data[:scheduled_plans]) if data[:scheduled_plans]
-              output.puts "Imported dashboard #{dashboard.id}" unless @options[:plain]
+              output.puts "Imported dashboard #{dashboard[:id]}" unless @options[:plain]
               output.puts dashboard.id if @options[:plain]
             end
           end
@@ -162,8 +162,8 @@ module Gzr
           same_slug = (slug_used&.fetch(:id,nil) == existing_dashboard&.fetch(:id,nil))
 
           if slug_used && !same_slug then
-            say_warning "slug #{slug_used.slug} already used for dashboard #{slug_used.title} in folder #{slug_used.folder_id}", output: output
-            say_warning("That dashboard is in the 'Trash' but not fully deleted yet", output: output) if slug_used.deleted
+            say_warning "slug #{slug_used[:slug]} already used for dashboard #{slug_used[:title]} in folder #{slug_used[:folder_id]}", output: output
+            say_warning("That dashboard is in the 'Trash' but not fully deleted yet", output: output) if slug_used[:deleted]
             say_warning "dashboard will be imported with new slug", output: output
           end
 
@@ -173,28 +173,28 @@ module Gzr
             end
             raise Gzr::CLI::Error, "Dashboard #{existing_dashboard[:title]} with slug #{existing_dashboard[:slug]} already exists in folder #{target_folder_id}\nUse --force if you want to overwrite it" unless @options[:force]
 
-            say_ok "Modifying existing dashboard #{existing_dashboard.id} #{existing_dashboard[:title]} in folder #{target_folder_id}", output: output
+            say_ok "Modifying existing dashboard #{existing_dashboard[:id]} #{existing_dashboard[:title]} in folder #{target_folder_id}", output: output
             new_dash = source.select do |k,v|
               (keys_to_keep('update_dashboard') - [:space_id,:folder_id,:user_id,:slug]).include? k
             end
             new_dash[:slug] = source[:slug] unless slug_used
             new_dash[:deleted] = false if existing_dashboard[:deleted]
-            d = update_dashboard(existing_dashboard.id,new_dash)
+            d = update_dashboard(existing_dashboard[:id],new_dash)
 
             d.dashboard_filters.each do |f|
-              delete_dashboard_filter(f.id)
+              delete_dashboard_filter(f[:id])
             end
             d.dashboard_filters = []
 
             d.dashboard_elements.each do |e|
-              delete_dashboard_element(e.id)
+              delete_dashboard_element(e[:id])
             end
             d.dashboard_elements = []
 
             d.dashboard_layouts.each do |l|
-              delete_dashboard_layout(l.id) unless l.active
+              delete_dashboard_layout(l[:id]) unless l[:active]
             end
-            d.dashboard_layouts.select! { |l| l.active }
+            d.dashboard_layouts.select! { |l| l[:active] }
 
             return d
           else
@@ -227,13 +227,13 @@ module Gzr
         end
 
         def process_dashboard_element(dash_elem)
-          return [nil, upsert_look(@me[:id], create_fetch_query(dash_elem[:look][:query]).id, @dest_folder_id, dash_elem[:look]).id, nil] if dash_elem[:look]
+          return [nil, upsert_look(@me[:id], create_fetch_query(dash_elem[:look][:query])[:id], @dest_folder_id, dash_elem[:look])[:id], nil] if dash_elem[:look]
 
           query = dash_elem[:result_maker]&.fetch(:query, false) || dash_elem[:query]
           return [create_fetch_query(query).id, nil, nil] if query
 
           merge_result = dash_elem[:result_maker]&.fetch(:merge_result, false) || dash_elem[:merge_result]
-          return [nil,nil,create_merge_result(merge_result).id] if merge_result
+          return [nil,nil,create_merge_result(merge_result)[:id]] if merge_result
 
           [nil,nil,nil]
         end
