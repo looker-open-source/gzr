@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -49,7 +49,7 @@ module Gzr
               attr = get_attribute_by_name(@attr,f)
             end
             raise(Gzr::CLI::Error, "Attribute #{@attr} does not exist") unless attr
-            write_file(@options[:dir] ? "Attribute_#{attr.id}_#{attr.name}.json" : nil, @options[:dir],nil, output) do |f|
+            write_file(@options[:dir] ? "Attribute_#{attr[:id]}_#{attr[:name]}.json" : nil, @options[:dir],nil, output) do |f|
               f.puts JSON.pretty_generate(attr.to_attrs)
             end
           end
