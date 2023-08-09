@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -25,50 +25,41 @@ module Gzr
   module Connection
 
     def query_all_connections(fields=nil)
-      data = nil
       begin
-        data = @sdk.all_connections(fields ? {:fields=>fields} : nil )
+        @sdk.all_connections(fields ? {:fields=>fields} : nil ).collect { |e| e.to_attrs }
       rescue LookerSDK::Error => e
           say_error "Error querying all_connections({:fields=>\"#{fields}\"})"
           say_error e
           raise
       end
-      data
     end
 
     def query_all_dialects(fields=nil)
-      data = nil
       begin
-        data = @sdk.all_dialect_infos(fields ? {:fields=>fields} : nil )
+        @sdk.all_dialect_infos(fields ? {:fields=>fields} : nil ).collect { |e| e.to_attrs }
       rescue LookerSDK::Error => e
           say_error "Error querying all_dialect_infos({:fields=>\"#{fields}\"})"
           say_error e
           raise
       end
-      data
     end
 
     def test_connection(name, tests=nil)
-      data = nil
-
       if tests.nil?
         connection = cat_connection(name)
-        if connection.nil?
-          return nil
-        end
+        return nil if connection.nil?
         tests = connection[:dialect][:connection_tests]
       end
 
       begin
-        data = @sdk.test_connection(name, {}, tests: tests)
+        @sdk.test_connection(name, {}, tests: tests).collect { |e| e.to_attrs }
       rescue LookerSDK::NotFound => e
-        return nil
+        return []
       rescue LookerSDK::Error => e
         say_error "Error executing test_connection(#{name},#{tests})"
         say_error e
         raise
       end
-      data
     end
 
     def delete_connection(name)
@@ -84,21 +75,18 @@ module Gzr
     end
 
     def create_connection(body)
-      data = nil
       begin
-        data = @sdk.create_connection(body).to_attrs
+        @sdk.create_connection(body).to_attrs
       rescue LookerSDK::Error => e
         say_error "Error executing create_connection(#{JSON.pretty_generate(body)})"
         say_error e
         raise
       end
-      data
     end
 
     def update_connection(name,body)
-      data = nil
       begin
-        data = @sdk.update_connection(name,body).to_attrs
+        @sdk.update_connection(name,body).to_attrs
       rescue LookerSDK::NotFound => e
         say_warning "Connection #{name} not found"
       rescue LookerSDK::Error => e
@@ -106,21 +94,20 @@ module Gzr
         say_error e
         raise
       end
-      data
     end
 
     def cat_connection(name)
-      data = nil
       begin
-        data = @sdk.connection(name).to_attrs
+        @sdk.connection(name).to_attrs
       rescue LookerSDK::NotFound => e
-        return nil
+        say_error "connection #{name} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error executing connection(#{name})"
         say_error e
         raise
       end
-      data
     end
 
     def trim_connection(data)
