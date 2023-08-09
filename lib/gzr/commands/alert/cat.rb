@@ -41,8 +41,8 @@ module Gzr
           say_warning(@options) if @options[:debug]
           with_session do
             alert = get_alert(@alert_id)
-            write_file(@options[:dir] ? "Alert_#{alert.id}_#{alert.field.name}.json" : nil, @options[:dir],nil, output) do |f|
-              f.puts JSON.pretty_generate(alert.to_attrs)
+            write_file(@options[:dir] ? "Alert_#{alert[:id]}_#{alert[:field][:name]}.json" : nil, @options[:dir],nil, output) do |f|
+              f.puts JSON.pretty_generate(alert)
             end
           end
         end

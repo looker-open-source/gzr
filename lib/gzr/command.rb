@@ -53,15 +53,15 @@ module Gzr
     end
 
     def get_user_by_id(user_id, req=nil)
-      user = nil
       begin
-        user = @sdk.user(user_id, req)
+        @sdk.user(user_id, req).to_attrs
+      rescue LookerSDK::NotFound => e
+        nil
       rescue LookerSDK::Error => e
         say_error "Error querying get_user_by_id(#{user_id})"
         say_error e
         raise
       end
-      user
     end
 
     def get_auth()
