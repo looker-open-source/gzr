@@ -30,8 +30,8 @@ module Gzr
       data = nil
       begin
         data = @sdk.dashboard(dashboard_id).to_attrs
-        data&.dashboard_filters&.sort! { |a,b| a.row <=> b.row }
-        data&.dashboard_layouts&.sort_by! { |v| (v.active ? 0 : 1) }
+        data[:dashboard_filters]&.sort! { |a,b| a.row <=> b.row }
+        data[:dashboard_layouts]&.sort_by! { |v| (v[:active] ? 0 : 1) }
       rescue LookerSDK::Error => e
         say_error "dashboard #{dashboard_id} not found"
         say_error e
@@ -95,8 +95,8 @@ module Gzr
       begin
         data = @sdk.create_dashboard(dash).to_attrs
         say_error data.inspect if data.respond_to?(:message)
-        data&.dashboard_filters&.sort! { |a,b| a.row <=> b.row }
-        data&.dashboard_layouts&.sort_by! { |v| (v.active ? 0 : 1) }
+        data[:dashboard_filters]&.sort! { |a,b| a.row <=> b.row }
+        data[:dashboard_layouts]&.sort_by! { |v| (v[:active] ? 0 : 1) }
       rescue LookerSDK::Error => e
         say_error "Error creating dashboard(#{JSON.pretty_generate(dash)})"
         say_error e
@@ -109,7 +109,7 @@ module Gzr
       data = nil
       begin
         data = @sdk.update_dashboard(dash_id,dash).to_attrs
-        data&.dashboard_filters&.sort! { |a,b| a.row <=> b.row }
+        data[:dashboard_filters]&.sort! { |a,b| a.row <=> b.row }
       rescue LookerSDK::NotFound => e
         say_error "dashboard #{dash_id} not found"
         say_error e
@@ -123,21 +123,18 @@ module Gzr
     end
 
     def create_dashboard_element(dash_elem)
-      data = nil
       begin
-        data = @sdk.create_dashboard_element(dash_elem).to_attrs
+        @sdk.create_dashboard_element(dash_elem).to_attrs
       rescue LookerSDK::Error => e
         say_error "Error creating dashboard_element(#{JSON.pretty_generate(dash_elem)})"
         say_error e
         raise
       end
-      data
     end
 
     def update_dashboard_element(id,dash_elem)
-      data = nil
       begin
-        data = @sdk.update_dashboard_element(id,dash_elem).to_attrs
+        @sdk.update_dashboard_element(id,dash_elem).to_attrs
       rescue LookerSDK::NotFound => e
         say_error "dashboard_element #{id} not found"
         say_error e
@@ -147,7 +144,6 @@ module Gzr
         say_error e
         raise
       end
-      data
     end
 
     def delete_dashboard_element(id)
@@ -292,12 +288,11 @@ module Gzr
           end
         end
         alerts = search_alerts(fields: 'id,dashboard_element_id', group_by: 'dashboard', all_owners: true)
-        alerts.map!{|v| v.to_attrs}
         say_warning alerts if @options[:debug]
         data[:dashboard_elements].each do |e|
           alerts_found = alerts.select { |a| a[:dashboard_element_id] == e[:id]}
           say_warning "Found alerts #{alerts_found}" if @options[:debug]
-          alerts_entries = alerts_found.map { |a| get_alert(a[:id]).to_attrs }
+          alerts_entries = alerts_found.map { |a| get_alert(a[:id]) }
           say_warning "Looked up alerts entries #{alerts_entries}" if @options[:debug]
           e[:alerts] = alerts_entries
         end

@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -44,8 +44,8 @@ module Gzr
               return nil
             end unless folder
             children = query_folder_children(@folder)
-            unless (folder.looks.length == 0 && folder.dashboards.length == 0 && children.length == 0) || @options[:force] then
-              raise Gzr::CLI::Error, "Folder '#{folder.name}' is not empty. Folder cannot be deleted unless --force is specified"
+            unless (folder[:looks].length == 0 && folder[:dashboards].length == 0 && children.length == 0) || @options[:force] then
+              raise Gzr::CLI::Error, "Folder '#{folder[:name]}' is not empty. Folder cannot be deleted unless --force is specified"
             end
             delete_folder(@folder)
           end
