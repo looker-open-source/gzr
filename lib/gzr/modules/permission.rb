@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -25,15 +25,13 @@ module Gzr
   module Permission
 
     def query_all_permissions()
-      data = nil
       begin
-        data = @sdk.all_permissions()
+        @sdk.all_permissions().collect { |p| p.to_attrs }
       rescue LookerSDK::Error => e
           say_error "Error querying all_permissions()"
           say_error e
           raise
       end
-      data
     end
 
   end
