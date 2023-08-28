@@ -29,7 +29,7 @@ module Gzr
         req = {}
         req[:fields] = fields if fields
         begin
-          return @sdk.all_model_sets(req)
+          @sdk.all_model_sets(req).collect { |s| s.to_attrs }
         rescue LookerSDK::NotFound => e
           return nil
         rescue LookerSDK::Error => e
@@ -43,7 +43,7 @@ module Gzr
         req = {}
         req[:fields] = fields if fields
         begin
-          return @sdk.model_set(set_id,req)&.to_attrs
+          @sdk.model_set(set_id,req)&.to_attrs
         rescue LookerSDK::NotFound => e
           return nil
         rescue LookerSDK::Error => e
@@ -73,7 +73,7 @@ module Gzr
           req[:filter_or] = filter_or unless filter_or.nil?
           req[:limit] = 64
           loop do
-            page = @sdk.search_model_sets(req)
+            page = @sdk.search_model_sets(req).collect { |s| s.to_attrs }
             data+=page
             break unless page.length == req[:limit]
             req[:offset] = (req[:offset] || 0) + req[:limit]
@@ -90,7 +90,7 @@ module Gzr
 
       def update_model_set(model_set_id, data)
         begin
-          return @sdk.update_model_set(model_set_id, data)&.to_attrs
+          @sdk.update_model_set(model_set_id, data)&.to_attrs
         rescue LookerSDK::Error => e
           say_error "Error calling update_model_set(#{model_set_id},#{JSON.pretty_generate(data)})"
           say_error e
@@ -100,7 +100,7 @@ module Gzr
 
       def create_model_set(data)
         begin
-          return @sdk.create_model_set(data)&.to_attrs
+          @sdk.create_model_set(data)&.to_attrs
         rescue LookerSDK::Error => e
           say_error "Error calling create_model_set(#{JSON.pretty_generate(data)})"
           say_error e
@@ -110,7 +110,7 @@ module Gzr
 
       def delete_model_set(model_set_id)
         begin
-          return @sdk.delete_model_set(model_set_id)
+          @sdk.delete_model_set(model_set_id)
         rescue LookerSDK::Error => e
           say_error "Error calling delete_model_set(#{model_set_id}})"
           say_error e
