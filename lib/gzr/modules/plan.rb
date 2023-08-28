@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -46,9 +46,8 @@ module Gzr
       req[:all_users] = true if user_id == "all"
       req[:user_id] = user_id if user_id && !(user_id == "all")
       req[:fields] = fields if fields
-      data = nil
       begin
-        data = @sdk.scheduled_plans_for_look(look_id,req)
+        @sdk.scheduled_plans_for_look(look_id,req).collect { |p| p.to_attrs }
         return nil if data.respond_to?(:message) && data.message == 'Not found'
       rescue LookerSDK::NotFound
         return nil
@@ -57,7 +56,6 @@ module Gzr
         say_error e
         raise
       end
-      data
     end
 
     def query_scheduled_plans_for_dashboard(dashboard_id,user_id,fields=nil)
@@ -65,9 +63,8 @@ module Gzr
       req[:all_users] = true if user_id == "all"
       req[:user_id] = user_id if user_id && !(user_id == "all")
       req[:fields] = fields if fields
-      data = nil
       begin
-        data = @sdk.scheduled_plans_for_dashboard(dashboard_id,req)
+        @sdk.scheduled_plans_for_dashboard(dashboard_id,req).collect { |p| p.to_attrs }
         return nil if data.respond_to?(:message) && data.message == 'Not found'
       rescue LookerSDK::NotFound
         return nil
@@ -76,8 +73,6 @@ module Gzr
         say_error e
         raise
       end
-      data.map! {|plan| plan.to_attrs}
-      data
     end
 
     def query_scheduled_plan(plan_id,fields=nil)
