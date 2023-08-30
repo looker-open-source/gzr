@@ -28,8 +28,6 @@ module Gzr
       req[:all_users] = true if user_id == "all"
       req[:user_id] = user_id if user_id && !(user_id == "all")
       req[:fields] = fields if fields
-      id = nil
-      id = user_id unless user_id == "all"
       begin
         @sdk.all_scheduled_plans(req).collect { |p| p.to_attrs }
       rescue LookerSDK::NotFound => e
@@ -48,7 +46,6 @@ module Gzr
       req[:fields] = fields if fields
       begin
         @sdk.scheduled_plans_for_look(look_id,req).collect { |p| p.to_attrs }
-        return nil if data.respond_to?(:message) && data.message == 'Not found'
       rescue LookerSDK::NotFound => e
         return []
       rescue LookerSDK::Error => e
@@ -128,7 +125,7 @@ module Gzr
 
     def run_scheduled_plan(plan)
       begin
-        @sdk.scheduled_plan_run_once(plan).to_attrs
+        @sdk.scheduled_plan_run_once(plan)
       rescue LookerSDK::NotFound
         say_error "scheduled_plan_run_once(#{plan_id}) not found"
         say_error e

@@ -55,13 +55,13 @@ module Gzr
     end
 
     def get_attribute_by_name(name, fields = nil)
-      data = query_all_user_attributes(fields).to_attrs.select {|a| a[:name] == name}
+      data = query_all_user_attributes(fields).select {|a| a[:name] == name}
       return nil if data.empty?
       data.first
     end
 
     def get_attribute_by_label(label, fields = nil)
-      data = query_all_user_attributes(fields).to_attrs.select {|a| a[:label] == label}
+      data = query_all_user_attributes(fields).select {|a| a[:label] == label}
       return nil if data.empty?
       data.first
     end
@@ -143,7 +143,7 @@ module Gzr
           keys_to_keep('update_user_attribute').include?(k) && !(name_used[k] == v)
         end
 
-        return update_attribute(existing.id,upd_attr)
+        return update_attribute(existing[:id],upd_attr)
       else
         new_attr = source.select do |k,v|
           (keys_to_keep('create_user_attribute') - [:hidden_value_domain_whitelist]).include? k

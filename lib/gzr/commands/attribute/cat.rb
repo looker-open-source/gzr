@@ -50,7 +50,7 @@ module Gzr
             end
             raise(Gzr::CLI::Error, "Attribute #{@attr} does not exist") unless attr
             write_file(@options[:dir] ? "Attribute_#{attr[:id]}_#{attr[:name]}.json" : nil, @options[:dir],nil, output) do |f|
-              f.puts JSON.pretty_generate(attr.to_attrs)
+              f.puts JSON.pretty_generate(attr)
             end
           end
         end

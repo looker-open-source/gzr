@@ -119,7 +119,7 @@ module Gzr
 
     def set_role_groups(role_id,groups=[])
       begin
-        @sdk.set_role_groups(role_id, groups).collect { |g| g.to_attrs }
+        @sdk.set_role_groups(role_id, groups)
       rescue LookerSDK::NotFound => e
         say_error "set_role_groups(#{role_id},#{JSON.pretty_generate(groups)}) not found"
         say_error e
@@ -135,7 +135,7 @@ module Gzr
 
     def set_role_users(role_id,users=[])
       begin
-        @sdk.set_role_users(role_id, users).collect { |u| u.to_attrs }
+        @sdk.set_role_users(role_id, users)
       rescue LookerSDK::NotFound => e
         say_error "set_role_users(#{role_id},#{JSON.pretty_generate(users)}) not found"
         say_error e

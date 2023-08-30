@@ -181,20 +181,20 @@ module Gzr
             new_dash[:deleted] = false if existing_dashboard[:deleted]
             d = update_dashboard(existing_dashboard[:id],new_dash)
 
-            d.dashboard_filters.each do |f|
+            d[:dashboard_filters].each do |f|
               delete_dashboard_filter(f[:id])
             end
-            d.dashboard_filters = []
+            d[:dashboard_filters] = []
 
-            d.dashboard_elements.each do |e|
+            d[:dashboard_elements].each do |e|
               delete_dashboard_element(e[:id])
             end
-            d.dashboard_elements = []
+            d[:dashboard_elements] = []
 
-            d.dashboard_layouts.each do |l|
+            d[:dashboard_layouts].each do |l|
               delete_dashboard_layout(l[:id]) unless l[:active]
             end
-            d.dashboard_layouts.select! { |l| l[:active] }
+            d[:dashboard_layouts].select! { |l| l[:active] }
 
             return d
           else

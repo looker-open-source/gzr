@@ -41,7 +41,7 @@ RSpec.describe Gzr::Commands::Plan::Failures do
     end
 
     output = StringIO.new
-    options = {:width=>130}
+    options = {:width=>1024}
     command = Gzr::Commands::Plan::Failures.new(options)
 
     command.instance_variable_set(:@sdk, mock_sdk)
@@ -49,11 +49,11 @@ RSpec.describe Gzr::Commands::Plan::Failures do
     command.execute(output: output)
 
     expect(output.string).to eq <<-OUT
-+-----------------+------------+--------------------+----------------+--------------------------+----------------------------+
-|scheduled_plan.id|user.name   |scheduled_job.status|scheduled_job.id|scheduled_job.created_time|scheduled_plan.next_run_time|
-+-----------------+------------+--------------------+----------------+--------------------------+----------------------------+
-|               23|Jake Johnson|failure             |           13694|2018-06-19 11:00:32       |2018-06-20 11:00:00         |
-+-----------------+------------+--------------------+----------------+--------------------------+----------------------------+
++-----------------+-------------------+-------+------------+--------------------+----------------+--------------------------+----------------------------+----------------------+---------------------------+----------------------------------+
+|scheduled_plan.id|scheduled_plan.name|user.id|user.name   |scheduled_job.status|scheduled_job.id|scheduled_job.created_time|scheduled_plan.next_run_time|scheduled_plan.look_id|scheduled_plan.dashboard_id|scheduled_plan.lookml_dashboard_id|
++-----------------+-------------------+-------+------------+--------------------+----------------+--------------------------+----------------------------+----------------------+---------------------------+----------------------------------+
+|               23|                   |       |Jake Johnson|failure             |           13694|2018-06-19 11:00:32       |2018-06-20 11:00:00         |                      |                           |                                  |
++-----------------+-------------------+-------+------------+--------------------+----------------+--------------------------+----------------------------+----------------------+---------------------------+----------------------------------+
     OUT
   end
 end
