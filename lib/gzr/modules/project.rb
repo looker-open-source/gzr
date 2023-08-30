@@ -25,9 +25,8 @@ module Gzr
   module Project
 
     def all_projects(fields: 'id')
-      data = []
       begin
-        data = @sdk.all_projects({ fields: fields })
+        @sdk.all_projects({ fields: fields }).collect { |p| p.to_attrs }
       rescue LookerSDK::NotFound => e
         return []
       rescue LookerSDK::Error => e
@@ -35,14 +34,15 @@ module Gzr
         say_error e
         raise
       end
-      data
     end
 
     def cat_project(project_id)
       begin
-        return @sdk.project(project_id)&.to_attrs
+        @sdk.project(project_id)&.to_attrs
       rescue LookerSDK::NotFound => e
-        return nil
+        say_error "project(#{project_id}) not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error getting project(#{project_id})"
         say_error e
@@ -58,7 +58,7 @@ module Gzr
 
     def create_project(body)
       begin
-        return @sdk.create_project(body)&.to_attrs
+        @sdk.create_project(body)&.to_attrs
       rescue LookerSDK::Error => e
         say_error "Error running create_project(#{JSON.pretty_generate(body)})"
         say_error e
@@ -68,9 +68,11 @@ module Gzr
 
     def update_project(id,body)
       begin
-        return @sdk.update_project(id,body)&.to_attrs
+        @sdk.update_project(id,body)&.to_attrs
       rescue LookerSDK::NotFound => e
-        return nil
+        say_error "update_project(#{id},#{JSON.pretty_generate(body)} not found)"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error running update_project(#{id},#{JSON.pretty_generate(body)})"
         say_error e
@@ -80,9 +82,9 @@ module Gzr
 
     def git_deploy_key(id)
       begin
-        return @sdk.git_deploy_key(id)
+        @sdk.git_deploy_key(id)
       rescue LookerSDK::NotFound => e
-        return nil
+        nil
       rescue LookerSDK::Error => e
         say_error "Error running git_deploy_key(#{id})"
         say_error e
@@ -92,9 +94,9 @@ module Gzr
 
     def create_git_deploy_key(id)
       begin
-        return @sdk.create_git_deploy_key(id)
+        @sdk.create_git_deploy_key(id)
       rescue LookerSDK::NotFound => e
-        return nil
+        nil
       rescue LookerSDK::Error => e
         say_error "Error running create_git_deploy_key(#{id})"
         say_error e
@@ -104,9 +106,9 @@ module Gzr
 
     def all_git_branches(proj_id)
       begin
-        return @sdk.all_git_branches(proj_id)
+        @sdk.all_git_branches(proj_id).collect { |b| b.to_attrs }
       rescue LookerSDK::NotFound => e
-        return nil
+        []
       rescue LookerSDK::Error => e
         say_error "Error running all_git_branches(#{proj_id})"
         say_error e
@@ -116,9 +118,9 @@ module Gzr
 
     def git_branch(proj_id)
       begin
-        return @sdk.git_branch(proj_id)
+        @sdk.git_branch(proj_id).to_attrs
       rescue LookerSDK::NotFound => e
-        return nil
+        nil
       rescue LookerSDK::Error => e
         say_error "Error running git_branch(#{proj_id})"
         say_error e
@@ -128,9 +130,11 @@ module Gzr
 
     def deploy_to_production(proj_id)
       begin
-        return @sdk.deploy_to_production(proj_id)
+        @sdk.deploy_to_production(proj_id)
       rescue LookerSDK::NotFound => e
-        return nil
+        say_error "deploy_to_production(#{proj_id}) not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error running deploy_to_production(#{proj_id})"
         say_error e
@@ -141,15 +145,16 @@ module Gzr
     def update_git_branch(proj_id, name)
       body = { name: name }
       begin
-        return @sdk.update_git_branch(proj_id, body)&.to_attrs
+        @sdk.update_git_branch(proj_id, body)&.to_attrs
       rescue LookerSDK::NotFound => e
-        return nil
+        say_error "update_git_branch(#{proj_id},#{JSON.pretty_generate(body)}) not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error running update_git_branch(#{proj_id},#{JSON.pretty_generate(body)})"
         say_error e
         raise
       end
     end
-
   end
 end
