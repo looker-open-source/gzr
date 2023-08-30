@@ -28,17 +28,17 @@ module Gzr
       req[:all_users] = true if user_id == "all"
       req[:user_id] = user_id if user_id && !(user_id == "all")
       req[:fields] = fields if fields
-      data = nil
       id = nil
       id = user_id unless user_id == "all"
       begin
-        data = @sdk.all_scheduled_plans(req)
-      rescue LookerSDK::ClientError => e
+        @sdk.all_scheduled_plans(req).collect { |p| p.to_attrs }
+      rescue LookerSDK::NotFound => e
+        return []
+      rescue LookerSDK::Error => e
         say_error "Unable to get all_scheduled_plans(#{JSON.pretty_generate(req)})"
         say_error e
         raise
       end
-      data
     end
 
     def query_scheduled_plans_for_look(look_id,user_id,fields=nil)
@@ -49,9 +49,9 @@ module Gzr
       begin
         @sdk.scheduled_plans_for_look(look_id,req).collect { |p| p.to_attrs }
         return nil if data.respond_to?(:message) && data.message == 'Not found'
-      rescue LookerSDK::NotFound
-        return nil
-      rescue LookerSDK::ClientError => e
+      rescue LookerSDK::NotFound => e
+        return []
+      rescue LookerSDK::Error => e
         say_error "Unable to get scheduled_plans_for_look(#{look_id},#{JSON.pretty_generate(req)})"
         say_error e
         raise
@@ -65,10 +65,9 @@ module Gzr
       req[:fields] = fields if fields
       begin
         @sdk.scheduled_plans_for_dashboard(dashboard_id,req).collect { |p| p.to_attrs }
-        return nil if data.respond_to?(:message) && data.message == 'Not found'
       rescue LookerSDK::NotFound
-        return nil
-      rescue LookerSDK::ClientError => e
+        return []
+      rescue LookerSDK::Error => e
         say_error "Unable to get scheduled_plans_for_dashboard(#{dashboard_id},#{JSON.pretty_generate(req)})"
         say_error e
         raise
@@ -79,57 +78,66 @@ module Gzr
       req = {}
       req[:fields] = fields if fields
       begin
-        data = @sdk.scheduled_plan(plan_id,req)
-      rescue LookerSDK::ClientError => e
+        @sdk.scheduled_plan(plan_id,req).to_attrs
+      rescue LookerSDK::NotFound
+        return nil
+      rescue LookerSDK::Error => e
         say_error "Unable to get scheduled_plan(#{plan_id},#{JSON.pretty_generate(req)})"
         say_error e
         raise
       end
-      data
     end
 
     def delete_scheduled_plan(plan_id)
       begin
-        data = @sdk.delete_scheduled_plan(plan_id)
-      rescue LookerSDK::ClientError => e
+        @sdk.delete_scheduled_plan(plan_id)
+      rescue LookerSDK::NotFound
+        say_error "delete_scheduled_plan(#{plan_id}) not found"
+        say_error e
+        raise
+      rescue LookerSDK::Error => e
         say_error "Unable to delete scheduled_plan(#{plan_id})"
         say_error e
         raise
       end
-      data
     end
 
     def create_scheduled_plan(plan)
       begin
-        data = @sdk.create_scheduled_plan(plan)
+        @sdk.create_scheduled_plan(plan).to_attrs
       rescue LookerSDK::Error => e
         say_error "Error creating scheduled_plan(#{JSON.pretty_generate(plan)})"
         say_error e
         raise
       end
-      data
     end
 
     def update_scheduled_plan(plan_id,plan)
       begin
-        data = @sdk.update_scheduled_plan(plan_id,plan)
+        @sdk.update_scheduled_plan(plan_id,plan).to_attrs
+      rescue LookerSDK::NotFound
+        say_error "update_scheduled_plan(#{plan_id},#{JSON.pretty_generate(plan)}) not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error updating scheduled_plan(#{plan_id},#{JSON.pretty_generate(plan)})"
         say_error e
         raise
       end
-      data
     end
 
     def run_scheduled_plan(plan)
       begin
-        data = @sdk.scheduled_plan_run_once(plan)
+        @sdk.scheduled_plan_run_once(plan).to_attrs
+      rescue LookerSDK::NotFound
+        say_error "scheduled_plan_run_once(#{plan_id}) not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error executing scheduled_plan_run_once(#{JSON.pretty_generate(plan)})"
         say_error e
         raise
       end
-      data
     end
 
     def upsert_plans_for_look(look_id,user_id,source_plans)
@@ -162,9 +170,9 @@ module Gzr
     end
 
     def upsert_plan_for_obj(user_id, source_plan, existing_plans)
-      matches = existing_plans.select { |p| p.name == source_plan[:name] && user_id == p.user_id }
+      matches = existing_plans.select { |p| p[:name] == source_plan[:name] && user_id == p[:user_id] }
       if matches.length > 0 then
-        say_ok "Modifying existing plan #{matches.first.id} #{matches.first.name}"
+        say_ok "Modifying existing plan #{matches.first[:id]} #{matches.first[:name]}"
         plan = keys_to_keep('update_scheduled_plan').collect do |e|
           [e,nil]
         end.to_h
@@ -189,7 +197,7 @@ module Gzr
         plan[:run_once] = false if plan[:run_once].nil?
         plan[:include_links] = false if plan[:include_links].nil?
         yield plan
-        update_scheduled_plan(matches.first.id,plan)
+        update_scheduled_plan(matches.first[:id],plan)
       else
         plan = source_plan.select do |k,v|
           (keys_to_keep('create_scheduled_plan') - [:plan_id,:dashboard_id,:user_id,:dashboard_filters,:lookml_dashboard_id,:scheduled_plan_destination]).include? k

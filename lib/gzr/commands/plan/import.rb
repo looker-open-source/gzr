@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -58,8 +58,8 @@ module Gzr
               else
                 raise Gzr::CLI::Error, "Invalid type '#{obj_type}', valid types are look and dashboard"
               end
-              output.puts "Imported plan #{plan.id}" unless @options[:plain]
-              output.puts plan.id if @options[:plain]
+              output.puts "Imported plan #{plan[:id]}" unless @options[:plain]
+              output.puts plan[:id] if @options[:plain]
             end
           end
         end

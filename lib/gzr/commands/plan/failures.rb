@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -43,11 +43,16 @@ module Gzr
               :view=>"scheduled_plan",
               :fields=>[
                 "scheduled_plan.id",
+                "scheduled_plan.name",
+                "user.id",
                 "user.name",
                 "scheduled_job.status",
                 "scheduled_job.id",
                 "scheduled_job.created_time",
-                "scheduled_plan.next_run_time"
+                "scheduled_plan.next_run_time",
+                "scheduled_plan.look_id",
+                "scheduled_plan.dashboard_id",
+                "scheduled_plan.lookml_dashboard_id"
               ],
               :filters=>{
                 "scheduled_job_stage.stage": "execute",
@@ -62,7 +67,7 @@ module Gzr
             }
             data = run_inline_query(query)
             fields = query[:fields]
-            expressions = fields.collect { |f| "send(\"#{f}\".to_sym)" }
+            expressions = fields.collect { |f| "[:'#{f}']" }
             begin
               say_ok "No plans found in history"
               return nil
@@ -72,11 +77,11 @@ module Gzr
             table_hash[:header] = fields unless @options[:plain]
             prior_plan_id = nil
             table_hash[:rows] = data.collect do |row|
-              next if row.send(:"scheduled_plan.id") == prior_plan_id
-              prior_plan_id = row.send(:"scheduled_plan.id")
-              next if row.send(:"scheduled_job.status") == 'success'
+              next if row[:'scheduled_plan.id'] == prior_plan_id
+              prior_plan_id = row[:'scheduled_plan.id']
+              next if row[:'scheduled_job.status'] == 'success'
               expressions.collect do |e|
-                eval "row.#{e}"
+                eval "row#{e}"
               end
             end.compact
             table = TTY::Table.new(table_hash)
