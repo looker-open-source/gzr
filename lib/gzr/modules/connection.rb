@@ -100,9 +100,7 @@ module Gzr
       begin
         @sdk.connection(name).to_attrs
       rescue LookerSDK::NotFound => e
-        say_error "connection #{name} not found"
-        say_error e
-        raise
+        nil
       rescue LookerSDK::Error => e
         say_error "Error executing connection(#{name})"
         say_error e
