@@ -118,7 +118,7 @@ module Gzr
                   layout_obj = create_dashboard_layout(layout)
                   say_warning "Created dashboard layout #{JSON.pretty_generate layout_obj.map(&:to_a).to_json}" if @options[:debug]
                 end
-                layout_components = new_layout[:dashboard_layout_components].zip(layout_obj.dashboard_layout_components)
+                layout_components = new_layout[:dashboard_layout_components].zip(layout_obj[:dashboard_layout_components])
                 layout_components.each do |source,target|
                   component = keys_to_keep('update_dashboard_layout_component').collect do |e|
                     [e,nil]
@@ -134,9 +134,9 @@ module Gzr
                   update_dashboard_layout_component(target[:id],component)
                 end
               end
-              upsert_plans_for_dashboard(dashboard.id,@me[:id],data[:scheduled_plans]) if data[:scheduled_plans]
+              upsert_plans_for_dashboard(dashboard[:id],@me[:id],data[:scheduled_plans]) if data[:scheduled_plans]
               output.puts "Imported dashboard #{dashboard[:id]}" unless @options[:plain]
-              output.puts dashboard.id if @options[:plain]
+              output.puts dashboard[:id] if @options[:plain]
             end
           end
         end
@@ -230,7 +230,7 @@ module Gzr
           return [nil, upsert_look(@me[:id], create_fetch_query(dash_elem[:look][:query])[:id], @dest_folder_id, dash_elem[:look])[:id], nil] if dash_elem[:look]
 
           query = dash_elem[:result_maker]&.fetch(:query, false) || dash_elem[:query]
-          return [create_fetch_query(query).id, nil, nil] if query
+          return [create_fetch_query(query)[:id], nil, nil] if query
 
           merge_result = dash_elem[:result_maker]&.fetch(:merge_result, false) || dash_elem[:merge_result]
           return [nil,nil,create_merge_result(merge_result)[:id]] if merge_result
