@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -24,15 +24,17 @@
 module Gzr
   module Look
     def query_look(look_id)
-      data = nil
       begin
-        data = @sdk.look(look_id)
+        @sdk.look(look_id).to_attrs
+      rescue LookerSDK::NotFoud => e
+          say_error "look(#{look_id}) not found"
+          say_error e
+          raise
       rescue LookerSDK::Error => e
           say_error "Error querying look(#{look_id})"
           say_error e
           raise
       end
-      data
     end
 
     def search_looks_by_slug(slug, folder_id=nil)
@@ -40,9 +42,9 @@ module Gzr
       begin
         req = { :slug => slug }
         req[:folder_id] = folder_id if folder_id
-        data = @sdk.search_looks(req)
+        data = @sdk.search_looks(req).collect { |l| l.to_attrs }
         req[:deleted] = true
-        data = @sdk.search_looks(req) if data.empty?
+        data = @sdk.search_looks(req).collect { |l| l.to_attrs } if data.empty?
       rescue LookerSDK::Error => e
         say_error "Error search_looks_by_slug(#{JSON.pretty_generate(req)})"
         say_error e
@@ -56,9 +58,9 @@ module Gzr
       begin
         req = { :title => title }
         req[:folder_id] = folder_id if folder_id
-        data = @sdk.search_looks(req)
+        data = @sdk.search_looks(req).collect { |l| l.to_attrs }
         req[:deleted] = true
-        data = @sdk.search_looks(req) if data.empty?
+        data = @sdk.search_looks(req).collect { |l| l.to_attrs } if data.empty?
       rescue LookerSDK::Error => e
         say_error "Error search_looks_by_title(#{JSON.pretty_generate(req)})"
         say_error e
@@ -70,36 +72,36 @@ module Gzr
     def create_look(look)
       begin
         look[:public] = false unless look[:public]
-        data = @sdk.create_look(look)
+        @sdk.create_look(look).to_attrs
       rescue LookerSDK::Error => e
         say_error "Error creating look(#{JSON.pretty_generate(look)})"
         say_error e
         raise
       end
-      data
     end
 
     def update_look(id,look)
       begin
-        data = @sdk.update_look(id,look)
+        @sdk.update_look(id,look).to_attrs
+      rescue LookerSDK::NotFound => e
+        say_error "look(#{id}) not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error updating look(#{id},#{JSON.pretty_generate(look)})"
         say_error e
         raise
       end
-      data
     end
 
     def delete_look(look_id)
-      data = nil
       begin
-        data = @sdk.delete_look(look_id)
+        @sdk.delete_look(look_id)
       rescue LookerSDK::Error => e
         say_error "Error deleting look(#{look_id})"
         say_error e
         raise
       end
-      data
     end
 
     def upsert_look(user_id, query_id, folder_id, source, output: $stdout)
@@ -123,8 +125,8 @@ module Gzr
       same_slug = (slug_used&.fetch(:id,nil) == existing_look&.fetch(:id,nil))
 
       if slug_used && !same_slug then
-        say_warning "slug #{slug_used.slug} already used for look #{slug_used.title} in folder #{slug_used.folder_id}", output: output
-        say_warning("That look is in the 'Trash' but not fully deleted yet", output: output) if slug_used.deleted
+        say_warning "slug #{slug_used[:slug]} already used for look #{slug_used[:title]} in folder #{slug_used[:folder_id]}", output: output
+        say_warning("That look is in the 'Trash' but not fully deleted yet", output: output) if slug_used[:deleted]
         say_warning "look will be imported with new slug", output: output
       end
 
@@ -133,14 +135,14 @@ module Gzr
           raise Gzr::CLI::Error, "Look #{source[:title]} already exists in folder #{folder_id}\nDelete it before trying to upate another Look to have that title."
         end
         raise Gzr::CLI::Error, "Look #{existing_look[:title]} with slug #{existing_look[:slug]} already exists in folder #{folder_id}\nUse --force if you want to overwrite it" unless @options[:force]
-        say_ok "Modifying existing Look #{existing_look.id} #{existing_look.title} in folder #{folder_id}", output: output
+        say_ok "Modifying existing Look #{existing_look[:id]} #{existing_look[:title]} in folder #{folder_id}", output: output
         new_look = source.select do |k,v|
           (keys_to_keep('update_look') - [:space_id,:folder_id,:user_id,:query_id,:slug]).include? k
         end
         new_look[:slug] = source[:slug] if source[:slug] && !slug_used
         new_look[:deleted] = false if existing_look[:deleted]
         new_look[:query_id] = query_id
-        return update_look(existing_look.id,new_look)
+        return update_look(existing_look[:id],new_look)
       else
         new_look = source.select do |k,v|
           (keys_to_keep('create_look') - [:space_id,:folder_id,:user_id,:query_id,:slug]).include? k
@@ -191,14 +193,14 @@ module Gzr
     end
 
     def cat_look(look_id)
-      data = query_look(look_id).to_attrs
+      data = query_look(look_id)
       find_vis_config_reference(data) do |vis_config|
         find_color_palette_reference(vis_config) do |o,default_colors|
           rewrite_color_palette!(o,default_colors)
         end
       end
 
-      data[:scheduled_plans] = query_scheduled_plans_for_look(@look_id,"all").map { |e| e.to_attrs }  if @options[:plans]
+      data[:scheduled_plans] = query_scheduled_plans_for_look(@look_id,"all") if @options[:plans]
       data
     end
 

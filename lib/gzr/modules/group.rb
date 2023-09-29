@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -35,7 +35,7 @@ module Gzr
       loop do
         begin
           req[:page] = page
-          scratch_data = @sdk.all_groups(req)
+          scratch_data = @sdk.all_groups(req).collect { |e| e.to_attrs }
         rescue LookerSDK::ClientError => e
           say_error "Unable to get all_groups(#{JSON.pretty_generate(req)})"
           say_error e
@@ -52,9 +52,8 @@ module Gzr
       req = { }
       req[:fields] = fields if fields
 
-      data = Array.new
       begin
-        data = @sdk.all_group_groups(group_id,req)
+        @sdk.all_group_groups(group_id,req).collect { |e| e.to_attrs }
       rescue LookerSDK::NotFound => e
         return []
       rescue LookerSDK::ClientError => e
@@ -62,7 +61,6 @@ module Gzr
         say_error e
         raise
       end
-      data
     end
 
     def query_group_users(group_id,fields=nil,sorts=nil)
@@ -77,7 +75,7 @@ module Gzr
       loop do
         begin
           req[:page] = page
-          scratch_data = @sdk.all_group_users(group_id,req)
+          scratch_data = @sdk.all_group_users(group_id,req).collect { |e| e.to_attrs }
         rescue LookerSDK::ClientError => e
           say_error "Unable to get all_group_users(#{group_id},#{JSON.pretty_generate(req)})"
           say_error e
@@ -93,9 +91,9 @@ module Gzr
     def search_groups(name)
       req = {:name => name }
       begin
-        return @sdk.search_groups(req)
+        return @sdk.search_groups(req).collect { |e| e.to_attrs }
       rescue LookerSDK::NotFound => e
-        return nil
+        return []
       rescue LookerSDK::ClientError => e
         say_error "Unable to search_groups(#{JSON.pretty_generate(req)})"
         say_error e
@@ -107,7 +105,7 @@ module Gzr
       req = Hash.new
       req[:fields] = fields if fields
       begin
-        return @sdk.group(id,req)
+        return @sdk.group(id,req).to_attrs
       rescue LookerSDK::NotFound => e
         return nil
       rescue LookerSDK::ClientError => e
@@ -121,7 +119,7 @@ module Gzr
       req = Hash.new
       req[:value] = value
       begin
-        return @sdk.update_user_attribute_group_value(group_id,attr_id, req)
+        return @sdk.update_user_attribute_group_value(group_id,attr_id, req).to_attrs
       rescue LookerSDK::ClientError => e
         say_error "Unable to update_user_attribute_group_value(#{group_id},#{attr_id},#{JSON.pretty_generate(req)})"
         say_error e

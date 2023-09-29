@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -50,12 +50,12 @@ module Gzr
             table_hash = Hash.new
             fields = field_names(@options[:fields])
             table_hash[:header] = fields unless @options[:plain]
-            expressions = fields.collect { |fn| field_expression(fn) }
+            expressions = fields.collect { |fn| field_expression_hash(fn) }
             rows = []
             folders.each do |h|
-              if ( h.is_shared_root || h.is_users_root || h.is_embed_shared_root || h.is_embed_users_root) then
+              if ( h[:is_shared_root] || h[:is_users_root] || h[:is_embed_shared_root] || h[:is_embed_users_root] ) then
                 rows << expressions.collect do |e|
-                  eval "h.#{e}"
+                  eval "h#{e}"
                 end
               end
             end

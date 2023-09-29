@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -47,10 +47,10 @@ module Gzr
             table_hash = Hash.new
             fields = field_names(@options[:fields])
             table_hash[:header] = fields unless @options[:plain]
-            expressions = fields.collect { |fn| field_expression(fn) }
+            expressions = fields.collect { |fn| field_expression_hash(fn) }
             table_hash[:rows] = data.map do |row|
               expressions.collect do |e|
-                v = eval "row.#{e}"
+                v = eval "row#{e}"
                 next (v.join "\n") if v.kind_of? Array
                 v
               end

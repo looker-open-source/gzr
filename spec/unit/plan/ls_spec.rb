@@ -28,13 +28,11 @@ RSpec.describe Gzr::Commands::Plan::Ls do
         :id=>1000,
         :display_name=>"John Smith"
     }
-    mock_user = double(Sawyer::Resource, user_doc)
-    allow(mock_user).to receive(:to_attrs).and_return(user_doc)
     response_doc = {
       :id=>1,
       :name=>"foo",
       :title=>"foo",
-      :user=>mock_user,
+      :user=>user_doc,
       :look_id=>100,
       :dashboard_id=>nil,
       :lookml_dashboard_id=>nil

@@ -40,17 +40,20 @@ module Gzr
           say_warning(@options) if @options[:debug]
           with_session do
             data = query_me(@options[:fields])
+
             table_hash = Hash.new
             fields = field_names(@options[:fields])
             table_hash[:header] = fields unless @options[:plain]
-            expressions = fields.collect { |fn| field_expression(fn) }
+            expressions = fields.collect { |fn| field_expression_hash(fn) }
             table_hash[:rows] = [expressions.collect do |e|
-              eval "data.#{e}"
+              eval "data#{e}"
             end]
+
             table = TTY::Table.new(table_hash) if data
             alignments = fields.collect do |k|
               (k =~ /id$/) ? :right : :left
             end
+
             begin
               if @options[:csv] then
                 output.puts render_csv(table)
@@ -58,6 +61,7 @@ module Gzr
                 output.puts table.render(if @options[:plain] then :basic else :ascii end, alignments: alignments, width: @options[:width] || TTY::Screen.width)
               end
             end if table
+
           end
         end
       end

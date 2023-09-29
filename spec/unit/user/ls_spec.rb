@@ -29,7 +29,7 @@ RSpec.describe Gzr::Commands::User::Ls do
     mock_sdk = Object.new
     mock_sdk.define_singleton_method(:logout) { }
     mock_sdk.define_singleton_method(:all_users) do |body|
-      return body[:page] == 1 ? [mock_response] : []
+      return body[:offset].nil? ? [mock_response] : []
     end
 
     output = StringIO.new

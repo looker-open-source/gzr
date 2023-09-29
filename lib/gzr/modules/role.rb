@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -26,33 +26,33 @@ module Gzr
     def query_all_roles(fields=nil)
       req = Hash.new
       req[:fields] = fields if fields
-      data = Array.new
       begin
-        data = @sdk.all_roles(req)
+        @sdk.all_roles(req).collect { |r| r.to_attrs }
       rescue LookerSDK::NotFound => e
-        # do nothing
-      rescue LookerSDK::ClientError => e
+        []
+      rescue LookerSDK::Error => e
         say_error "Unable to get all_roles(#{JSON.pretty_generate(req)})"
         say_error e
         say_error e.errors if e.errors
         raise
       end
-      data
     end
+
     def query_role(role_id)
-      data = nil
       begin
-        data = @sdk.role(role_id)
+        @sdk.role(role_id).to_attrs
       rescue LookerSDK::NotFound => e
-        # do nothing
-      rescue LookerSDK::ClientError => e
+        say_error "role(#{role_id}) not found"
+        say_error e
+        raise
+      rescue LookerSDK::Error => e
         say_error "Unable to get role(#{role_id})"
         say_error e
         say_error e.errors if e.errors
         raise
       end
-      data
     end
+
     def trim_role(data)
       trimmed = data.select do |k,v|
         (keys_to_keep('create_role') + [:id]).include? k
@@ -65,87 +65,99 @@ module Gzr
       end
       trimmed
     end
+
     def delete_role(role_id)
-      data = nil
       begin
-        data = @sdk.delete_role(role_id)
+        @sdk.delete_role(role_id)
       rescue LookerSDK::NotFound => e
-        # do nothing
-      rescue LookerSDK::ClientError => e
+        say_error "role(#{role_id}) not found"
+        say_error e
+        raise
+      rescue LookerSDK::Error => e
         say_error "Unable to delete_role(#{role_id})"
         say_error e
         say_error e.errors if e.errors
         raise
       end
-      data
     end
+
     def query_role_groups(role_id,fields=nil)
       req = Hash.new
       req[:fields] = fields if fields
-      data = Array.new
       begin
-        data = @sdk.role_groups(role_id, req)
+        @sdk.role_groups(role_id, req).collect { |g| g.to_attrs }
       rescue LookerSDK::NotFound => e
-        # do nothing
-      rescue LookerSDK::ClientError => e
+        say_error "role_groups(#{role_id},#{JSON.pretty_generate(req)}) not found"
+        say_error e
+        raise
+      rescue LookerSDK::Error => e
         say_error "Unable to get role_groups(#{role_id},#{JSON.pretty_generate(req)})"
         say_error e
         say_error e.errors if e.errors
         raise
       end
-      data
     end
+
     def query_role_users(role_id,fields=nil,direct_association_only=true)
       req = Hash.new
       req[:fields] = fields if fields
       req[:direct_association_only] = direct_association_only
-      data = Array.new
       begin
-        data = @sdk.role_users(role_id, req)
+        @sdk.role_users(role_id, req).collect { |u| u.to_attrs }
       rescue LookerSDK::NotFound => e
-        # do nothing
-      rescue LookerSDK::ClientError => e
+        say_error "role_users(#{role_id},#{JSON.pretty_generate(req)}) not found"
+        say_error e
+        say_error e.errors if e.errors
+        raise
+      rescue LookerSDK::Error => e
         say_error "Unable to get role_users(#{role_id},#{JSON.pretty_generate(req)})"
         say_error e
         say_error e.errors if e.errors
         raise
       end
-      data
     end
+
     def set_role_groups(role_id,groups=[])
-      data = Array.new
       begin
-        data = @sdk.set_role_groups(role_id, groups)
-      rescue LookerSDK::ClientError => e
+        @sdk.set_role_groups(role_id, groups)
+      rescue LookerSDK::NotFound => e
+        say_error "set_role_groups(#{role_id},#{JSON.pretty_generate(groups)}) not found"
+        say_error e
+        say_error e.errors if e.errors
+        raise
+      rescue LookerSDK::Error => e
         say_error "Unable to call set_role_groups(#{role_id},#{JSON.pretty_generate(groups)})"
         say_error e
         say_error e.errors if e.errors
         raise
       end
-      data
     end
+
     def set_role_users(role_id,users=[])
-      data = Array.new
       begin
-        data = @sdk.set_role_users(role_id, users)
-      rescue LookerSDK::ClientError => e
+        @sdk.set_role_users(role_id, users)
+      rescue LookerSDK::NotFound => e
+        say_error "set_role_users(#{role_id},#{JSON.pretty_generate(users)}) not found"
+        say_error e
+        say_error e.errors if e.errors
+        raise
+      rescue LookerSDK::Error => e
         say_error "Unable to call set_role_users(#{role_id},#{JSON.pretty_generate(users)})"
         say_error e
         say_error e.errors if e.errors
         raise
       end
-      data
     end
+
     def create_role(name,pset,mset)
       req = { name: name, permission_set_id: pset, model_set_id: mset }
       begin
-        return @sdk.create_role(req)&.to_attrs
+        @sdk.create_role(req)&.to_attrs
       rescue LookerSDK::Error => e
         say_error "Unable to call create_role(#{JSON.pretty_generate(req)})"
         say_error e
         raise
       end
     end
-
   end
 end

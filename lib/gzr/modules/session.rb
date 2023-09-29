@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -317,7 +317,7 @@ module Gzr
       body = {}
       body[:workspace_id] = workspace_id
       begin
-        return @sdk.update_session(body)&.to_attrs
+        @sdk.update_session(body)&.to_attrs
       rescue LookerSDK::Error => e
         say_error "Unable to run update_session(#{JSON.pretty_generate(body)})"
         say_error e

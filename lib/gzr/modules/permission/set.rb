@@ -29,7 +29,7 @@ module Gzr
         req = {}
         req[:fields] = fields if fields
         begin
-          return @sdk.all_permission_sets(req)
+          @sdk.all_permission_sets(req).collect { |s| s.to_attrs }
         rescue LookerSDK::NotFound => e
           return nil
         rescue LookerSDK::Error => e
@@ -73,7 +73,7 @@ module Gzr
           req[:filter_or] = filter_or unless filter_or.nil?
           req[:limit] = 64
           loop do
-            page = @sdk.search_permission_sets(req)
+            page = @sdk.search_permission_sets(req).collect { |s| s.to_attrs }
             data+=page
             break unless page.length == req[:limit]
             req[:offset] = (req[:offset] || 0) + req[:limit]

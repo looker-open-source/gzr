@@ -26,7 +26,7 @@ module Gzr
     def get_alert(alert_id)
       data = nil
       begin
-        data = @sdk.get_alert(alert_id)
+        data = @sdk.get_alert(alert_id).to_attrs
       rescue LookerSDK::NotFound => e
         # do nothing
       rescue LookerSDK::Error => e
@@ -34,11 +34,11 @@ module Gzr
         say_error e
         raise
       end
-      if data[:owner_id]
+      if data and data[:owner_id]
         owner = get_user_by_id(data[:owner_id])
-        data[:owner] = owner.to_attrs.select do |k,v|
+        data[:owner] = owner.select do |k,v|
           [:email,:last_name,:first_name].include?(k) && !(v.nil? || v.empty?)
-        end
+        end if owner
       end
       data
     end
@@ -57,7 +57,7 @@ module Gzr
         req[:all_owners] = all_owners unless all_owners.nil?
         req[:limit] = 64
         loop do
-          page = @sdk.search_alerts(req)
+          page = @sdk.search_alerts(req).collect { |a| a.to_attrs }
           data+=page
           break unless page.length == req[:limit]
           req[:offset] = (req[:offset] || 0) + req[:limit]
@@ -75,6 +75,10 @@ module Gzr
     def follow_alert(alert_id)
       begin
         @sdk.follow_alert(alert_id)
+      rescue LookerSDK::NotFound => e
+        say_error "Alert #{alert_id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error following alert(#{alert_id})"
         say_error e
@@ -85,8 +89,12 @@ module Gzr
     def unfollow_alert(alert_id)
       begin
         @sdk.unfollow_alert(alert_id)
+      rescue LookerSDK::NotFound => e
+        say_error "Alert #{alert_id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
-        say_error "Error following alert(#{alert_id})"
+        say_error "Error unfollowing alert(#{alert_id})"
         say_error e
         raise
       end
@@ -99,20 +107,26 @@ module Gzr
       req[:disabled_reason] = disabled_reason unless disabled_reason.nil?
       req[:is_public] = is_public unless is_public.nil?
       req[:threshold] = threshold unless threshold.nil?
-      data = nil
       begin
-        data = @sdk.update_alert_field(alert_id, req)
+        @sdk.update_alert_field(alert_id, req).to_attrs
+      rescue LookerSDK::NotFound => e
+        say_error "Alert #{alert_id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error calling update_alert_field(#{alert_id},#{JSON.pretty_generate(req)})"
         say_error e
         raise
       end
-      data
     end
 
     def delete_alert(alert_id)
       begin
         @sdk.delete_alert(alert_id)
+      rescue LookerSDK::NotFound => e
+        say_error "Alert #{alert_id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error calling delete_alert(#{alert_id})"
         say_error e
@@ -126,7 +140,7 @@ module Gzr
       begin
         req[:limit] = 64
         loop do
-          page = @sdk.alert_notifications(req)
+          page = @sdk.alert_notifications(req).collect { |a| a.to_attrs }
           data+=page
           break unless page.length == req[:limit]
           req[:offset] = (req[:offset] || 0) + req[:limit]
@@ -142,28 +156,27 @@ module Gzr
     end
 
     def read_alert_notification(notification_id)
-      data = nil
       begin
-        data = @sdk.read_alert_notification(notification_id)
+        @sdk.read_alert_notification(notification_id).to_attrs
+      rescue LookerSDK::NotFound => e
+        say_error "Alert notification #{notification_id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error calling read_alert_notification(#{notification_id})"
         say_error e
         raise
       end
-      data.to_attrs
     end
 
     def create_alert(req)
-      data = nil
       begin
-        data = @sdk.create_alert(req)
+        @sdk.create_alert(req).to_attrs
       rescue LookerSDK::Error => e
         say_error "Error calling create_alert(#{JSON.pretty_generate(req)})"
         say_error e
         raise
       end
-      data.to_attrs
     end
-
   end
 end

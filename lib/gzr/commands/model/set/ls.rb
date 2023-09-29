@@ -48,10 +48,10 @@ module Gzr
               table_hash = Hash.new
               fields = field_names(@options[:fields])
               table_hash[:header] = fields unless @options[:plain]
-              expressions = fields.collect { |fn| field_expression(fn) }
+              expressions = fields.collect { |fn| field_expression_hash(fn) }
               table_hash[:rows] = data.map do |row|
                 expressions.collect do |e|
-                  eval "row.#{e}"
+                  eval "row#{e}"
                 end
               end
               table = TTY::Table.new(table_hash)

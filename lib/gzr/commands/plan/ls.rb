@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -55,7 +55,7 @@ module Gzr
                   "scheduled_plan.lookml_dashboard_id"
                 ],
                 :filters=>{
-                  "scheduled_plan.enabled"=>false
+                  "scheduled_plan.enabled"=>"false"
                 },
                 :sorts=>[
                   "scheduled_plan.id asc 0"
@@ -64,11 +64,11 @@ module Gzr
               }
               data = run_inline_query(query)
               fields = query[:fields]
-              expressions = fields.collect { |f| "send(\"#{f}\".to_sym)" }
+              expressions = fields.collect { |f| "[:'#{f}']" }
             else
               data = query_all_scheduled_plans("all",@options[:fields])
               fields = field_names(@options[:fields])
-              expressions = fields.collect { |fn| field_expression(fn) }
+              expressions = fields.collect { |fn| field_expression_hash(fn) }
             end
             begin
               say_ok "No plans found"
@@ -79,7 +79,7 @@ module Gzr
             table_hash[:header] = fields unless @options[:plain]
             table_hash[:rows] = data.map do |row|
               expressions.collect do |e|
-                eval "row.#{e}"
+                eval "row#{e}"
               end
             end
             table = TTY::Table.new(table_hash)

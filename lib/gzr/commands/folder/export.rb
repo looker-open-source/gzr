@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -86,7 +86,7 @@ module Gzr
         end
 
         def process_folder(folder_id, base, rel_path = nil)
-          folder = query_folder(folder_id).to_attrs
+          folder = query_folder(folder_id)
           name = folder[:name]
           name = "nil (#{folder_id})" if name.nil?
           path = Pathname.new(name.gsub('/',"\u{2215}"))

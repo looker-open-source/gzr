@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -38,7 +38,7 @@ module Gzr
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
           with_session do
-            plan = query_scheduled_plan(@plan_id)&.to_attrs
+            plan = query_scheduled_plan(@plan_id)
             # The api call scheduled_plan_run_once is an odd duck. It accepts
             # the output of any of the calls to retrieve a scheduled plan
             # even though many of the attributes passed are marked read-only.

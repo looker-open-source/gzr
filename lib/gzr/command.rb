@@ -53,15 +53,15 @@ module Gzr
     end
 
     def get_user_by_id(user_id, req=nil)
-      user = nil
       begin
-        user = @sdk.user(user_id, req)
+        @sdk.user(user_id, req).to_attrs
+      rescue LookerSDK::NotFound => e
+        nil
       rescue LookerSDK::Error => e
         say_error "Error querying get_user_by_id(#{user_id})"
         say_error e
         raise
       end
-      user
     end
 
     def get_auth()
@@ -129,13 +129,12 @@ module Gzr
 
     def run_inline_query(query)
       begin
-        data = @sdk.run_inline_query("json",query)
+        @sdk.run_inline_query("json",query).collect { |r| r.to_attrs }
       rescue LookerSDK::Error => e
         say_error "Error running inline_query(#{JSON.pretty_generate(query)})"
         say_error e
         raise
       end
-      data
     end
 
     def all_color_collections()
@@ -408,6 +407,11 @@ module Gzr
     def field_expression(name)
       parts = name.split(/\./)
       parts.join('&.')
+    end
+
+    def field_expression_hash(name)
+      parts = name.split(/\./)
+      parts.collect { |p| "&.fetch(:#{p},nil)" }.join('')
     end
 
 

@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -71,14 +71,13 @@ module Gzr
             f = @options[:fields]
 
             data = folder_ids.map do |folder_id|
-              query_folder(folder_id, f).to_attrs
+              query_folder(folder_id, f)
             end.compact
             folder_ids.each do |folder_id|
-              query_folder_children(folder_id, 'id,name,parent_id').map {|child| child.to_attrs}.each do |child|
+              query_folder_children(folder_id, 'id,name,parent_id').each do |child|
                 data.push child
               end
             end
-
 
             begin
               puts "No data returned for folders #{folder_ids.inspect}"

@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -40,7 +40,7 @@ module Gzr
           say_warning(@options) if @options[:debug]
 
           with_session do
-            groups = query_role_groups(@role_id, 'id').collect { |g| g.id }
+            groups = query_role_groups(@role_id, 'id').collect { |g| g[:id] }
             groups += @groups
             set_role_groups(@role_id,groups.uniq)
           end

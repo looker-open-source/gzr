@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -40,7 +40,7 @@ module Gzr
         def execute(input: $stdin, output: $stdout)
           say_warning("options: #{@options.inspect}") if @options[:debug]
           with_session do
-            data = query_role(@role_id)&.to_attrs
+            data = query_role(@role_id)
             data = trim_role(data) if @options[:trim]
             write_file(@options[:dir] ? "Role_#{data[:id]}_#{data[:name]}.json" : nil, @options[:dir], nil, output) do |f|
               f.puts JSON.pretty_generate(data)

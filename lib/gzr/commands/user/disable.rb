@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -39,6 +39,7 @@ module Gzr
           say_warning(@options) if @options[:debug]
           with_session do
             data = update_user(@user_id, { :is_disabled=>true })
+            say_error "user #{@user_id} not found" unless data
           end
         end
       end

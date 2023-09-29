@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -24,89 +24,91 @@
 module Gzr
   module Attribute
     def query_user_attribute(attr_id,fields=nil)
-      data = nil
       begin
         req = {}
         req[:fields] = fields if fields
-        data = @sdk.user_attribute(attr_id,req)
+        @sdk.user_attribute(attr_id,req).to_attrs
       rescue LookerSDK::NotFound => e
-        # do nothing
+        say_error "User_attribute #{attr_id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error querying user_attribute(#{attr_id},#{JSON.pretty_generate(req)})"
         say_error e
         raise
       end
-      data
     end
 
     def query_all_user_attributes(fields=nil, sorts=nil)
-      data = nil
       begin
         req = {}
         req[:fields] = fields if fields
         req[:sorts] = sorts if sorts
-        data = @sdk.all_user_attributes(req)
+        @sdk.all_user_attributes(req).collect { |a| a.to_attrs }
+      rescue LookerSDK::NotFound => e
+        []
       rescue LookerSDK::Error => e
         say_error "Error querying all_user_attributes(#{JSON.pretty_generate(req)})"
         say_error e
         raise
       end
-      data
     end
 
     def get_attribute_by_name(name, fields = nil)
-      data = query_all_user_attributes(fields).select {|a| a.name == name}
+      data = query_all_user_attributes(fields).select {|a| a[:name] == name}
       return nil if data.empty?
       data.first
     end
 
     def get_attribute_by_label(label, fields = nil)
-      data = query_all_user_attributes(fields).select {|a| a.label == label}
+      data = query_all_user_attributes(fields).select {|a| a[:label] == label}
       return nil if data.empty?
       data.first
     end
 
     def create_attribute(attr)
-      data = nil
       begin
-        data = @sdk.create_user_attribute(attr)
+        @sdk.create_user_attribute(attr).to_attrs
       rescue LookerSDK::Error => e
         say_error "Error creating user_attribute(#{JSON.pretty_generate(attr)})"
         say_error e
         raise
       end
-      data
     end
 
     def update_attribute(id,attr)
-      data = nil
       begin
-        data = @sdk.update_user_attribute(id,attr)
+        @sdk.update_user_attribute(id,attr).to_attrs
+      rescue LookerSDK::NotFound => e
+        say_error "user_attribute #{id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error updating user_attribute(#{id},#{JSON.pretty_generate(attr)})"
         say_error e
         raise
       end
-      data
     end
 
     def delete_user_attribute(id)
-      data = nil
       begin
-        data = @sdk.delete_user_attribute(id)
+        @sdk.delete_user_attribute(id)
+      rescue LookerSDK::NotFound => e
+        say_error "user_attribute #{id} not found"
+        say_error e
+        raise
       rescue LookerSDK::Error => e
         say_error "Error deleting user_attribute(#{id})"
         say_error e
         raise
       end
-      data
     end
 
     def query_all_user_attribute_group_values(attr_id, fields=nil)
       begin
         req = {}
         req[:fields] = fields if fields
-        return @sdk.all_user_attribute_group_values(attr_id,req)
+        return @sdk.all_user_attribute_group_values(attr_id,req).collect { |v| v.to_attrs }
       rescue LookerSDK::NotFound => e
         return nil
       rescue LookerSDK::Error => e
@@ -117,7 +119,7 @@ module Gzr
     end
 
     def query_user_attribute_group_value(group_id, attr_id)
-      data = query_all_user_attribute_group_values(attr_id)&.select {|a| a.group_id == group_id}
+      data = query_all_user_attribute_group_values(attr_id)&.select {|a| a[:group_id] == group_id}
       return nil if data.nil? || data.empty?
       data.first
     end
@@ -141,7 +143,7 @@ module Gzr
           keys_to_keep('update_user_attribute').include?(k) && !(name_used[k] == v)
         end
 
-        return update_attribute(existing.id,upd_attr)
+        return update_attribute(existing[:id],upd_attr)
       else
         new_attr = source.select do |k,v|
           (keys_to_keep('create_user_attribute') - [:hidden_value_domain_whitelist]).include? k

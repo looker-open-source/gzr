@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -67,9 +67,9 @@ module Gzr
             end
             raise(Gzr::CLI::Error, "Attribute #{@attr} does not exist") unless attr
 
-            data = update_user_attribute_group_value(group.id,attr.id, @value)
-            say_warning("Attribute #{attr.name} does not have a value set for group #{group.name}", output: output) unless data
-            output.puts "Group attribute #{data.id} set to #{data.value}"
+            data = update_user_attribute_group_value(group[:id],attr[:id], @value)
+            say_warning("Attribute #{attr[:name]} does not have a value set for group #{group[:name]}", output: output) unless data
+            output.puts "Group attribute #{data[:id]} set to #{data[:value]}"
           end
         end
       end

@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -69,14 +69,14 @@ module Gzr
 
             folder_ids.each do |folder_id|
               s = query_folder(folder_id, "id,name,parent_id,looks(id,title),dashboards(id,title)")
-              folder_name = s.name
-              folder_name = "nil (#{s.id})" unless folder_name
+              folder_name = s[:name]
+              folder_name = "nil (#{s[:id]})" unless folder_name
               folder_name = "\"#{folder_name}\"" if ((folder_name != folder_name.strip) || (folder_name.length == 0))
               folder_name += " (#{folder_id})" unless folder_ids.length == 1
               tree_data[folder_name] =
-                [ recurse_folders(s.id) ] +
-                s.looks.map { |l| "(l) #{l.title}" } +
-                s.dashboards.map { |d| "(d) #{d.title}" }
+                [ recurse_folders(s[:id]) ] +
+                s[:looks].map { |l| "(l) #{l[:title]}" } +
+                s[:dashboards].map { |d| "(d) #{d[:title]}" }
             end
             tree = TTY::Tree.new(tree_data)
             output.puts tree.render
@@ -87,13 +87,13 @@ module Gzr
           data = query_folder_children(folder_id, "id,name,parent_id,looks(id,title),dashboards(id,title)")
           tree_branch = Hash.new
           data.each do |s|
-            folder_name = s.name
-            folder_name = "nil (#{s.id})" unless folder_name
+            folder_name = s[:name]
+            folder_name = "nil (#{s[:id]})" unless folder_name
             folder_name = "\"#{folder_name}\"" if ((folder_name != folder_name.strip) || (folder_name.length == 0))
             tree_branch[folder_name] =
-              [ recurse_folders(s.id) ] +
-              s.looks.map { |l| "(l) #{l.title}" } +
-              s.dashboards.map { |d| "(d) #{d.title}" }
+              [ recurse_folders(s[:id]) ] +
+              s[:looks].map { |l| "(l) #{l[:title]}" } +
+              s[:dashboards].map { |d| "(d) #{d[:title]}" }
           end
           tree_branch
         end

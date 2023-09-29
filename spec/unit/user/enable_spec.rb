@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -26,7 +26,14 @@ RSpec.describe Gzr::Commands::User::Enable do
     mock_sdk = Object.new
     mock_sdk.define_singleton_method(:logout) { }
     mock_sdk.define_singleton_method(:update_user) do |user_id,body|
-      return
+      o = Object.new
+      o.define_singleton_method(:to_attrs) do
+        return {
+          id: user_id,
+          is_disabled: body[:is_disabled]
+        }
+      end
+      return o
     end
 
     output = StringIO.new

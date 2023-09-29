@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -37,9 +37,19 @@ module Gzr
 
         def execute(input: $stdin, output: $stdout)
           say_warning(@options) if @options[:debug]
+          credentials = [
+            'credentials_email',
+            'credentials_embed',
+            'credentials_google',
+            'credentials_ldap',
+            'credentials_looker_openid',
+            'credentials_oidc',
+            'credentials_saml',
+            'credentials_totp'
+          ]
           with_session do
             f = @options[:fields]
-            f += ',credentials_email,credentials_totp,credentials_google,credentials_saml,credentials_oidc' if @options[:"last-login"]
+            f = f + ',' + credentials.join(',') if @options[:"last-login"]
             data = query_all_users(f, "id")
             begin
               say_ok "No users found"
@@ -50,17 +60,18 @@ module Gzr
             fields = field_names(@options[:fields])
             fields.unshift 'last_login' if @options[:"last-login"]
             table_hash[:header] = fields unless @options[:plain]
-            expressions = fields.collect { |fn| field_expression(fn) }
+            expressions = fields.collect { |fn| field_expression_hash(fn) }
             table_hash[:rows] = data.map do |row|
               expressions.collect do |e|
-                next(eval "row.#{e}") unless (e == 'last_login')
-                [
-                  row.credentials_email()&.logged_in_at(),
-                  (row.credentials_totp()&.logged_in_at()),
-                  (row.credentials_google()&.logged_in_at()),
-                 (row.credentials_saml()&.logged_in_at()),
-                  (row.credentials_oidc()&.logged_in_at())
-                ].compact.max
+                next(eval "row#{e}") unless (e == '&.fetch(:last_login,nil)')
+                credentials.collect do |c|
+                  obj = row.fetch(c.to_sym)
+                  if obj.kind_of?(Array)
+                    obj.collect { |e| e.fetch(:logged_in_at,nil)&.to_s }
+                  else
+                    obj&.fetch(:logged_in_at,nil)&.to_s
+                  end
+                end.flatten.compact.max
               end
             end
             table = TTY::Table.new(table_hash)

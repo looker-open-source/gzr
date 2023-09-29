@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Google, Inc.
+# Copyright (c) 2023 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -61,7 +61,7 @@ $ gzr session logout --token_file --host looker.example.com
 
             if @options[:all]
               say_warning "querying all_git_branches(#{@project_id})" if @options[:debug]
-              data += all_git_branches(@project_id).select{ |e| e.name != data[0].name }
+              data += all_git_branches(@project_id).select{ |e| e[:name] != data[0][:name] }
             end
             begin
               say_ok "No branches found"
@@ -71,10 +71,10 @@ $ gzr session logout --token_file --host looker.example.com
             table_hash = Hash.new
             fields = field_names(@options[:fields])
             table_hash[:header] = fields unless @options[:plain]
-            expressions = fields.collect { |fn| field_expression(fn) }
+            expressions = fields.collect { |fn| field_expression_hash(fn) }
             table_hash[:rows] = data.map do |row|
               expressions.collect do |e|
-                eval "row.#{e}"
+                eval "row#{e}"
               end
             end
             table = TTY::Table.new(table_hash)
