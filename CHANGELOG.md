@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.11](https://github.com/looker-open-source/gzr/compare/v0.3.10...v0.3.11) (2023-09-29)
+
+
+### Features
+
+* Tech debt removal for better testing ([#223](https://github.com/looker-open-source/gzr/issues/223)) ([e3a7e88](https://github.com/looker-open-source/gzr/commit/e3a7e889fe020a4a1a5f496b634b11cf96c3028f))
+
 ## [0.3.10](https://github.com/looker-open-source/gzr/compare/v0.3.9...v0.3.10) (2023-06-28)
 
 
