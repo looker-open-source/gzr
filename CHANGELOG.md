@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.12](https://github.com/looker-open-source/gzr/compare/v0.3.11...v0.3.12) (2023-10-04)
+
+
+### Bug Fixes
+
+* called row element with wrong method ([e1b7bf7](https://github.com/looker-open-source/gzr/commit/e1b7bf7e0f0873dd4655ae8cd01d25d2ca978db2))
+
 ## [0.3.11](https://github.com/looker-open-source/gzr/compare/v0.3.10...v0.3.11) (2023-09-29)
 
 
