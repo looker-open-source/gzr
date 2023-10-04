@@ -30,7 +30,7 @@ module Gzr
       data = nil
       begin
         data = @sdk.dashboard(dashboard_id).to_attrs
-        data[:dashboard_filters]&.sort! { |a,b| a.row <=> b.row }
+        data[:dashboard_filters]&.sort! { |a,b| a[:row] <=> b[:row] }
         data[:dashboard_layouts]&.sort_by! { |v| (v[:active] ? 0 : 1) }
       rescue LookerSDK::Error => e
         say_error "dashboard #{dashboard_id} not found"
@@ -95,7 +95,7 @@ module Gzr
       begin
         data = @sdk.create_dashboard(dash).to_attrs
         say_error data.inspect if data.respond_to?(:message)
-        data[:dashboard_filters]&.sort! { |a,b| a.row <=> b.row }
+        data[:dashboard_filters]&.sort! { |a,b| a[:row] <=> b[:row] }
         data[:dashboard_layouts]&.sort_by! { |v| (v[:active] ? 0 : 1) }
       rescue LookerSDK::Error => e
         say_error "Error creating dashboard(#{JSON.pretty_generate(dash)})"
@@ -109,7 +109,7 @@ module Gzr
       data = nil
       begin
         data = @sdk.update_dashboard(dash_id,dash).to_attrs
-        data[:dashboard_filters]&.sort! { |a,b| a.row <=> b.row }
+        data[:dashboard_filters]&.sort! { |a,b| a[:row] <=> b[:row] }
       rescue LookerSDK::NotFound => e
         say_error "dashboard #{dash_id} not found"
         say_error e
