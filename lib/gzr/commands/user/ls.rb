@@ -60,19 +60,20 @@ module Gzr
             fields = field_names(@options[:fields])
             fields.unshift 'last_login' if @options[:"last-login"]
             table_hash[:header] = fields unless @options[:plain]
-            expressions = fields.collect { |fn| field_expression_hash(fn) }
             table_hash[:rows] = data.map do |row|
-              expressions.collect do |e|
-                next(eval "row#{e}") unless (e == '&.fetch(:last_login,nil)')
-                credentials.collect do |c|
+              new_row = field_expressions_eval(fields,row)
+              if @options[:"last-login"]
+                new_row.shift
+                new_row.unshift (credentials.map do |c|
                   obj = row.fetch(c.to_sym)
                   if obj.kind_of?(Array)
                     obj.collect { |e| e.fetch(:logged_in_at,nil)&.to_s }
                   else
                     obj&.fetch(:logged_in_at,nil)&.to_s
                   end
-                end.flatten.compact.max
+                end.flatten.compact.max)
               end
+              new_row
             end
             table = TTY::Table.new(table_hash)
             alignments = fields.collect do |k|
