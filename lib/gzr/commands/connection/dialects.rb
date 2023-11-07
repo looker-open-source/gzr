@@ -47,11 +47,8 @@ module Gzr
             table_hash = Hash.new
             fields = field_names(@options[:fields])
             table_hash[:header] = data[0].keys unless @options[:plain]
-            expressions = fields.collect { |fn| field_expression_hash(fn) }
             table_hash[:rows] = data.map do |row|
-              expressions.collect do |e|
-                eval "row#{e}"
-              end
+              field_expressions_eval(fields,row)
             end
             table = TTY::Table.new(table_hash)
             alignments = fields.collect do |k|
