@@ -416,6 +416,9 @@ module Gzr
             current = nil
           end
         end
+        if current.kind_of? Array
+          current = current.join("\n")
+        end
         current
       end
     end
