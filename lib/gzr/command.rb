@@ -400,13 +400,24 @@ module Gzr
     end
 
     ##
-    # This method will accept a field name in a format like 'c.e.g'
-    # and convert it into 'c&.e&.g', which can be evaluated to get
-    # the value of g, or nil if any intermediate value is nil.
+    # This method will accept an array of field name expressions in a format like 'c.e.g'
+    # and convert each into the value of g, or nil if any intermediate value is nil.
 
-    def field_expression(name)
-      parts = name.split(/\./)
-      parts.join('&.')
+    def field_expressions_eval(expressions, data)
+      expressions.map do |exp|
+        nesting = exp.split('.')
+        current = data
+        while (nesting.length > 0) do
+          field = nesting.shift
+          if (current.kind_of?(Hash))
+            value = current.fetch(field.to_sym,nil)
+            current = value
+          else
+            current = nil
+          end
+        end
+        current
+      end
     end
 
     def field_expression_hash(name)
