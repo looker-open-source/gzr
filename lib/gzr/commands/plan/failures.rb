@@ -67,7 +67,6 @@ module Gzr
             }
             data = run_inline_query(query)
             fields = query[:fields]
-            expressions = fields.collect { |f| "[:'#{f}']" }
             begin
               say_ok "No plans found in history"
               return nil
@@ -80,8 +79,8 @@ module Gzr
               next if row[:'scheduled_plan.id'] == prior_plan_id
               prior_plan_id = row[:'scheduled_plan.id']
               next if row[:'scheduled_job.status'] == 'success'
-              expressions.collect do |e|
-                eval "row#{e}"
+              fields.collect do |f|
+                row.fetch(f.to_sym, nil)
               end
             end.compact
             table = TTY::Table.new(table_hash)
