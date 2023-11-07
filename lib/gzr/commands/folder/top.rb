@@ -50,16 +50,10 @@ module Gzr
             table_hash = Hash.new
             fields = field_names(@options[:fields])
             table_hash[:header] = fields unless @options[:plain]
-            expressions = fields.collect { |fn| field_expression_hash(fn) }
-            rows = []
-            folders.each do |h|
-              if ( h[:is_shared_root] || h[:is_users_root] || h[:is_embed_shared_root] || h[:is_embed_users_root] ) then
-                rows << expressions.collect do |e|
-                  eval "h#{e}"
-                end
-              end
+            data = folders.select { |h| ( h[:is_shared_root] || h[:is_users_root] || h[:is_embed_shared_root] || h[:is_embed_users_root] )}
+            table_hash[:rows] = data.map  do |row|
+              field_expressions_eval(fields,row)
             end
-            table_hash[:rows] = rows
             table = TTY::Table.new(table_hash)
             begin
               if @options[:csv] then
