@@ -64,11 +64,9 @@ module Gzr
               }
               data = run_inline_query(query)
               fields = query[:fields]
-              expressions = fields.collect { |f| "[:'#{f}']" }
             else
               data = query_all_scheduled_plans("all",@options[:fields])
               fields = field_names(@options[:fields])
-              expressions = fields.collect { |fn| field_expression_hash(fn) }
             end
             begin
               say_ok "No plans found"
@@ -78,8 +76,12 @@ module Gzr
             table_hash = Hash.new
             table_hash[:header] = fields unless @options[:plain]
             table_hash[:rows] = data.map do |row|
-              expressions.collect do |e|
-                eval "row#{e}"
+              if @options[:disabled] then
+                fields.collect do |f|
+                  row.fetch(f.to_sym, nil)
+                end
+              else
+                field_expressions_eval(fields,row)
               end
             end
             table = TTY::Table.new(table_hash)
