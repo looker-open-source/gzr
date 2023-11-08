@@ -48,11 +48,8 @@ module Gzr
               table_hash = Hash.new
               fields = field_names(@options[:fields])
               table_hash[:header] = fields unless @options[:plain]
-              expressions = fields.collect { |fn| field_expression_hash(fn) }
               table_hash[:rows] = data.map do |row|
-                expressions.collect do |e|
-                  eval "row#{e}"
-                end
+                field_expressions_eval(fields,row)
               end
               table = TTY::Table.new(table_hash)
               alignments = fields.collect do |k|
@@ -62,7 +59,7 @@ module Gzr
                 if @options[:csv] then
                   output.puts render_csv(table)
                 else
-                  output.puts table.render(if @options[:plain] then :basic else :ascii end, alignments: alignments, width: @options[:width] || TTY::Screen.width)
+                  output.puts table.render(if @options[:plain] then :basic else :ascii end, multiline: true, alignments: alignments, width: @options[:width] || TTY::Screen.width)
                 end
               end if table
             end

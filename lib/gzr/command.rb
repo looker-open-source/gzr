@@ -400,78 +400,27 @@ module Gzr
     end
 
     ##
-    # This method will accept a field name in a format like 'c.e.g'
-    # and convert it into 'c&.e&.g', which can be evaluated to get
-    # the value of g, or nil if any intermediate value is nil.
+    # This method will accept an array of field name expressions in a format like 'c.e.g'
+    # and convert each into the value of g, or nil if any intermediate value is nil.
 
-    def field_expression(name)
-      parts = name.split(/\./)
-      parts.join('&.')
-    end
-
-    def field_expression_hash(name)
-      parts = name.split(/\./)
-      parts.collect { |p| "&.fetch(:#{p},nil)" }.join('')
-    end
-
-
-    # This version of field names yields an expression that can be evaluated against a hash structure
-    # like this one...
-    #
-    # data&.fetch(:a,nil)
-    # val1
-    # data&.fetch(:b,nil)
-    # val2
-    # data&.fetch(:c,nil)&.fetch(:d,nil)
-    # val3
-    # data&.fetch(:c,nil)&.fetch(:e,nil)&.fetch(:f,nil)
-    # val4
-    # data&.fetch(:c,nil)&.fetch(:e,nil)&.fetch(:g,nil)
-    # val5
-    # data&.fetch(:h,nil)
-    # val6
-    #
-    # data =
-    # {
-    #   a: "val",
-    #   b: "val",
-    #   c: {
-    #     d: "val",
-    #     e: {
-    #       f: "val",
-    #       g: "val"
-    #     }
-    #   },
-    #   h: "val"
-    # }
-    #
-    # field_names_hash(fields).each do |field|
-    #   puts "data#{field}"
-    #   puts eval "data#{field}"
-    # end
-
-    def field_names_hash(opt_fields)
-      fields = []
-      token_stack = []
-      last_token = false
-      tokens = opt_fields.split /(\(|,|\))/
-      tokens << nil
-      tokens.each do |t|
-        if t == '(' then
-          token_stack.push(last_token)
-        elsif t.nil? || t == ',' then
-          fields << "&.fetch(:#{(token_stack + [last_token]).join(',nil)&.fetch(:')},nil)" if last_token
-        elsif t.empty? then
-          next
-        elsif t == ')' then
-          fields << "&.fetch(:#{(token_stack + [last_token]).join(',nil)&.fetch(:')},nil)" if last_token
-          token_stack.pop
-          last_token = false
-        else
-          last_token = t
+    def field_expressions_eval(expressions, data)
+      expressions.map do |exp|
+        nesting = exp.split('.')
+        current = data
+        while (nesting.length > 0) do
+          field = nesting.shift
+          if (current.kind_of?(Hash))
+            value = current.fetch(field.to_sym,nil)
+            current = value
+          else
+            current = nil
+          end
         end
+        if current.kind_of? Array
+          current = current.join("\n")
+        end
+        current
       end
-      fields
     end
 
     ##
