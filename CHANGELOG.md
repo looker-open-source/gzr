@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.3.13](https://github.com/looker-open-source/gzr/compare/v0.3.12...v0.3.13) (2024-02-20)
+
+
+### Bug Fixes
+
+* clean up eval code ([b478a45](https://github.com/looker-open-source/gzr/commit/b478a45327ddf1e48441e780c54ad280822d736c))
+* remove eval from lib/gzr/commands/alert/ls.rb ([5a3e53a](https://github.com/looker-open-source/gzr/commit/5a3e53a528b9f05ff86716980f435c0225ecb6b5))
+* remove eval from lib/gzr/commands/alert/notifications.rb ([1a06c3c](https://github.com/looker-open-source/gzr/commit/1a06c3ca9541e049f93ae9bb5eccb31d639437fa))
+* remove eval from lib/gzr/commands/attribute/ls.rb ([5bc8051](https://github.com/looker-open-source/gzr/commit/5bc80514d88bfb344d90f1a736521354774c63f2))
+* remove eval from lib/gzr/commands/connection/dialects.rb ([1a45294](https://github.com/looker-open-source/gzr/commit/1a45294a4e97f714c7d523d8bf6e8a01c5341380))
+* remove eval from lib/gzr/commands/connection/ls.rb ([87e36f8](https://github.com/looker-open-source/gzr/commit/87e36f8223f9585938b9c33d06b18055f2f78de2))
+* remove eval from lib/gzr/commands/connection/test.rb ([70f1e27](https://github.com/looker-open-source/gzr/commit/70f1e274cad6fa2506d07afb24f54ca6474e89de))
+* remove eval from lib/gzr/commands/folder/top.rb ([42740d2](https://github.com/looker-open-source/gzr/commit/42740d23a4771ffb98e732322882104960dc5949))
+* remove eval from lib/gzr/commands/group/ls.rb ([21e0169](https://github.com/looker-open-source/gzr/commit/21e016960f6c3e30885c830817a84c351c0e77c4))
+* remove eval from lib/gzr/commands/group/member_groups.rb ([e4b20b3](https://github.com/looker-open-source/gzr/commit/e4b20b37a8935efd21a654ed88653f96ba87c446))
+* remove eval from lib/gzr/commands/group/member_users.rb ([956ac4e](https://github.com/looker-open-source/gzr/commit/956ac4eb967266f9829a80f4f21d6b0cc9442577))
+* remove eval from lib/gzr/commands/model/ls.rb ([8d23a68](https://github.com/looker-open-source/gzr/commit/8d23a687cc23fe4827ab6597054f6420a954513d))
+* remove eval from lib/gzr/commands/model/set/ls.rb ([596f60a](https://github.com/looker-open-source/gzr/commit/596f60aaac0570874771aee5e12cdcb746a0fd8b))
+* remove eval from lib/gzr/commands/permission/ls.rb ([b79897b](https://github.com/looker-open-source/gzr/commit/b79897b1915a9fb7dd265b27ba7c507af07dc620))
+* remove eval from lib/gzr/commands/permission/set/ls.rb ([f47916d](https://github.com/looker-open-source/gzr/commit/f47916d396d8c01484d7d24f183b342736282f7f))
+* remove eval from lib/gzr/commands/plan/failures.rb ([b912249](https://github.com/looker-open-source/gzr/commit/b9122494ff2f4dd2d9d5294df6f0900d5fd60983))
+* remove eval from lib/gzr/commands/plan/ls.rb ([84e74f4](https://github.com/looker-open-source/gzr/commit/84e74f439f327fb8e4faa74dcc6d166a016573b2))
+* remove eval from lib/gzr/commands/project/branch.rb ([2b36a27](https://github.com/looker-open-source/gzr/commit/2b36a2757e9edd0e7305ecc8dea2ff6ba01fc5c8))
+* remove eval from lib/gzr/commands/project/ls.rb ([70e80d6](https://github.com/looker-open-source/gzr/commit/70e80d6253ced09fd9ec96918f8eed90f5f1d4c6))
+* remove eval from lib/gzr/commands/role/group_ls.rb ([43dd2ec](https://github.com/looker-open-source/gzr/commit/43dd2eca15211bcf0032b006de71a9b85a225ba9))
+* remove eval from lib/gzr/commands/role/ls.rb ([fae96e7](https://github.com/looker-open-source/gzr/commit/fae96e7c99fdd27d3bd141ae334eaa8cf6ba572b))
+* remove eval from lib/gzr/commands/role/user_ls.rb ([6a53980](https://github.com/looker-open-source/gzr/commit/6a53980eb7a407bce9d163b6fb6264c03c64b623))
+* remove eval from lib/gzr/commands/user/me.rb ([af070e3](https://github.com/looker-open-source/gzr/commit/af070e3b8f7aa4acbc11e3665b94a203c3a1962e))
+* use query_slug in merge query api ([beb1524](https://github.com/looker-open-source/gzr/commit/beb152409d43032d45299cf4687031254d27872c))
+
 ## [0.3.12](https://github.com/looker-open-source/gzr/compare/v0.3.11...v0.3.12) (2023-10-04)
 
 
