@@ -301,7 +301,7 @@ module Gzr
         if merge_result
           merge_result[:source_queries].each_index do |j|
             source_query = merge_result[:source_queries][j]
-            merge_result[:source_queries][j][:query] = query(source_query[:query_id]).to_attrs
+            merge_result[:source_queries][j][:query] = query(source_query[:query_slug] || source_query[:query_id]).to_attrs
           end
           find_vis_config_reference(merge_result) do |vis_config|
             find_color_palette_reference(vis_config) do |o,default_colors|
