@@ -26,7 +26,7 @@ module Gzr
     def query_look(look_id)
       begin
         @sdk.look(look_id).to_attrs
-      rescue LookerSDK::NotFoud => e
+      rescue LookerSDK::NotFound => e
           say_error "look(#{look_id}) not found"
           say_error e
           raise
