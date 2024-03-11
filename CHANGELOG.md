@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.14](https://github.com/looker-open-source/gzr/compare/v0.3.13...v0.3.14) (2024-03-11)
+
+
+### Bug Fixes
+
+* typo NotFoud error ([f391d43](https://github.com/looker-open-source/gzr/commit/f391d43dc75f4a06f89cb13b7c4200d870d77b49))
+
 ## [0.3.13](https://github.com/looker-open-source/gzr/compare/v0.3.12...v0.3.13) (2024-02-20)
 
 
