@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2018 Mike DeAngelo Looker Data Sciences, Inc.
+# Copyright (c) 2024 Mike DeAngelo Google, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -19,22 +19,20 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-RSpec.describe "`gzr plan` command", type: :cli do
-  it "executes `gzr help plan` command successfully" do
-    output = `gzr help plan`
+RSpec.describe "`gzr plan randomize` command", type: :cli do
+  it "executes `gzr plan help randomize` command successfully" do
+    output = `gzr plan help randomize`
     expected_output = <<-OUT
-Commands:
-  gzr plan cat PLAN_ID                       # Output the JSON representation of a scheduled plan to the screen or a file
-  gzr plan disable PLAN_ID                   # Disable the specified plan
-  gzr plan enable PLAN_ID                    # Enable the specified plan
-  gzr plan failures                          # Report all plans that failed in their most recent run attempt
-  gzr plan help [COMMAND]                    # Describe subcommands or one specific subcommand
-  gzr plan import PLAN_FILE OBJ_TYPE OBJ_ID  # Import a plan from a file
-  gzr plan ls                                # List the scheduled plans on a server
-  gzr plan randomize                         # Randomize the scheduled plans on a server
-  gzr plan rm PLAN_ID                        # Delete a scheduled plan
-  gzr plan runit PLAN_ID                     # Execute a saved plan immediately
+Usage:
+  gzr plan randomize
 
+Options:
+  -h, [--help], [--no-help]  # Display usage information
+      [--window=N]           # Length of window
+                             # Default: 60
+      [--all], [--no-all]    # Randomize all plans regardless of owner
+
+Randomize the scheduled plans on a server
     OUT
 
     expect(output).to eq(expected_output)
