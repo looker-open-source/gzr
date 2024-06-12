@@ -144,6 +144,22 @@ module Gzr
           Gzr::Commands::Plan::Ls.new(options).execute
         end
       end
+
+      desc 'randomize', 'Randomize the scheduled plans on a server'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      method_option :window, type: :numeric, default: 60,
+                           desc: 'Length of window'
+      method_option :all, type: :boolean,
+                           desc: 'Randomize all plans regardless of owner'
+      def randomize(*)
+        if options[:help]
+          invoke :help, ['randomize']
+        else
+          require_relative 'plan/randomize'
+          Gzr::Commands::Plan::Randomize.new(options).execute
+        end
+      end
     end
   end
 end
