@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.15](https://github.com/looker-open-source/gzr/compare/v0.3.14...v0.3.15) (2024-06-12)
+
+
+### Features
+
+* Alert randomization ([f367d8e](https://github.com/looker-open-source/gzr/commit/f367d8e5e0d164cf5cf1d9b7e79ed93fd2c0ea62))
+* Plan randomization ([3176fe0](https://github.com/looker-open-source/gzr/commit/3176fe0032c237adcb7b95d821e0f54323e19221))
+
 ## [0.3.14](https://github.com/looker-open-source/gzr/compare/v0.3.13...v0.3.14) (2024-03-11)
 
 
