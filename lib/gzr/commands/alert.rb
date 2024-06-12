@@ -51,6 +51,22 @@ module Gzr
         end
       end
 
+      desc 'randomize', 'Randomize the scheduled alerts on a server'
+      method_option :help, aliases: '-h', type: :boolean,
+                           desc: 'Display usage information'
+      method_option :window, type: :numeric, default: 60,
+                           desc: 'Length of window'
+      method_option :all, type: :boolean,
+                           desc: 'Randomize all alerts regardless of owner'
+      def randomize(*)
+        if options[:help]
+          invoke :help, ['randomize']
+        else
+          require_relative 'alert/randomize'
+          Gzr::Commands::Alert::Randomize.new(options).execute
+        end
+      end
+
       desc 'cat ALERT_ID', 'Output json information about an alert to screen or file'
       method_option :help, aliases: '-h', type: :boolean,
                            desc: 'Display usage information'

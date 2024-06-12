@@ -178,5 +178,15 @@ module Gzr
         raise
       end
     end
+
+    def update_alert(alert_id,req)
+      begin
+        @sdk.update_alert(alert_id,req).to_attrs
+      rescue LookerSDK::Error => e
+        say_error "Error calling update_alert(#{alert_id}, #{JSON.pretty_generate(req)})"
+        say_error e
+        raise
+      end
+    end
   end
 end
