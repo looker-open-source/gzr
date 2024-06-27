@@ -24,7 +24,7 @@ RSpec.describe "`gzr plan randomize` command", type: :cli do
     output = `gzr plan help randomize`
     expected_output = <<-OUT
 Usage:
-  gzr plan randomize
+  gzr plan randomize [PLAN_ID]
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
