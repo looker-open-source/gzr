@@ -33,7 +33,7 @@ Commands:
   gzr alert import FILE [DASHBOARD_ELEMENT_ID]  # Import an alert from a file
   gzr alert ls                                  # list alerts
   gzr alert notifications                       # Get notifications
-  gzr alert randomize                           # Randomize the scheduled alerts on a server
+  gzr alert randomize [ALERT_ID]                # Randomize the scheduled alerts on a server
   gzr alert read NOTIFICATION_ID                # Read notification id
   gzr alert rm ALERT_ID                         # Delete the alert given by ALERT_ID
   gzr alert threshold ALERT_ID THRESHOLD        # Change the threshold of the alert given by ALERT_ID
