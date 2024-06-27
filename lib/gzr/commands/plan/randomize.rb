@@ -33,8 +33,9 @@ module Gzr
         include Gzr::Plan
         include Gzr::User
         include Gzr::Cron
-        def initialize(options)
+        def initialize(plan_id,options)
           super()
+          @plan_id = plan_id
           @options = options
         end
 
@@ -50,20 +51,33 @@ module Gzr
           with_session do
             @me ||= query_me("id")
 
-            plans = query_all_scheduled_plans( @options[:all]?'all':@me[:id] )
-            plans.each do |plan|
-              crontab = plan[:crontab]
-              if crontab == ""
-                say_warning("skipping plan #{plan[:id]} with no crontab")
-                next
+            if @plan_id
+              plan = query_scheduled_plan(@plan_id)
+              if plan
+                randomize_plan(plan,window)
+              else
+                say_warning("Plan #{@plan_id} not found")
               end
-              crontab = randomize_cron(crontab, window)
-              begin
-                update_scheduled_plan(plan[:id], { crontab: crontab })
-              rescue LookerSDK::UnprocessableEntity => e
-                say_warning("Skipping invalid entry")
+            else
+              plans = query_all_scheduled_plans( @options[:all]?'all':@me[:id] )
+              plans.each do |plan|
+                randomize_plan(plan,window)
               end
             end
+          end
+        end
+
+        def randomize_plan(plan,window=60)
+          crontab = plan[:crontab]
+          if crontab == ""
+            say_warning("skipping plan #{plan[:id]} with no crontab")
+            return
+          end
+          crontab = randomize_cron(crontab, window)
+          begin
+            update_scheduled_plan(plan[:id], { crontab: crontab })
+          rescue LookerSDK::UnprocessableEntity => e
+            say_warning("Skipping invalid entry")
           end
         end
       end

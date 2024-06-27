@@ -29,7 +29,7 @@ Usage:
 Options:
   -h, [--help], [--no-help]          # Display usage information
       [--fields=FIELDS]              # Fields to display
-                                     # Default: id,enabled,name,user(id,display_name),look_id,dashboard_id,lookml_dashboard_id
+                                     # Default: id,enabled,name,user(id,display_name),look_id,dashboard_id,lookml_dashboard_id,crontab
       [--disabled], [--no-disabled]  # Retrieve disable plans
       [--plain], [--no-plain]        # print without any extra formatting
       [--csv], [--no-csv]            # output in csv format per RFC4180
