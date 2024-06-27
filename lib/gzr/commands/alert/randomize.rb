@@ -33,8 +33,9 @@ module Gzr
         include Gzr::Alert
         include Gzr::User
         include Gzr::Cron
-        def initialize(options)
+        def initialize(alert_id,options)
           super()
+          @alert_id = alert_id
           @options = options
         end
 
@@ -50,30 +51,43 @@ module Gzr
           with_session do
             @me ||= query_me("id")
 
-            req = {}
-            req[:disabled] = false
-            req[:all_owners] = @options[:all] unless @options[:all].nil?
-            alerts = search_alerts(**req)
-            begin
-              say_ok "No alerts found"
-              return nil
-            end unless alerts && alerts.length > 0
-
-            alerts.each do |alert|
-              crontab = alert[:cron]
-              if crontab == ""
-                say_warning("skipping alert #{alert[:id]} with no cron")
-                next
+            if @alert_id
+              alert = get_alert(@alert_id)
+              if alert
+                randomize_alert(alert,window)
+              else
+                say_warning("Alert #{@alert_id} not found")
               end
-              crontab = randomize_cron(crontab, window)
+            else
+              req = {}
+              req[:disabled] = false
+              req[:all_owners] = @options[:all] unless @options[:all].nil?
+              alerts = search_alerts(**req)
               begin
-                alert[:cron] = crontab
-                update_alert(alert[:id], alert)
-              rescue LookerSDK::UnprocessableEntity => e
-                say_warning("Skipping invalid entry")
+                say_ok "No alerts found"
+                return nil
+              end unless alerts && alerts.length > 0
+
+              alerts.each do |alert|
+                randomize_alert(alert,window)
               end
             end
 
+          end
+        end
+
+        def randomize_alert(alert,window=60)
+          crontab = alert[:cron]
+          if crontab == ""
+            say_warning("skipping alert #{alert[:id]} with no cron")
+            return
+          end
+          crontab = randomize_cron(crontab, window)
+          begin
+            alert[:cron] = crontab
+            update_alert(alert[:id], alert)
+          rescue LookerSDK::UnprocessableEntity => e
+            say_warning("Skipping invalid entry")
           end
         end
       end

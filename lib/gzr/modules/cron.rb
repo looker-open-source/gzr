@@ -44,7 +44,7 @@ module Gzr
         hour = 0
       end
       cronfields[0] = minute
-      cronfields[1] = hour
+      cronfields[1] = hour if /^[[:digit:]]+$/.match? cronfields[1]
       return cronfields.join(' ')
     end
   end

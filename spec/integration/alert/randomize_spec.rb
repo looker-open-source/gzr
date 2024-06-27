@@ -24,7 +24,7 @@ RSpec.describe "`gzr alert randomize` command", type: :cli do
     output = `gzr alert help randomize`
     expected_output = <<-OUT
 Usage:
-  gzr alert randomize
+  gzr alert randomize [ALERT_ID]
 
 Options:
   -h, [--help], [--no-help]  # Display usage information
