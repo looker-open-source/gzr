@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.16](https://github.com/looker-open-source/gzr/compare/v0.3.15...v0.3.16) (2024-06-27)
+
+
+### Features
+
+* randomize a specific alert by alert_id ([0e9cf40](https://github.com/looker-open-source/gzr/commit/0e9cf401346845d4f740a75379161cecddf1669b))
+* randomize a specific plan by plan_id ([99d30f1](https://github.com/looker-open-source/gzr/commit/99d30f1747eafa81989bfd3bfc728c5a367fc1e3))
+
 ## [0.3.15](https://github.com/looker-open-source/gzr/compare/v0.3.14...v0.3.15) (2024-06-12)
 
 
