@@ -287,7 +287,17 @@ module Gzr
             rewrite_color_palette!(o,default_colors)
           end
         end
-        alerts = search_alerts(fields: 'id,dashboard_element_id', group_by: 'dashboard', all_owners: true)
+        alerts = []
+        begin
+          alerts = search_alerts(fields: 'id,dashboard_element_id', group_by: 'dashboard', all_owners: true)
+        rescue LookerSDK::Forbidden => e
+          say_warning "Must be an admin user to look up all alerts"
+          begin
+            alerts = search_alerts(fields: 'id,dashboard_element_id', group_by: 'dashboard')
+          rescue LookerSDK::Error => e
+            say_warning "Error looking up alerts owned by user."
+          end
+        end
         say_warning alerts if @options[:debug]
         data[:dashboard_elements].each do |e|
           alerts_found = alerts.select { |a| a[:dashboard_element_id] == e[:id]}
