@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.17](https://github.com/looker-open-source/gzr/compare/v0.3.16...v0.3.17) (2024-07-17)
+
+
+### Bug Fixes
+
+* continue after 403 error on dashboard cat getting alerts if user is not admin ([#255](https://github.com/looker-open-source/gzr/issues/255)) ([6cbb69f](https://github.com/looker-open-source/gzr/commit/6cbb69f7e30ee7d06c54037d3ba484a7f17306d6))
+
 ## [0.3.16](https://github.com/looker-open-source/gzr/compare/v0.3.15...v0.3.16) (2024-06-27)
 
 
