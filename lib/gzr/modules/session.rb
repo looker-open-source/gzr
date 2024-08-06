@@ -38,11 +38,11 @@ module Gzr
       output.puts pastel.green data
     end
 
-    def say_warning(data, output: $stdout)
+    def say_warning(data, output: $stderr)
       output.puts pastel.yellow data
     end
 
-    def say_error(data, output: $stdout)
+    def say_error(data, output: $stderr)
       output.puts pastel.red data
     end
 
