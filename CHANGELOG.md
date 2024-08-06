@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.18](https://github.com/looker-open-source/gzr/compare/v0.3.17...v0.3.18) (2024-08-06)
+
+
+### Bug Fixes
+
+* send wanring and error text to  instead of ([0ba321c](https://github.com/looker-open-source/gzr/commit/0ba321cfce3e9e2021b7ffaf458d87961667caaa))
+
 ## [0.3.17](https://github.com/looker-open-source/gzr/compare/v0.3.16...v0.3.17) (2024-07-19)
 
 
