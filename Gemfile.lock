@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    gazer (0.3.17)
+    gazer (0.3.18)
       faraday (~> 2.7.8)
       faraday-multipart (~> 1.0)
       looker-sdk (~> 0.1.6)
