@@ -186,19 +186,20 @@ module Gzr
           http.headers[:user_agent] = conn_hash[:user_agent]
         end
 
-        versions_response = agent.call(:get,"/versions")
-
+        begin
+            versions_response = agent.call(:get,"/versions")
+            api_data = versions_response&.data
+            @versions = api_data&.supported_versions&.map { |v| v.version }
+            @current_version = api_data&.current_version&.version
         rescue Faraday::SSLError => e
           raise Gzr::CLI::Error, "SSL Certificate could not be verified\nDo you need the --no-verify-ssl option or the --no-ssl option?"
         rescue Faraday::ConnectionFailed => cf
           raise Gzr::CLI::Error, "Connection Failed.\nDid you specify the --no-ssl option for an ssl secured server?\nYou may need to use --port=443 in some cases as well."
         rescue LookerSDK::NotFound => nf
           say_warning "endpoint #{root}versions was not found. Assuming version 4.0."
-
-        api_data = versions_response&.data
-        @versions = api_data&.supported_versions&.map { |v| v.version } || ["4.0"]
-        @current_version = api_data&.current_version&.version || "4.0"
-
+          @versions = ["4.0"]
+          @current_version = "4.0"
+        end
       end
 
       say_warning "API current_version #{@current_version}" if @options[:debug]
