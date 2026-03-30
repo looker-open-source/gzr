@@ -1,0 +1,11 @@
+{
+  "packages": {
+    ".": {
+      "release-type": "ruby",
+      "package-name": "gazer",
+      "version-file": "lib/gzr/version.rb",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true
+    }
+  }
+}
