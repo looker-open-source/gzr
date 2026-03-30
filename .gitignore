@@ -16,3 +16,9 @@
 gzr.code-workspace
 /output/
 scratch
+steps_to_add_project.txt
+add_thelook.sh
+add_faa.sh
+.gitignore
+.gitignore
+looker_env.sh
