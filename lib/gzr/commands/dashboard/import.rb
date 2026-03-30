@@ -77,38 +77,17 @@ module Gzr
                 dashboard[:dashboard_filters].push create_dashboard_filter(filter)
               end
 
-              dashboard[:dashboard_elements] ||= []
-              elem_table = data[:dashboard_elements].map do |new_element|
-                element = new_element.select do |k,v|
-                  (keys_to_keep('create_dashboard_element') - [:dashboard_id, :look_id, :query_id, :merge_result_id, :result_maker_id, :query, :merge_result]).include? k
-                end
-                (element[:query_id],element[:look_id],element[:merge_result_id]) = process_dashboard_element(new_element)
-                say_warning "Creating dashboard element #{element.select {|k,v| !v.nil?}.inspect}" if @options[:debug]
-                element[:dashboard_id] = dashboard[:id]
-                result_maker = copy_result_maker_filterables(new_element)
-                element[:result_maker] = result_maker if result_maker
-                dashboard_element = create_dashboard_element(element)
-                say_warning "dashboard_element #{dashboard_element.inspect}" if @options[:debug]
-                if new_element[:alerts]
-                  new_element[:alerts].each do |a|
-                    a.select! do |k,v|
-                      (keys_to_keep('create_alert') - [:owner_id, :dashboard_element_id]).include? k
-                    end
-                    a[:dashboard_element_id] = dashboard_element[:id]
-                    a[:owner_id] = @me[:id]
-                    new_alert = create_alert(a)
-                    say_warning "alert #{JSON.pretty_generate(new_alert)}" if @options[:debug]
-                  end
-                end
-                dashboard[:dashboard_elements].push dashboard_element
-                [new_element[:id], dashboard_element[:id]]
-              end
-
-              source_dashboard_layouts = data[:dashboard_layouts].map do |new_layout|
+              data[:dashboard_layouts].map do |new_layout|
                 layout_obj = nil
-                if new_layout[:active]
-                  layout_obj = get_dashboard_layout(dashboard[:dashboard_layouts].first[:id])
+                say_warning dashboard[:dashboard_layouts] if @options[:debug]
+                if dashboard[:dashboard_layouts].length > 0 && new_layout[:active]
+                  layout_obj = get_dashboard_layout(dashboard[:dashboard_layouts].find { |l| l[:active] }[:id])
                   say_warning "Updating layout #{layout_obj[:id]}" if @options[:debug]
+                  layout = new_layout.select do |k,v|
+                    (keys_to_keep('update_dashboard_layout') - [:id,:dashboard_id]).include? k
+                  end
+                  layout_obj.merge!(layout)
+                  update_dashboard_layout(layout_obj[:id],layout_obj)
                 else
                   layout = new_layout.select do |k,v|
                     (keys_to_keep('create_dashboard_layout') - [:dashboard_id]).include? k
@@ -118,22 +97,47 @@ module Gzr
                   layout_obj = create_dashboard_layout(layout)
                   say_warning "Created dashboard layout #{JSON.pretty_generate layout_obj.map(&:to_a).to_json}" if @options[:debug]
                 end
-                layout_components = new_layout[:dashboard_layout_components].zip(layout_obj[:dashboard_layout_components])
-                layout_components.each do |source,target|
-                  component = keys_to_keep('update_dashboard_layout_component').collect do |e|
-                    [e,nil]
-                  end.to_h
-                  component[:dashboard_layout_id] = target[:dashboard_layout_id]
+                
+                new_layout[:dashboard_layout_components].each do |new_component|
+                  new_element_id = new_component[:dashboard_element_id]
+                  new_element = data[:dashboard_elements].find { |e| e[:id] == new_element_id }
+                  element = new_element.select do |k,v|
+                    (keys_to_keep('create_dashboard_element') - [:dashboard_id, :look_id, :query_id, :merge_result_id, :result_maker_id, :query, :merge_result]).include? k
+                  end
+                  (element[:query_id],element[:look_id],element[:merge_result_id]) = process_dashboard_element(new_element)
+                  say_warning "Creating dashboard element #{element.select {|k,v| !v.nil?}.inspect}" if @options[:debug]
+                  element[:dashboard_id] = dashboard[:id]
+                  result_maker = copy_result_maker_filterables(new_element)
+                  element[:result_maker] = result_maker if result_maker
+                  element[:dashboard_layout_id] = layout_obj[:id]
+                  dashboard_element = create_dashboard_element(element)
+                  say_warning "dashboard_element #{dashboard_element.inspect}" if @options[:debug]
+                  if new_element[:alerts]
+                    new_element[:alerts].each do |a|
+                      a.select! do |k,v|
+                        (keys_to_keep('create_alert') - [:owner_id, :dashboard_element_id]).include? k
+                      end
+                      a[:dashboard_element_id] = dashboard_element[:id]
+                      a[:owner_id] = @me[:id]
+                      new_alert = create_alert(a)
+                      say_warning "alert #{JSON.pretty_generate(new_alert)}" if @options[:debug]
+                    end
+                  end
 
-                  component.merge!(source.select do |k,v|
-                    (keys_to_keep('update_dashboard_layout_component') - [:id,:dashboard_layout_id]).include? k
+                  target_components = get_dashboard_layout(layout_obj[:id])[:dashboard_layout_components]
+                  target_component = target_components.find do |c|
+                    c[:dashboard_element_id] == dashboard_element[:id]
+                  end
+
+                  target_component.merge!(new_component.select do |k,v|
+                    (keys_to_keep('update_dashboard_layout_component') - [:id,:dashboard_layout_id,:dashboard_element_id]).include? k
                   end)
 
-                  component[:dashboard_element_id] = elem_table.assoc(source[:dashboard_element_id])[1]
-                  say_warning "Updating dashboard layout component #{target[:id]}" if @options[:debug]
-                  update_dashboard_layout_component(target[:id],component)
+                  say_warning "Updating dashboard layout component #{target_component[:id]}" if @options[:debug]
+                  update_dashboard_layout_component(target_component[:id],target_component)
                 end
               end
+
               upsert_plans_for_dashboard(dashboard[:id],@me[:id],data[:scheduled_plans]) if data[:scheduled_plans]
               output.puts "Imported dashboard #{dashboard[:id]}" unless @options[:plain]
               output.puts dashboard[:id] if @options[:plain]
