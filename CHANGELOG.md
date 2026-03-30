@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.20](https://github.com/looker-open-source/gzr/compare/v0.3.19...v0.3.20) (2026-03-30)
+
+
+### Bug Fixes
+
+* fix release please settings ([#280](https://github.com/looker-open-source/gzr/issues/280)) ([ff53d8c](https://github.com/looker-open-source/gzr/commit/ff53d8c1f503a975ac8b1f88ef85469c8cfc77ae))
+* handle-missing-versions-endpoint-in-api-call ([#270](https://github.com/looker-open-source/gzr/issues/270)) ([6b146b3](https://github.com/looker-open-source/gzr/commit/6b146b30c7acb4e3ccbe74537cfc8f9fa19a0f0e))
+
 ## [0.3.19](https://github.com/looker-open-source/gzr/compare/v0.3.18...v0.3.19) (2026-03-30)
 
 
