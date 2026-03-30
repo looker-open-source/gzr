@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.19](https://github.com/looker-open-source/gzr/compare/v0.3.18...v0.3.19) (2026-03-30)
+
+
+### Bug Fixes
+
+* Refactored dashboard import to properly work with tabbed dashboards ([#274](https://github.com/looker-open-source/gzr/issues/274)) ([3a8edb3](https://github.com/looker-open-source/gzr/commit/3a8edb321a7cf8dd46859d55669236e76351f18d))
+
 ## [0.3.18](https://github.com/looker-open-source/gzr/compare/v0.3.17...v0.3.18) (2024-08-06)
 
 
