@@ -27,7 +27,7 @@ Usage:
   gzr attribute get_group_value GROUP_ID|GROUP_NAME ATTR_ID|ATTR_NAME
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help], [--skip-help]  # Display usage information
 
 Retrieve a user attribute value for a group
     OUT

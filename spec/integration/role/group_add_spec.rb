@@ -27,7 +27,7 @@ Usage:
   gzr role group_add ROLE_ID GROUP_ID GROUP_ID GROUP_ID ...
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help], [--skip-help]  # Display usage information
 
 Add indicated groups to role
     OUT

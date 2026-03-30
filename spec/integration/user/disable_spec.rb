@@ -27,7 +27,7 @@ Usage:
   gzr user disable USER_ID
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help], [--skip-help]  # Display usage information
 
 Disable the user given by user_id
     OUT

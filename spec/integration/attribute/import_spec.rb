@@ -27,9 +27,9 @@ Usage:
   gzr attribute import FILE
 
 Options:
-  -h, [--help], [--no-help]    # Display usage information
-      [--plain], [--no-plain]  # Provide minimal response information
-      [--force]                # If the user attribute already exists, modify it
+  -h, [--help], [--no-help], [--skip-help]     # Display usage information
+      [--plain], [--no-plain], [--skip-plain]  # Provide minimal response information
+      [--force]                                # If the user attribute already exists, modify it
 
 Import a user attribute from a file
     OUT

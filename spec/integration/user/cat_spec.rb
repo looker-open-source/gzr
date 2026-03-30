@@ -27,10 +27,10 @@ Usage:
   gzr user cat USER_ID
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
-      [--fields=FIELDS]      # Fields to display
-      [--dir=DIR]            # Directory to store output file
-      [--trim], [--no-trim]  # Trim output to minimal set of fields for later import
+  -h, [--help], [--no-help], [--skip-help]  # Display usage information
+      [--fields=FIELDS]                     # Fields to display
+      [--dir=DIR]                           # Directory to store output file
+      [--trim], [--no-trim], [--skip-trim]  # Trim output to minimal set of fields for later import
 
 Output json information about a user to screen or file
     OUT

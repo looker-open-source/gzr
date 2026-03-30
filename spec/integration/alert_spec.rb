@@ -37,6 +37,7 @@ Commands:
   gzr alert read NOTIFICATION_ID                # Read notification id
   gzr alert rm ALERT_ID                         # Delete the alert given by ALERT_ID
   gzr alert threshold ALERT_ID THRESHOLD        # Change the threshold of the alert given by ALERT_ID
+  gzr alert tree                                # Print a tree of all available commands
   gzr alert unfollow ALERT_ID                   # Stop following the alert given by ALERT_ID
 
     OUT

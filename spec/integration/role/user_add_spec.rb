@@ -27,7 +27,7 @@ Usage:
   gzr role user_add ROLE_ID USER_ID USER_ID USER_ID ...
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help], [--skip-help]  # Display usage information
 
 Add indicated users to role
     OUT

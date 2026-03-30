@@ -27,7 +27,7 @@ Usage:
   gzr user delete USER_ID
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help], [--skip-help]  # Display usage information
 
 Delete the user given by user_id
     OUT

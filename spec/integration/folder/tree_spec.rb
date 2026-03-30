@@ -27,7 +27,7 @@ Usage:
   gzr folder tree STARTING_FOLDER
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help], [--skip-help]  # Display usage information
 
 Display the dashboards, looks, and subfolders of a folder in a tree format
     OUT

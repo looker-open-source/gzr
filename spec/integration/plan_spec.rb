@@ -34,6 +34,7 @@ Commands:
   gzr plan randomize [PLAN_ID]               # Randomize the scheduled plans on a server
   gzr plan rm PLAN_ID                        # Delete a scheduled plan
   gzr plan runit PLAN_ID                     # Execute a saved plan immediately
+  gzr plan tree                              # Print a tree of all available commands
 
     OUT
 

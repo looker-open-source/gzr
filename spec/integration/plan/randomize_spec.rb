@@ -27,10 +27,10 @@ Usage:
   gzr plan randomize [PLAN_ID]
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
-      [--window=N]           # Length of window
-                             # Default: 60
-      [--all], [--no-all]    # Randomize all plans regardless of owner
+  -h, [--help], [--no-help], [--skip-help]  # Display usage information
+      [--window=N]                          # Length of window
+                                            # Default: 60
+      [--all], [--no-all], [--skip-all]     # Randomize all plans regardless of owner
 
 Randomize the scheduled plans on a server
     OUT

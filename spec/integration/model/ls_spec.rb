@@ -27,11 +27,13 @@ Usage:
   gzr model ls
 
 Options:
-  -h, [--help], [--no-help]    # Display usage information
-      [--fields=FIELDS]        # Fields to display
-                               # Default: name,label,project_name
-      [--plain], [--no-plain]  # print without any extra formatting
-      [--csv], [--no-csv]      # output in csv format per RFC4180
+  -h, [--help], [--no-help], [--skip-help]     # Display usage information
+      [--fields=FIELDS]                        # Fields to display
+                                               # Default: name,label,project_name
+      [--plain], [--no-plain], [--skip-plain]  # print without any extra formatting
+                                               # Default: false
+      [--csv], [--no-csv], [--skip-csv]        # output in csv format per RFC4180
+                                               # Default: false
 
 List the models in this server.
     OUT

@@ -27,7 +27,7 @@ Usage:
   gzr attribute set_group_value GROUP_ID|GROUP_NAME ATTR_ID|ATTR_NAME VALUE
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help], [--skip-help]  # Display usage information
 
 Set a user attribute value for a group
     OUT

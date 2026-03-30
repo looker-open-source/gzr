@@ -32,6 +32,7 @@ Commands:
   gzr attribute ls                                                           # List all the defined user attributes
   gzr attribute rm ATTR_ID|ATTR_NAME                                         # Delete a user attribute
   gzr attribute set_group_value GROUP_ID|GROUP_NAME ATTR_ID|ATTR_NAME VALUE  # Set a user attribute value for a group
+  gzr attribute tree                                                         # Print a tree of all available commands
 
     OUT
 

@@ -27,12 +27,15 @@ Usage:
   gzr role user_ls ROLE_ID
 
 Options:
-  -h, [--help], [--no-help]            # Display usage information
-      [--fields=FIELDS]                # Fields to display
-                                       # Default: id,first_name,last_name,email
-      [--plain], [--no-plain]          # print without any extra formatting
-      [--csv], [--no-csv]              # output in csv format per RFC4180
-      [--all-users], [--no-all-users]  # Show users with this role through a group membership
+  -h, [--help], [--no-help], [--skip-help]                 # Display usage information
+      [--fields=FIELDS]                                    # Fields to display
+                                                           # Default: id,first_name,last_name,email
+      [--plain], [--no-plain], [--skip-plain]              # print without any extra formatting
+                                                           # Default: false
+      [--csv], [--no-csv], [--skip-csv]                    # output in csv format per RFC4180
+                                                           # Default: false
+      [--all-users], [--no-all-users], [--skip-all-users]  # Show users with this role through a group membership
+                                                           # Default: false
 
 List the users assigned to a role
     OUT

@@ -27,11 +27,13 @@ Usage:
   gzr role group_ls ROLE_ID
 
 Options:
-  -h, [--help], [--no-help]    # Display usage information
-      [--fields=FIELDS]        # Fields to display
-                               # Default: id,name,external_group_id
-      [--plain], [--no-plain]  # print without any extra formatting
-      [--csv], [--no-csv]      # output in csv format per RFC4180
+  -h, [--help], [--no-help], [--skip-help]     # Display usage information
+      [--fields=FIELDS]                        # Fields to display
+                                               # Default: id,name,external_group_id
+      [--plain], [--no-plain], [--skip-plain]  # print without any extra formatting
+                                               # Default: false
+      [--csv], [--no-csv], [--skip-csv]        # output in csv format per RFC4180
+                                               # Default: false
 
 List the groups assigned to a role
     OUT

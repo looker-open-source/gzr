@@ -27,9 +27,9 @@ Usage:
   gzr look rm LOOK_ID
 
 Options:
-  -h, [--help], [--no-help]        # Display usage information
-      [--soft], [--no-soft]        # Soft delete the look
-      [--restore], [--no-restore]  # Restore a soft deleted look
+  -h, [--help], [--no-help], [--skip-help]           # Display usage information
+      [--soft], [--no-soft], [--skip-soft]           # Soft delete the look
+      [--restore], [--no-restore], [--skip-restore]  # Restore a soft deleted look
 
 Delete look given by LOOK_ID
     OUT

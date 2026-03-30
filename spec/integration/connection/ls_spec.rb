@@ -27,11 +27,13 @@ Usage:
   gzr connection ls
 
 Options:
-  -h, [--help], [--no-help]    # Display usage information
-      [--fields=FIELDS]        # Fields to display
-                               # Default: name,dialect(name),host,port,database,schema
-      [--plain], [--no-plain]  # print without any extra formatting
-      [--csv], [--no-csv]      # output in csv format per RFC4180
+  -h, [--help], [--no-help], [--skip-help]     # Display usage information
+      [--fields=FIELDS]                        # Fields to display
+                                               # Default: name,dialect(name),host,port,database,schema
+      [--plain], [--no-plain], [--skip-plain]  # print without any extra formatting
+                                               # Default: false
+      [--csv], [--no-csv], [--skip-csv]        # output in csv format per RFC4180
+                                               # Default: false
 
 List all available connections
     OUT

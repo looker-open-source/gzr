@@ -27,10 +27,10 @@ Usage:
   gzr plan import PLAN_FILE OBJ_TYPE OBJ_ID
 
 Options:
-  -h, [--help], [--no-help]        # Display usage information
-      [--plain], [--no-plain]      # Provide minimal response information
-      [--enable], [--no-enable]    # Enable the plan on import
-      [--disable], [--no-disable]  # Disable the plan on import
+  -h, [--help], [--no-help], [--skip-help]           # Display usage information
+      [--plain], [--no-plain], [--skip-plain]        # Provide minimal response information
+      [--enable], [--no-enable], [--skip-enable]     # Enable the plan on import
+      [--disable], [--no-disable], [--skip-disable]  # Disable the plan on import
 
 Import a plan from a file
     OUT

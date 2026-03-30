@@ -27,8 +27,8 @@ Usage:
   gzr attribute rm ATTR_ID|ATTR_NAME
 
 Options:
-  -h, [--help], [--no-help]    # Display usage information
-      [--plain], [--no-plain]  # Provide minimal response information
+  -h, [--help], [--no-help], [--skip-help]     # Display usage information
+      [--plain], [--no-plain], [--skip-plain]  # Provide minimal response information
 
 Delete a user attribute
     OUT

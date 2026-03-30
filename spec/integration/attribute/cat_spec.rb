@@ -27,9 +27,9 @@ Usage:
   gzr attribute cat ATTR_ID|ATTR_NAME
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
-      [--fields=FIELDS]      # Fields to display
-      [--dir=DIR]            # Directory to store output file
+  -h, [--help], [--no-help], [--skip-help]  # Display usage information
+      [--fields=FIELDS]                     # Fields to display
+      [--dir=DIR]                           # Directory to store output file
 
 Output json information about an attribute to screen or file
     OUT

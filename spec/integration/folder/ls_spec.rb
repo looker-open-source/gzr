@@ -27,11 +27,13 @@ Usage:
   gzr folder ls FILTER_SPEC
 
 Options:
-  -h, [--help], [--no-help]    # Display usage information
-      [--fields=FIELDS]        # Fields to display
-                               # Default: parent_id,id,name,looks(id,title),dashboards(id,title)
-      [--plain], [--no-plain]  # print without any extra formatting
-      [--csv], [--no-csv]      # output in csv format per RFC4180
+  -h, [--help], [--no-help], [--skip-help]     # Display usage information
+      [--fields=FIELDS]                        # Fields to display
+                                               # Default: parent_id,id,name,looks(id,title),dashboards(id,title)
+      [--plain], [--no-plain], [--skip-plain]  # print without any extra formatting
+                                               # Default: false
+      [--csv], [--no-csv], [--skip-csv]        # output in csv format per RFC4180
+                                               # Default: false
 
 list the contents of a folder given by folder name, folder_id, ~ for the current user's default folder, or ~name / ~number for the home folder of a user
     OUT

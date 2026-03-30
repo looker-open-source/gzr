@@ -27,12 +27,12 @@ Usage:
   gzr dashboard cat DASHBOARD_ID
 
 Options:
-  -h, [--help], [--no-help]                        # Display usage information
-      [--dir=DIR]                                  # Directory to store output file
-      [--plans], [--no-plans]                      # Include scheduled plans
-      [--transform=TRANSFORM]                      # Fully-qualified path to a JSON file describing the transformations to apply
-      [--simple-filename], [--no-simple-filename]  # Use simple filename for output (Dashboard_<id>.json)
-      [--trim], [--no-trim]                        # Trim output to minimal set of fields for later import
+  -h, [--help], [--no-help], [--skip-help]                                   # Display usage information
+      [--dir=DIR]                                                            # Directory to store output file
+      [--plans], [--no-plans], [--skip-plans]                                # Include scheduled plans
+      [--transform=TRANSFORM]                                                # Fully-qualified path to a JSON file describing the transformations to apply
+      [--simple-filename], [--no-simple-filename], [--skip-simple-filename]  # Use simple filename for output (Dashboard_<id>.json)
+      [--trim], [--no-trim], [--skip-trim]                                   # Trim output to minimal set of fields for later import
 
 Output the JSON representation of a dashboard to the screen or a file
     OUT
