@@ -27,9 +27,11 @@ Usage:
   gzr plan failures
 
 Options:
-  -h, [--help], [--no-help]    # Display usage information
-      [--plain], [--no-plain]  # print without any extra formatting
-      [--csv], [--no-csv]      # output in csv format per RFC4180
+  -h, [--help], [--no-help], [--skip-help]     # Display usage information
+      [--plain], [--no-plain], [--skip-plain]  # print without any extra formatting
+                                               # Default: false
+      [--csv], [--no-csv], [--skip-csv]        # output in csv format per RFC4180
+                                               # Default: false
 
 Report all plans that failed in their most recent run attempt
     OUT

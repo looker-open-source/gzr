@@ -27,11 +27,13 @@ Usage:
   gzr user me
 
 Options:
-  -h, [--help], [--no-help]    # Display usage information
-      [--fields=FIELDS]        # Fields to display
-                               # Default: id,email,last_name,first_name,personal_folder_id,home_folder_id
-      [--plain], [--no-plain]  # print without any extra formatting
-      [--csv], [--no-csv]      # output in csv format per RFC4180
+  -h, [--help], [--no-help], [--skip-help]     # Display usage information
+      [--fields=FIELDS]                        # Fields to display
+                                               # Default: id,email,last_name,first_name,personal_folder_id,home_folder_id
+      [--plain], [--no-plain], [--skip-plain]  # print without any extra formatting
+                                               # Default: false
+      [--csv], [--no-csv], [--skip-csv]        # output in csv format per RFC4180
+                                               # Default: false
 
 Show information for the current user
     OUT

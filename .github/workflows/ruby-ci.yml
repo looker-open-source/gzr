@@ -237,6 +237,9 @@ jobs:
           path: rspec.xml
 
   publish-test-results:
+    permissions:
+      checks: write
+      pull-requests: write
     needs: [test]
     if: success() || failure()
     runs-on: ubuntu-latest

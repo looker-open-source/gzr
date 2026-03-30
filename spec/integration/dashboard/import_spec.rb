@@ -27,9 +27,9 @@ Usage:
   gzr dashboard import FILE DEST_FOLDER_ID
 
 Options:
-  -h, [--help], [--no-help]    # Display usage information
-      [--plain], [--no-plain]  # Provide minimal response information
-      [--force]                # Overwrite a dashboard with the same name/slug in the target folder
+  -h, [--help], [--no-help], [--skip-help]     # Display usage information
+      [--plain], [--no-plain], [--skip-plain]  # Provide minimal response information
+      [--force]                                # Overwrite a dashboard with the same name/slug in the target folder
 
 Import a dashboard from a file
     OUT

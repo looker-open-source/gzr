@@ -27,8 +27,8 @@ Usage:
   gzr folder cat FOLDER_ID
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
-      [--dir=DIR]            # Directory to get output file
+  -h, [--help], [--no-help], [--skip-help]  # Display usage information
+      [--dir=DIR]                           # Directory to get output file
 
 Output the JSON representation of a folder to the screen or a file
     OUT

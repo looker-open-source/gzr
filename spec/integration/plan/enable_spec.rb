@@ -27,7 +27,7 @@ Usage:
   gzr plan enable PLAN_ID
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help], [--skip-help]  # Display usage information
 
 Enable the specified plan
     OUT

@@ -27,10 +27,10 @@ Usage:
   gzr alert randomize [ALERT_ID]
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
-      [--window=N]           # Length of window
-                             # Default: 60
-      [--all], [--no-all]    # Randomize all alerts regardless of owner
+  -h, [--help], [--no-help], [--skip-help]  # Display usage information
+      [--window=N]                          # Length of window
+                                            # Default: 60
+      [--all], [--no-all], [--skip-all]     # Randomize all alerts regardless of owner
 
 Randomize the scheduled alerts on a server
     OUT

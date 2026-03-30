@@ -27,8 +27,8 @@ Usage:
   gzr look mv LOOK_ID TARGET_FOLDER_ID
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
-      [--force]              # Overwrite a look with the same name in the target folder
+  -h, [--help], [--no-help], [--skip-help]  # Display usage information
+      [--force]                             # Overwrite a look with the same name in the target folder
 
 Move a look to the given folder
     OUT

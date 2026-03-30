@@ -27,10 +27,10 @@ Usage:
   gzr query runquery QUERY_DEF
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
-      [--file=FILE]          # Filename for saved data
-      [--format=FORMAT]      # One of json,json_detail,csv,txt,html,md,xlsx,sql,png,jpg
-                             # Default: json
+  -h, [--help], [--no-help], [--skip-help]  # Display usage information
+      [--file=FILE]                         # Filename for saved data
+      [--format=FORMAT]                     # One of json,json_detail,csv,txt,html,md,xlsx,sql,png,jpg
+                                            # Default: json
 
 Run query_id, query_slug, or json_query_desc
     OUT

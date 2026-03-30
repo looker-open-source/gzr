@@ -27,11 +27,13 @@ Usage:
   gzr folder top
 
 Options:
-  -h, [--help], [--no-help]    # Display usage information
-      [--fields=FIELDS]        # Fields to display
-                               # Default: id,name,is_shared_root,is_users_root,is_embed_shared_root,is_embed_users_root
-      [--plain], [--no-plain]  # print without any extra formatting
-      [--csv], [--no-csv]      # output in csv format per RFC4180
+  -h, [--help], [--no-help], [--skip-help]     # Display usage information
+      [--fields=FIELDS]                        # Fields to display
+                                               # Default: id,name,is_shared_root,is_users_root,is_embed_shared_root,is_embed_users_root
+      [--plain], [--no-plain], [--skip-plain]  # print without any extra formatting
+                                               # Default: false
+      [--csv], [--no-csv], [--skip-csv]        # output in csv format per RFC4180
+                                               # Default: false
 
 Retrieve the top level (or root) folders
     OUT

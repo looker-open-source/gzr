@@ -27,7 +27,7 @@ Usage:
   gzr role group_rm ROLE_ID GROUP_ID GROUP_ID GROUP_ID ...
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help], [--skip-help]  # Display usage information
 
 Remove indicated groups from role
     OUT

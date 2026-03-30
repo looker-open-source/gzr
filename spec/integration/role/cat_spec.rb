@@ -27,9 +27,9 @@ Usage:
   gzr role cat ROLE_ID
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
-      [--dir=DIR]            # Directory to get output file
-      [--trim], [--no-trim]  # Trim output to minimal set of fields for later import
+  -h, [--help], [--no-help], [--skip-help]  # Display usage information
+      [--dir=DIR]                           # Directory to get output file
+      [--trim], [--no-trim], [--skip-trim]  # Trim output to minimal set of fields for later import
 
 Output the JSON representation of a role to screen/file
     OUT

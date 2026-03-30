@@ -27,8 +27,8 @@ Usage:
   gzr folder create NAME PARENT_FOLDER
 
 Options:
-  -h, [--help], [--no-help]    # Display usage information
-      [--plain], [--no-plain]  # Provide minimal response information
+  -h, [--help], [--no-help], [--skip-help]     # Display usage information
+      [--plain], [--no-plain], [--skip-plain]  # Provide minimal response information
 
 Command description...
     OUT

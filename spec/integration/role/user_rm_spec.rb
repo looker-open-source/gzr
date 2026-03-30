@@ -27,7 +27,7 @@ Usage:
   gzr role user_rm ROLE_ID USER_ID USER_ID USER_ID ...
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help], [--skip-help]  # Display usage information
 
 Remove indicated users from role
     OUT

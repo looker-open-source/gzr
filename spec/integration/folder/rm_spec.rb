@@ -27,7 +27,7 @@ Usage:
   gzr folder rm FOLDER_ID
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help], [--skip-help]  # Display usage information
 
 Delete a folder. The folder must be empty or the --force flag specified to deleted subfolders, dashboards, and looks.
     OUT

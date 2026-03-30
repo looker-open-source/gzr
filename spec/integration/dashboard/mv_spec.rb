@@ -27,8 +27,8 @@ Usage:
   gzr dashboard mv DASHBOARD_ID TARGET_FOLDER_ID
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
-      [--force]              # Overwrite a dashboard with the same name in the target folder
+  -h, [--help], [--no-help], [--skip-help]  # Display usage information
+      [--force]                             # Overwrite a dashboard with the same name in the target folder
 
 Move a dashboard to the given folder
     OUT

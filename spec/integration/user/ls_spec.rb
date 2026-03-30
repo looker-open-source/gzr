@@ -27,12 +27,15 @@ Usage:
   gzr user ls
 
 Options:
-  -h, [--help], [--no-help]              # Display usage information
-      [--fields=FIELDS]                  # Fields to display
-                                         # Default: id,email,last_name,first_name,personal_folder_id,home_folder_id
-      [--last-login], [--no-last-login]  # Include the time of the most recent login
-      [--plain], [--no-plain]            # print without any extra formatting
-      [--csv], [--no-csv]                # output in csv format per RFC4180
+  -h, [--help], [--no-help], [--skip-help]                    # Display usage information
+      [--fields=FIELDS]                                       # Fields to display
+                                                              # Default: id,email,last_name,first_name,personal_folder_id,home_folder_id
+      [--last-login], [--no-last-login], [--skip-last-login]  # Include the time of the most recent login
+                                                              # Default: false
+      [--plain], [--no-plain], [--skip-plain]                 # print without any extra formatting
+                                                              # Default: false
+      [--csv], [--no-csv], [--skip-csv]                       # output in csv format per RFC4180
+                                                              # Default: false
 
 list all users
     OUT

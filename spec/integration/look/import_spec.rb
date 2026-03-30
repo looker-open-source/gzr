@@ -27,9 +27,9 @@ Usage:
   gzr look import FILE DEST_FOLDER_ID
 
 Options:
-  -h, [--help], [--no-help]    # Display usage information
-      [--plain], [--no-plain]  # Provide minimal response information
-      [--force]                # Overwrite a look with the same name/slug in the target folder
+  -h, [--help], [--no-help], [--skip-help]     # Display usage information
+      [--plain], [--no-plain], [--skip-plain]  # Provide minimal response information
+      [--force]                                # Overwrite a look with the same name/slug in the target folder
 
 Import a look from a file
     OUT
