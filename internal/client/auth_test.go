@@ -26,11 +26,11 @@ func TestTokenStorage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-	os.Setenv("HOME", tmpDir)
+	defer func() { _ = os.Setenv("HOME", origHome) }()
+	_ = os.Setenv("HOME", tmpDir)
 
 	host := "test.looker.com"
 	token := "test_token_123"
@@ -89,11 +89,11 @@ func TestTokenStorage_Expired(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-	os.Setenv("HOME", tmpDir)
+	defer func() { _ = os.Setenv("HOME", origHome) }()
+	_ = os.Setenv("HOME", tmpDir)
 
 	host := "test.looker.com"
 	token := "test_token_123"

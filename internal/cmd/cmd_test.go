@@ -256,7 +256,7 @@ func TestUserMeCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -281,7 +281,7 @@ func TestSpaceLsCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -306,7 +306,7 @@ func TestConnectionCatCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -331,7 +331,7 @@ func TestConnectionRmCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -347,9 +347,9 @@ func TestConnectionImportCommand(t *testing.T) {
 	defer func() { MockSDK = nil }()
 
 	tmpFile, _ := os.CreateTemp("", "conn*.json")
-	defer os.Remove(tmpFile.Name())
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
 	_, _ = tmpFile.WriteString(`{"name":"my_new_conn","dialect_name":"postgres"}`)
-	tmpFile.Close()
+	_ = tmpFile.Close()
 
 	oldStdout := os.Stdout
 	r, w, _ := os.Pipe()
@@ -361,7 +361,7 @@ func TestConnectionImportCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -386,7 +386,7 @@ func TestConnectionTestCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -411,7 +411,7 @@ func TestDashboardMvCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -436,7 +436,7 @@ func TestDashboardImportLookmlCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -461,7 +461,7 @@ func TestDashboardSyncLookmlCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -483,7 +483,7 @@ func TestVersionCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -513,7 +513,7 @@ func TestLookMvCommand(t *testing.T) {
 			t.Fatalf("Execute failed: %v", err)
 		}
 
-		w.Close()
+		_ = w.Close()
 		os.Stdout = oldStdout
 		var buf bytes.Buffer
 		_, _ = io.Copy(&buf, r)
@@ -565,7 +565,7 @@ func TestLookMvCommand(t *testing.T) {
 			t.Fatalf("Execute failed with --force: %v", err)
 		}
 
-		w.Close()
+		_ = w.Close()
 		os.Stdout = oldStdout
 		var buf bytes.Buffer
 		_, _ = io.Copy(&buf, r)
@@ -591,7 +591,7 @@ func TestModelCatCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -607,9 +607,9 @@ func TestModelImportCommand(t *testing.T) {
 	defer func() { MockSDK = nil }()
 
 	tmpFile, _ := os.CreateTemp("", "model*.json")
-	defer os.Remove(tmpFile.Name())
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
 	_, _ = tmpFile.WriteString(`{"name":"my_model","project_name":"my_project"}`)
-	tmpFile.Close()
+	_ = tmpFile.Close()
 
 	oldStdout := os.Stdout
 	r, w, _ := os.Pipe()
@@ -621,7 +621,7 @@ func TestModelImportCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -646,7 +646,7 @@ func TestModelSetLsCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -671,7 +671,7 @@ func TestModelSetCatCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -687,9 +687,9 @@ func TestModelSetImportCommand(t *testing.T) {
 	defer func() { MockSDK = nil }()
 
 	tmpFile, _ := os.CreateTemp("", "modelset*.json")
-	defer os.Remove(tmpFile.Name())
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
 	_, _ = tmpFile.WriteString(`{"name":"my_model_set","models":["my_model"]}`)
-	tmpFile.Close()
+	_ = tmpFile.Close()
 
 	oldStdout := os.Stdout
 	r, w, _ := os.Pipe()
@@ -701,7 +701,7 @@ func TestModelSetImportCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -726,7 +726,7 @@ func TestModelSetRmCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -751,7 +751,7 @@ func TestPermissionTreeCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -778,7 +778,7 @@ func TestPermissionSetLsCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -803,7 +803,7 @@ func TestPermissionSetCatCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -819,9 +819,9 @@ func TestPermissionSetImportCommand(t *testing.T) {
 	defer func() { MockSDK = nil }()
 
 	tmpFile, _ := os.CreateTemp("", "permsset*.json")
-	defer os.Remove(tmpFile.Name())
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
 	_, _ = tmpFile.WriteString(`{"name":"my_permission_set","permissions":["access_data"]}`)
-	tmpFile.Close()
+	_ = tmpFile.Close()
 
 	oldStdout := os.Stdout
 	r, w, _ := os.Pipe()
@@ -833,7 +833,7 @@ func TestPermissionSetImportCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -858,7 +858,7 @@ func TestPermissionSetRmCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)
@@ -883,7 +883,7 @@ func TestSpaceTopCommand(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, _ = io.Copy(&buf, r)

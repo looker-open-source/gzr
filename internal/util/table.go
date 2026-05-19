@@ -108,6 +108,6 @@ func (t *Table) Render(plain, isCSV bool) {
 		table.Header(headerAny...)
 	}
 
-	table.Bulk(bulkData)
-	table.Render()
+	_ = table.Bulk(bulkData)
+	_ = table.Render()
 }

@@ -66,7 +66,7 @@ func ReadTokenData() (TokenData, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open token file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	var data TokenData
 	if err := json.NewDecoder(file).Decode(&data); err != nil {
@@ -86,7 +86,7 @@ func WriteTokenData(data TokenData) error {
 	if err != nil {
 		return fmt.Errorf("failed to open token file for writing: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")

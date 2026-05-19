@@ -21,8 +21,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/spf13/cobra"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -95,25 +95,25 @@ var dashboardCatCmd = &cobra.Command{
 
 		if dashboardCatTrim {
 			keepDash := map[string]bool{
-				"id":                 true,
-				"title":              true,
-				"description":        true,
-				"background_color":   true,
-				"show_title":         true,
-				"title_color":        true,
-				"show_filters_bar":   true,
+				"id":                    true,
+				"title":                 true,
+				"description":           true,
+				"background_color":      true,
+				"show_title":            true,
+				"title_color":           true,
+				"show_filters_bar":      true,
 				"tile_background_color": true,
-				"tile_text_color":    true,
-				"text_tile_text_color": true,
-				"crossfilter_enabled": true,
-				"preferred_viewer":   true,
-				"slug":               true,
-				"folder_id":          true,
-				"user_id":            true,
-				"dashboard_elements": true,
-				"dashboard_filters":  true,
-				"dashboard_layouts":  true,
-				"scheduled_plans":    true,
+				"tile_text_color":       true,
+				"text_tile_text_color":  true,
+				"crossfilter_enabled":   true,
+				"preferred_viewer":      true,
+				"slug":                  true,
+				"folder_id":             true,
+				"user_id":               true,
+				"dashboard_elements":    true,
+				"dashboard_filters":     true,
+				"dashboard_layouts":     true,
+				"scheduled_plans":       true,
 			}
 			for k := range m {
 				if !keepDash[k] {
@@ -125,24 +125,24 @@ var dashboardCatCmd = &cobra.Command{
 				for i, ev := range elements {
 					if em, ok := ev.(map[string]interface{}); ok {
 						keepElem := map[string]bool{
-							"id":                   true,
-							"body_text":            true,
-							"subtitle_text":        true,
-							"title":                true,
-							"title_hidden":         true,
-							"title_text":           true,
-							"type":                 true,
-							"rich_content_json":    true,
-							"extension_id":         true,
-							"aria_description":     true,
-							"look_id":              true,
-							"query_id":             true,
-							"merge_result_id":      true,
-							"result_maker_id":      true,
-							"look":                 true,
-							"query":                true,
-							"merge_result":         true,
-							"alerts":               true,
+							"id":                true,
+							"body_text":         true,
+							"subtitle_text":     true,
+							"title":             true,
+							"title_hidden":      true,
+							"title_text":        true,
+							"type":              true,
+							"rich_content_json": true,
+							"extension_id":      true,
+							"aria_description":  true,
+							"look_id":           true,
+							"query_id":          true,
+							"merge_result_id":   true,
+							"result_maker_id":   true,
+							"look":              true,
+							"query":             true,
+							"merge_result":      true,
+							"alerts":            true,
 						}
 						for k := range em {
 							if !keepElem[k] {
@@ -168,15 +168,15 @@ var dashboardCatCmd = &cobra.Command{
 				for i, lv := range layouts {
 					if lm, ok := lv.(map[string]interface{}); ok {
 						keepLayout := map[string]bool{
-							"id":             true,
-							"type":           true,
-							"active":         true,
-							"column_width":   true,
-							"width":          true,
-							"label":          true,
-							"description":    true,
-							"order":          true,
-							"lookml_link_id": true,
+							"id":                          true,
+							"type":                        true,
+							"active":                      true,
+							"column_width":                true,
+							"width":                       true,
+							"label":                       true,
+							"description":                 true,
+							"order":                       true,
+							"lookml_link_id":              true,
 							"dashboard_layout_components": true,
 						}
 						for k := range lm {
@@ -260,14 +260,15 @@ var dashboardCatCmd = &cobra.Command{
 							w := int64(em["width"].(float64))
 							t, _ := em["type"].(string)
 
-							if pos == "top" {
+							switch pos {
+							case "top":
 								for j, cv := range components {
 									if cm, ok := cv.(map[string]interface{}); ok {
 										cm["row"] = cm["row"].(float64) + float64(h)
 										components[j] = cm
 									}
 								}
-							} else if pos == "bottom" {
+							case "bottom":
 								row = maxRow
 							}
 
@@ -304,7 +305,9 @@ var dashboardCatCmd = &cobra.Command{
 
 		if dashboardCatDir != "" {
 			title := ""
-			if v, ok := m["title"].(string); ok { title = v }
+			if v, ok := m["title"].(string); ok {
+				title = v
+			}
 			fn := fmt.Sprintf("%s/Dashboard_%s_%s.json", dashboardCatDir, dID, strings.ReplaceAll(title, "/", "_"))
 			_ = os.WriteFile(fn, []byte(outStr), 0644)
 			fmt.Printf("Wrote %s\n", fn)
@@ -367,18 +370,26 @@ var dashboardImportCmd = &cobra.Command{
 		myID := *me.Id
 
 		title := ""
-		if v, ok := m["title"].(string); ok { title = v }
+		if v, ok := m["title"].(string); ok {
+			title = v
+		}
 		slug := ""
-		if v, ok := m["slug"].(string); ok { slug = v }
+		if v, ok := m["slug"].(string); ok {
+			slug = v
+		}
 
 		var existingDash *v4.Dashboard
 		if slug != "" {
 			dashes, _ := c.SDK.SearchDashboards(v4.RequestSearchDashboards{Slug: &slug, FolderId: &folderID}, nil)
-			if len(dashes) > 0 { existingDash = &dashes[0] }
+			if len(dashes) > 0 {
+				existingDash = &dashes[0]
+			}
 		}
 		if existingDash == nil && title != "" {
 			dashes, _ := c.SDK.SearchDashboards(v4.RequestSearchDashboards{Title: &title, FolderId: &folderID}, nil)
-			if len(dashes) > 0 { existingDash = &dashes[0] }
+			if len(dashes) > 0 {
+				existingDash = &dashes[0]
+			}
 		}
 
 		db, _ := json.Marshal(m)
@@ -402,12 +413,16 @@ var dashboardImportCmd = &cobra.Command{
 
 			if updated.DashboardFilters != nil {
 				for _, f := range *updated.DashboardFilters {
-					if f.Id != nil { _, _ = c.SDK.DeleteDashboardFilter(*f.Id, nil) }
+					if f.Id != nil {
+						_, _ = c.SDK.DeleteDashboardFilter(*f.Id, nil)
+					}
 				}
 			}
 			if updated.DashboardElements != nil {
 				for _, e := range *updated.DashboardElements {
-					if e.Id != nil { _, _ = c.SDK.DeleteDashboardElement(*e.Id, nil) }
+					if e.Id != nil {
+						_, _ = c.SDK.DeleteDashboardElement(*e.Id, nil)
+					}
 				}
 			}
 			if updated.DashboardLayouts != nil {
@@ -450,14 +465,18 @@ var dashboardImportCmd = &cobra.Command{
 					for _, l := range *resultDash.DashboardLayouts {
 						if l.Active != nil && *l.Active && l.Id != nil {
 							updated, err := c.SDK.UpdateDashboardLayout(*l.Id, wdl, "", nil)
-							if err == nil { layoutObj = &updated }
+							if err == nil {
+								layoutObj = &updated
+							}
 							break
 						}
 					}
 				}
 				if layoutObj == nil {
 					created, err := c.SDK.CreateDashboardLayout(wdl, "", nil)
-					if err == nil { layoutObj = &created }
+					if err == nil {
+						layoutObj = &created
+					}
 				}
 
 				if layoutObj != nil && layoutObj.Id != nil {
@@ -501,13 +520,17 @@ var dashboardImportCmd = &cobra.Command{
 										var wq v4.WriteQuery
 										_ = json.Unmarshal(qb, &wq)
 										cq, _ := c.SDK.CreateQuery(wq, "", nil)
-										if cq.Id != nil { wde.QueryId = cq.Id }
+										if cq.Id != nil {
+											wde.QueryId = cq.Id
+										}
 									} else if mVal, ok := elemMap["merge_result"].(map[string]interface{}); ok {
 										mb, _ := json.Marshal(mVal)
 										var wmq v4.WriteMergeQuery
 										_ = json.Unmarshal(mb, &wmq)
 										cmq, _ := c.SDK.CreateMergeQuery(wmq, "", nil)
-										if cmq.Id != nil { wde.MergeResultId = cmq.Id }
+										if cmq.Id != nil {
+											wde.MergeResultId = cmq.Id
+										}
 									}
 
 									reqElem := v4.RequestCreateDashboardElement{Body: wde}
@@ -555,10 +578,14 @@ var dashboardImportCmd = &cobra.Command{
 
 				var matchedPlan *v4.ScheduledPlan
 				pName := ""
-				if wsp.Name != nil { pName = *wsp.Name }
+				if wsp.Name != nil {
+					pName = *wsp.Name
+				}
 				for _, ep := range existingPlans {
 					epName := ""
-					if ep.Name != nil { epName = *ep.Name }
+					if ep.Name != nil {
+						epName = *ep.Name
+					}
 					if epName == pName && ep.UserId != nil && *ep.UserId == myID {
 						matchedPlan = &ep
 						break
@@ -597,7 +624,7 @@ var dashboardMvCmd = &cobra.Command{
 
 		dash, err := c.SDK.Dashboard(dashboardID, "id,title", nil)
 		if err != nil {
-			return fmt.Errorf("Dashboard with id %s does not exist: %w", dashboardID, err)
+			return fmt.Errorf("dashboard with id %s does not exist: %w", dashboardID, err)
 		}
 
 		matches, _ := c.SDK.SearchDashboards(v4.RequestSearchDashboards{Title: dash.Title, FolderId: &targetFolderID}, nil)
@@ -608,7 +635,7 @@ var dashboardMvCmd = &cobra.Command{
 
 		if matchingTitle != nil {
 			if !dashboardMvForce {
-				return fmt.Errorf("Dashboard %s already exists in folder %s\nUse --force if you want to overwrite it", *dash.Title, targetFolderID)
+				return fmt.Errorf("dashboard %s already exists in folder %s\nuse --force if you want to overwrite it", *dash.Title, targetFolderID)
 			}
 			if !dashboardMvPlain {
 				fmt.Printf("Deleting existing dashboard %s %s in folder %s\n", *matchingTitle.Id, *matchingTitle.Title, targetFolderID)
@@ -645,7 +672,7 @@ var dashboardImportLookmlCmd = &cobra.Command{
 
 		dash, err := c.SDK.Dashboard(dashboardID, "id,title", nil)
 		if err != nil {
-			return fmt.Errorf("Dashboard with id %s does not exist: %w", dashboardID, err)
+			return fmt.Errorf("dashboard with id %s does not exist: %w", dashboardID, err)
 		}
 
 		matches, _ := c.SDK.SearchDashboards(v4.RequestSearchDashboards{Title: dash.Title, FolderId: &targetFolderID}, nil)
@@ -656,7 +683,7 @@ var dashboardImportLookmlCmd = &cobra.Command{
 
 		if matchingTitle != nil && (matchingTitle.LookmlLinkId == nil || *matchingTitle.LookmlLinkId != dashboardID) {
 			if !dashboardImportLookmlForce {
-				return fmt.Errorf("Dashboard %s already exists in folder %s\nUse --force if you want to overwrite it", *dash.Title, targetFolderID)
+				return fmt.Errorf("dashboard %s already exists in folder %s\nuse --force if you want to overwrite it", *dash.Title, targetFolderID)
 			}
 			if !dashboardImportLookmlPlain {
 				fmt.Printf("Deleting existing dashboard %s %s in folder %s\n", *matchingTitle.Id, *matchingTitle.Title, targetFolderID)
@@ -669,7 +696,7 @@ var dashboardImportLookmlCmd = &cobra.Command{
 
 		if matchingTitle != nil && matchingTitle.LookmlLinkId != nil && *matchingTitle.LookmlLinkId == dashboardID {
 			if !dashboardImportLookmlSync {
-				return fmt.Errorf("Linked Dashboard %s already exists in folder %s\nUse --sync if you want to synchronize it", *dash.Title, targetFolderID)
+				return fmt.Errorf("linked dashboard %s already exists in folder %s\nuse --sync if you want to synchronize it", *dash.Title, targetFolderID)
 			}
 			if !dashboardImportLookmlPlain {
 				fmt.Printf("Syncing existing dashboard %s %s in folder %s\n", *matchingTitle.Id, *matchingTitle.Title, targetFolderID)
@@ -722,7 +749,7 @@ var dashboardSyncLookmlCmd = &cobra.Command{
 
 		_, err = c.SDK.Dashboard(dashboardID, "id,title", nil)
 		if err != nil {
-			return fmt.Errorf("Dashboard with id %s does not exist: %w", dashboardID, err)
+			return fmt.Errorf("dashboard with id %s does not exist: %w", dashboardID, err)
 		}
 
 		ids, err := c.SDK.SyncLookmlDashboard(v4.RequestSyncLookmlDashboard{LookmlDashboardId: dashboardID}, nil)

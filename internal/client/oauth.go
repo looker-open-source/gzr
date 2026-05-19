@@ -111,7 +111,7 @@ func PerformOAuthLogin(ctx context.Context, host, port, clientID string, ssl boo
 		}
 
 		w.Header().Set("Content-Type", "text/html")
-		fmt.Fprintf(w, "<html><body><h1>Authorization Successful!</h1><p>You can close this window and return to the CLI.</p></body></html>")
+		_, _ = fmt.Fprintf(w, "<html><body><h1>Authorization Successful!</h1><p>You can close this window and return to the CLI.</p></body></html>")
 		codeChan <- code
 	})
 
@@ -120,7 +120,7 @@ func PerformOAuthLogin(ctx context.Context, host, port, clientID string, ssl boo
 			errChan <- fmt.Errorf("local server error: %w", err)
 		}
 	}()
-	defer srv.Shutdown(context.Background())
+	defer func() { _ = srv.Shutdown(context.Background()) }()
 
 	fmt.Printf("Opening browser to URL: %s\n", authURL.String())
 	if err := browser.OpenURL(authURL.String()); err != nil {
@@ -159,7 +159,7 @@ func PerformOAuthLogin(ctx context.Context, host, port, clientID string, ssl boo
 		if err != nil {
 			return "", time.Time{}, fmt.Errorf("token request failed: %w", err)
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode != http.StatusOK {
 			bodyStr, _ := io.ReadAll(resp.Body)

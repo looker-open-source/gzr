@@ -38,7 +38,7 @@ func GetNetrcCredentials(host string) (string, string, error) {
 	if err != nil {
 		return "", "", fmt.Errorf("failed to open netrc: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	n, err := netrc.Parse(file)
 	if err != nil {

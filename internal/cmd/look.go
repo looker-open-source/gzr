@@ -414,7 +414,7 @@ var lookMvCmd = &cobra.Command{
 
 		look, err := c.SDK.Look(lookID, "id,title", nil)
 		if err != nil {
-			return fmt.Errorf("Look with id %s does not exist: %w", lookID, err)
+			return fmt.Errorf("look with id %s does not exist: %w", lookID, err)
 		}
 
 		var matchingTitle *v4.LookWithQuery
@@ -430,7 +430,7 @@ var lookMvCmd = &cobra.Command{
 
 		if matchingTitle != nil {
 			if !lookMvForce {
-				return fmt.Errorf("Look %s already exists in folder %s\nUse --force if you want to overwrite it", *look.Title, targetFolderID)
+				return fmt.Errorf("look %s already exists in folder %s\nuse --force if you want to overwrite it", *look.Title, targetFolderID)
 			}
 			if !lookMvPlain {
 				fmt.Printf("Deleting existing look %s %s in folder %s\n", *matchingTitle.Id, *matchingTitle.Title, targetFolderID)

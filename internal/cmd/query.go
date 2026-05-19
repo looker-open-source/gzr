@@ -77,7 +77,7 @@ var queryRunCmd = &cobra.Command{
 		if queryRunFile != "" {
 			file, err = os.Create(queryRunFile)
 			if err != nil { return err }
-			defer file.Close()
+			defer func() { _ = file.Close() }()
 			outWriter = file
 		}
 

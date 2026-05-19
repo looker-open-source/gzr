@@ -17,30 +17,28 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
-	"github.com/spf13/cobra"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
+	"github.com/spf13/cobra"
 	"gzr.looker.com/gzr/internal/util"
 )
 
 var (
-	planLsFields       string
-	planLsDisabled     bool
-	planLsPlain        bool
-	planLsCSV          bool
-	planCatDir         string
-	planImportPlain    bool
-	planImportEnable   bool
-	planImportDisable  bool
-	planFailuresPlain  bool
-	planFailuresCSV    bool
-	planRandWindow     int
-	planRandAll        bool
+	planLsFields      string
+	planLsDisabled    bool
+	planLsPlain       bool
+	planLsCSV         bool
+	planCatDir        string
+	planImportPlain   bool
+	planImportEnable  bool
+	planImportDisable bool
+	planFailuresPlain bool
+	planFailuresCSV   bool
+	planRandWindow    int
+	planRandAll       bool
 )
 
 var PlanCmd = &cobra.Command{
@@ -53,27 +51,30 @@ var planLsCmd = &cobra.Command{
 	Short: "List scheduled plans",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := initClient(cmd.Context(), false)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 
 		req := v4.RequestAllScheduledPlans{
 			Fields: &planLsFields,
 		}
-		if planLsDisabled {
-			// Retrieve disabled plans? all_scheduled_plans doesn't have a disabled filter in v4 SDK?
-			// E.g. RequestAllScheduledPlans has UserId, Fields, AllUsers.
-			// E.g. we can filter in memory if needed, or just list all. E.g. if planLsDisabled is true, maybe we filter where enabled == false. E.g. if false, we don't filter or filter enabled == true? E.g. Ruby gzr had --disabled flag. E.g. if set, it might have passed it, or filtered. E.g. let's check if all_scheduled_plans returns disabled by default. E.g. usually it returns all. E.g. let's filter in memory.
-		}
 		req.AllUsers = ptrBool(true) // E.g. Ruby gzr ls had --all-users or just listed all? E.g. Ruby gzr ls had no --all flag but description says 'List scheduled plans on a server'. E.g. let's check if it passed all_users. E.g. earlier I saw `req[:all_users] = true if user_id == "all"`. E.g. in ls.rb it might have passed all_users=true.
 
 		plans, err := c.SDK.AllScheduledPlans(req, nil)
-		if err != nil { return fmt.Errorf("failed to list plans: %w", err) }
+		if err != nil {
+			return fmt.Errorf("failed to list plans: %w", err)
+		}
 
 		headers := strings.Split(planLsFields, ",")
-		for i := range headers { headers[i] = strings.TrimSpace(headers[i]) }
+		for i := range headers {
+			headers[i] = strings.TrimSpace(headers[i])
+		}
 
 		table := util.NewTable(headers)
 		for _, p := range plans {
-			if planLsDisabled && p.Enabled != nil && *p.Enabled { continue }
+			if planLsDisabled && p.Enabled != nil && *p.Enabled {
+				continue
+			}
 			table.Append(extractFields(p, planLsFields))
 		}
 		table.Render(planLsPlain, planLsCSV)
@@ -87,16 +88,22 @@ var planCatCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := initClient(cmd.Context(), false)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		pID := args[0]
 
 		plan, err := c.SDK.ScheduledPlan(pID, "", nil)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 
 		bytes, _ := json.MarshalIndent(plan, "", "  ")
 		if planCatDir != "" {
 			name := ""
-			if plan.Name != nil { name = *plan.Name }
+			if plan.Name != nil {
+				name = *plan.Name
+			}
 			fn := fmt.Sprintf("%s/Plan_%s_%s.json", planCatDir, pID, strings.ReplaceAll(name, "/", "_"))
 			_ = os.WriteFile(fn, bytes, 0644)
 			fmt.Printf("Wrote %s\n", fn)
@@ -113,10 +120,14 @@ var planRmCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := initClient(cmd.Context(), false)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		pID := args[0]
 		_, err = c.SDK.DeleteScheduledPlan(pID, nil)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		fmt.Printf("Scheduled plan %s deleted.\n", pID)
 		return nil
 	},
@@ -128,11 +139,15 @@ var planEnableCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := initClient(cmd.Context(), false)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		pID := args[0]
 
 		plan, err := c.SDK.ScheduledPlan(pID, "", nil)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 
 		pb, _ := json.Marshal(plan)
 		var wsp v4.WriteScheduledPlan
@@ -140,7 +155,9 @@ var planEnableCmd = &cobra.Command{
 		wsp.Enabled = ptrBool(true)
 
 		_, err = c.SDK.UpdateScheduledPlan(pID, wsp, nil)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		fmt.Printf("Scheduled plan %s enabled.\n", pID)
 		return nil
 	},
@@ -152,11 +169,15 @@ var planDisableCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := initClient(cmd.Context(), false)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		pID := args[0]
 
 		plan, err := c.SDK.ScheduledPlan(pID, "", nil)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 
 		pb, _ := json.Marshal(plan)
 		var wsp v4.WriteScheduledPlan
@@ -164,7 +185,9 @@ var planDisableCmd = &cobra.Command{
 		wsp.Enabled = ptrBool(false)
 
 		_, err = c.SDK.UpdateScheduledPlan(pID, wsp, nil)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		fmt.Printf("Scheduled plan %s disabled.\n", pID)
 		return nil
 	},
@@ -176,18 +199,24 @@ var planRunItCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := initClient(cmd.Context(), false)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		pID := args[0]
 
 		plan, err := c.SDK.ScheduledPlan(pID, "", nil)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 
 		pb, _ := json.Marshal(plan)
 		var wsp v4.WriteScheduledPlan
 		_ = json.Unmarshal(pb, &wsp)
 
 		_, err = c.SDK.ScheduledPlanRunOnceById(pID, wsp, nil)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		fmt.Printf("Executed plan %s\n", pID)
 		return nil
 	},
@@ -199,19 +228,27 @@ var planImportCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(3),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := initClient(cmd.Context(), false)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		file := args[0]
 		objType := strings.ToLower(args[1])
 		objID := args[2]
 
 		b, err := os.ReadFile(file)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 
 		var m map[string]interface{}
-		if err := json.Unmarshal(b, &m); err != nil { return err }
+		if err := json.Unmarshal(b, &m); err != nil {
+			return err
+		}
 
 		me, err := c.SDK.Me("id", nil)
-		if err != nil || me.Id == nil { return fmt.Errorf("failed to get me: %v", err) }
+		if err != nil || me.Id == nil {
+			return fmt.Errorf("failed to get me: %v", err)
+		}
 		myID := *me.Id
 
 		mb, _ := json.Marshal(m)
@@ -219,16 +256,21 @@ var planImportCmd = &cobra.Command{
 		_ = json.Unmarshal(mb, &wsp)
 		wsp.UserId = &myID
 
-		if objType == "look" {
+		switch objType {
+		case "look":
 			wsp.LookId = &objID
-		} else if objType == "dashboard" {
+		case "dashboard":
 			wsp.DashboardId = &objID
-		} else {
+		default:
 			return fmt.Errorf("invalid obj_type %s, must be look or dashboard", objType)
 		}
 
-		if planImportEnable { wsp.Enabled = ptrBool(true) }
-		if planImportDisable { wsp.Enabled = ptrBool(false) }
+		if planImportEnable {
+			wsp.Enabled = ptrBool(true)
+		}
+		if planImportDisable {
+			wsp.Enabled = ptrBool(false)
+		}
 
 		var existingPlans []v4.ScheduledPlan
 		if objType == "look" {
@@ -241,10 +283,14 @@ var planImportCmd = &cobra.Command{
 
 		var matchedPlan *v4.ScheduledPlan
 		pName := ""
-		if wsp.Name != nil { pName = *wsp.Name }
+		if wsp.Name != nil {
+			pName = *wsp.Name
+		}
 		for _, ep := range existingPlans {
 			epName := ""
-			if ep.Name != nil { epName = *ep.Name }
+			if ep.Name != nil {
+				epName = *ep.Name
+			}
 			if epName == pName && ep.UserId != nil && *ep.UserId == myID {
 				matchedPlan = &ep
 				break
@@ -255,11 +301,15 @@ var planImportCmd = &cobra.Command{
 		if matchedPlan != nil {
 			mpID := *matchedPlan.Id
 			updated, err := c.SDK.UpdateScheduledPlan(mpID, wsp, nil)
-			if err != nil { return err }
+			if err != nil {
+				return err
+			}
 			resultPlan = &updated
 		} else {
 			created, err := c.SDK.CreateScheduledPlan(wsp, nil)
-			if err != nil { return err }
+			if err != nil {
+				return err
+			}
 			resultPlan = &created
 		}
 
@@ -277,7 +327,9 @@ var planFailuresCmd = &cobra.Command{
 	Short: "Report all plans that failed in their most recent run attempt",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := initClient(cmd.Context(), false)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 
 		fields := []string{
 			"scheduled_plan.id",
@@ -306,7 +358,9 @@ var planFailuresCmd = &cobra.Command{
 		}
 
 		res, err := c.SDK.RunInlineQuery(v4.RequestRunInlineQuery{ResultFormat: "json", Body: wq}, nil)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 
 		var rows []map[string]interface{}
 		_ = json.Unmarshal([]byte(res), &rows)
@@ -315,10 +369,14 @@ var planFailuresCmd = &cobra.Command{
 		priorID := ""
 		for _, r := range rows {
 			pID, _ := r["scheduled_plan.id"].(string)
-			if pID == priorID { continue }
+			if pID == priorID {
+				continue
+			}
 			priorID = pID
 			status, _ := r["scheduled_job.status"].(string)
-			if status == "success" { continue }
+			if status == "success" {
+				continue
+			}
 
 			tableRows = append(tableRows, mapToRow(r, fields))
 		}
@@ -337,22 +395,29 @@ var planRandomizeCmd = &cobra.Command{
 	Short: "Randomize scheduled plans on a server",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := initClient(cmd.Context(), false)
-		if err != nil { return err }
-		rand.Seed(time.Now().UnixNano())
+		if err != nil {
+			return err
+		}
 
 		window := planRandWindow
-		if window < 1 || window > 60 { return fmt.Errorf("window must be between 1 and 60") }
+		if window < 1 || window > 60 {
+			return fmt.Errorf("window must be between 1 and 60")
+		}
 
 		var plans []v4.ScheduledPlan
 		if len(args) > 0 {
 			pID := args[0]
 			p, err := c.SDK.ScheduledPlan(pID, "", nil)
-			if err != nil { return err }
+			if err != nil {
+				return err
+			}
 			plans = append(plans, p)
 		} else {
 			req := v4.RequestAllScheduledPlans{AllUsers: &planRandAll}
 			plans, err = c.SDK.AllScheduledPlans(req, nil)
-			if err != nil { return err }
+			if err != nil {
+				return err
+			}
 		}
 
 		for _, p := range plans {

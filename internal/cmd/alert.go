@@ -21,7 +21,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
@@ -107,7 +106,6 @@ var alertRandomizeCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := initClient(cmd.Context(), false)
 		if err != nil { return err }
-		rand.Seed(time.Now().UnixNano())
 
 		window := alertRandWindow
 		if window < 1 || window > 60 { return fmt.Errorf("window must be between 1 and 60") }

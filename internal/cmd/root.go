@@ -39,7 +39,6 @@ var (
 	cfgHTTPProxy    string
 	cfgForce        bool
 	cfgWidth        int
-	cfgOAuth        bool // For session login --oauth, but let's put it on session login command or global if needed
 )
 
 var RootCmd = &cobra.Command{

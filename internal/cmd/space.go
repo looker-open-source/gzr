@@ -509,7 +509,7 @@ var spaceExportCmd = &cobra.Command{
 				var w io.Writer = &buf
 				if spaceExportTgz != "" {
 					gzw := gzip.NewWriter(&buf)
-					defer gzw.Close()
+					defer func() { _ = gzw.Close() }()
 					w = gzw
 				}
 				archiver = tar.NewWriter(w)
