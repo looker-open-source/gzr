@@ -63,15 +63,27 @@ var apiAlertCreateAlertCmd = &cobra.Command{
 	Use:   "create_alert [BODY_JSON_FILE_OR_-]",
 	Short: "Create an alert",
 	Long:  "### Create a new alert and return details of the newly created object\n\nRequired fields: `field`, `destinations`, `comparison_type`, `threshold`, `cron`\n\nExample Request:\nRun alert on dashboard element '103' at 5am every day. Send an email to 'test@test.com' if inventory for Los Angeles (using dashboard filter `Warehouse Name`) is lower than 1,000\n```\n{\n  \"cron\": \"0 5 * * *\",\n  \"custom_title\": \"Alert when LA inventory is low\",\n  \"dashboard_element_id\": 103,\n  \"applied_dashboard_filters\": [\n    {\n      \"filter_title\": \"Warehouse Name\",\n      \"field_name\": \"distribution_centers.name\",\n      \"filter_value\": \"Los Angeles CA\",\n      \"filter_description\": \"is Los Angeles CA\"\n    }\n  ],\n  \"comparison_type\": \"LESS_THAN\",\n  \"destinations\": [\n    {\n      \"destination_type\": \"EMAIL\",\n      \"email_address\": \"test@test.com\"\n    }\n  ],\n  \"field\": {\n    \"title\": \"Number on Hand\",\n    \"name\": \"inventory_items.number_on_hand\"\n  },\n  \"is_disabled\": false,\n  \"is_public\": true,\n  \"threshold\": 1000\n}\n```\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAlertCreateAlertCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/alerts", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAlertCreateAlertCmdBodySchema = "{\n  \"properties\": {\n    \"applied_dashboard_filters\": {\n      \"description\": \"Filters coming from the dashboard that are applied. Example `[{ \\\"filter_title\\\": \\\"Name\\\", \\\"field_name\\\": \\\"distribution_centers.name\\\", \\\"filter_value\\\": \\\"Los Angeles CA\\\" }]`\",\n      \"items\": {\n        \"$ref\": \"#/definitions/AlertAppliedDashboardFilter\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"comparison_type\": {\n      \"description\": \"This property informs the check what kind of comparison we are performing. Only certain condition types are valid for time series alerts. For details, refer to [Setting Alert Conditions](https://docs.cloud.google.com/looker/docs/sharing-and-publishing/creating-alerts#setting_alert_conditions) Valid values are: \\\"EQUAL_TO\\\", \\\"GREATER_THAN\\\", \\\"GREATER_THAN_OR_EQUAL_TO\\\", \\\"LESS_THAN\\\", \\\"LESS_THAN_OR_EQUAL_TO\\\", \\\"INCREASES_BY\\\", \\\"DECREASES_BY\\\", \\\"CHANGES_BY\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false,\n      \"x-looker-values\": [\n        \"EQUAL_TO\",\n        \"GREATER_THAN\",\n        \"GREATER_THAN_OR_EQUAL_TO\",\n        \"LESS_THAN\",\n        \"LESS_THAN_OR_EQUAL_TO\",\n        \"INCREASES_BY\",\n        \"DECREASES_BY\",\n        \"CHANGES_BY\"\n      ]\n    },\n    \"cron\": {\n      \"description\": \"Vixie-Style crontab specification when to run. At minimum, it has to be longer than 15 minute intervals\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"custom_title\": {\n      \"description\": \"An optional, user-defined title for the alert\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_url_base\": {\n      \"description\": \"Domain for the custom url selected by the alert creator from the admin defined domain allowlist\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_url_label\": {\n      \"description\": \"Label for the custom url defined by the alert creator\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_url_params\": {\n      \"description\": \"Parameters and path for the custom url defined by the alert creator\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_element_id\": {\n      \"description\": \"ID of the dashboard element associated with the alert. Refer to [dashboard_element()](#!/Dashboard/DashboardElement)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"description\": {\n      \"description\": \"An optional description for the alert. This supplements the title\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"destinations\": {\n      \"description\": \"Array of destinations to send alerts to. Must be the same type of destination. Example `[{ \\\"destination_type\\\": \\\"EMAIL\\\", \\\"email_address\\\": \\\"test@test.com\\\" }]`\",\n      \"items\": {\n        \"$ref\": \"#/definitions/AlertDestination\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"disabled_reason\": {\n      \"description\": \"Reason for disabling alert\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"enhancements\": {\n      \"description\": \"Enum of additional alert properties. Valid values are: \\\"NONE\\\", \\\"STRATEGIC_NARRATIVE\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-values\": [\n        \"NONE\",\n        \"STRATEGIC_NARRATIVE\"\n      ]\n    },\n    \"field\": {\n      \"$ref\": \"#/definitions/AlertField\",\n      \"description\": \"The field the alert threshold is compared against when determining when to send notifications\",\n      \"x-looker-nullable\": false\n    },\n    \"investigative_content_id\": {\n      \"description\": \"The ID of the investigative content. For dashboards, this will be the dashboard ID\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"investigative_content_type\": {\n      \"description\": \"The type of the investigative content Valid values are: \\\"dashboard\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-values\": [\n        \"dashboard\"\n      ]\n    },\n    \"is_disabled\": {\n      \"description\": \"Whether or not the alert is disabled\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"is_public\": {\n      \"description\": \"Whether or not the alert is public\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"lookml_dashboard_id\": {\n      \"description\": \"ID of the LookML dashboard associated with the alert\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"lookml_link_id\": {\n      \"description\": \"ID of the LookML dashboard element associated with the alert\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"owner_id\": {\n      \"description\": \"User id of alert owner\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"query_id\": {\n      \"description\": \"ID of the query\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"show_custom_url\": {\n      \"description\": \"Boolean to determine if the custom url should be used\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"threshold\": {\n      \"description\": \"Value of the alert threshold\",\n      \"format\": \"double\",\n      \"type\": \"number\",\n      \"x-looker-nullable\": false\n    },\n    \"time_series_condition_state\": {\n      \"$ref\": \"#/definitions/AlertConditionState\",\n      \"description\": \"(Write-Only) (Optional) Only used when first creating time series alerts. It's used to pick a starting time reference from which alerts will be evaluated again. Without it, alerts be run against all time series data. Refer to [docs](https://docs.cloud.google.com/looker/docs/sharing-and-publishing/creating-alerts) for details. Example `{ latest_time_series_id: '2020-09-17', previous_time_series_id: '2020-09-16' }`.\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    }\n  },\n  \"required\": [\n    \"comparison_type\",\n    \"cron\",\n    \"destinations\",\n    \"field\",\n    \"owner_id\",\n    \"threshold\"\n  ],\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAlertCmd.AddCommand(apiAlertCreateAlertCmd)
+	apiAlertCreateAlertCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAlertDeleteAlertCmd = &cobra.Command{
@@ -238,30 +250,54 @@ var apiAlertUpdateAlertCmd = &cobra.Command{
 	Use:   "update_alert [ALERT_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update an alert",
 	Long:  "### Update an alert\n# Required fields: `owner_id`, `field`, `destinations`, `comparison_type`, `threshold`, `cron`\n#\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAlertUpdateAlertCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PUT", "/alerts/{alert_id}", []string{"alert_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAlertUpdateAlertCmdBodySchema = "{\n  \"properties\": {\n    \"applied_dashboard_filters\": {\n      \"description\": \"Filters coming from the dashboard that are applied. Example `[{ \\\"filter_title\\\": \\\"Name\\\", \\\"field_name\\\": \\\"distribution_centers.name\\\", \\\"filter_value\\\": \\\"Los Angeles CA\\\" }]`\",\n      \"items\": {\n        \"$ref\": \"#/definitions/AlertAppliedDashboardFilter\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"comparison_type\": {\n      \"description\": \"This property informs the check what kind of comparison we are performing. Only certain condition types are valid for time series alerts. For details, refer to [Setting Alert Conditions](https://docs.cloud.google.com/looker/docs/sharing-and-publishing/creating-alerts#setting_alert_conditions) Valid values are: \\\"EQUAL_TO\\\", \\\"GREATER_THAN\\\", \\\"GREATER_THAN_OR_EQUAL_TO\\\", \\\"LESS_THAN\\\", \\\"LESS_THAN_OR_EQUAL_TO\\\", \\\"INCREASES_BY\\\", \\\"DECREASES_BY\\\", \\\"CHANGES_BY\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false,\n      \"x-looker-values\": [\n        \"EQUAL_TO\",\n        \"GREATER_THAN\",\n        \"GREATER_THAN_OR_EQUAL_TO\",\n        \"LESS_THAN\",\n        \"LESS_THAN_OR_EQUAL_TO\",\n        \"INCREASES_BY\",\n        \"DECREASES_BY\",\n        \"CHANGES_BY\"\n      ]\n    },\n    \"cron\": {\n      \"description\": \"Vixie-Style crontab specification when to run. At minimum, it has to be longer than 15 minute intervals\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"custom_title\": {\n      \"description\": \"An optional, user-defined title for the alert\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_url_base\": {\n      \"description\": \"Domain for the custom url selected by the alert creator from the admin defined domain allowlist\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_url_label\": {\n      \"description\": \"Label for the custom url defined by the alert creator\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_url_params\": {\n      \"description\": \"Parameters and path for the custom url defined by the alert creator\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_element_id\": {\n      \"description\": \"ID of the dashboard element associated with the alert. Refer to [dashboard_element()](#!/Dashboard/DashboardElement)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"description\": {\n      \"description\": \"An optional description for the alert. This supplements the title\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"destinations\": {\n      \"description\": \"Array of destinations to send alerts to. Must be the same type of destination. Example `[{ \\\"destination_type\\\": \\\"EMAIL\\\", \\\"email_address\\\": \\\"test@test.com\\\" }]`\",\n      \"items\": {\n        \"$ref\": \"#/definitions/AlertDestination\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"disabled_reason\": {\n      \"description\": \"Reason for disabling alert\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"enhancements\": {\n      \"description\": \"Enum of additional alert properties. Valid values are: \\\"NONE\\\", \\\"STRATEGIC_NARRATIVE\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-values\": [\n        \"NONE\",\n        \"STRATEGIC_NARRATIVE\"\n      ]\n    },\n    \"field\": {\n      \"$ref\": \"#/definitions/AlertField\",\n      \"description\": \"The field the alert threshold is compared against when determining when to send notifications\",\n      \"x-looker-nullable\": false\n    },\n    \"investigative_content_id\": {\n      \"description\": \"The ID of the investigative content. For dashboards, this will be the dashboard ID\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"investigative_content_type\": {\n      \"description\": \"The type of the investigative content Valid values are: \\\"dashboard\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-values\": [\n        \"dashboard\"\n      ]\n    },\n    \"is_disabled\": {\n      \"description\": \"Whether or not the alert is disabled\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"is_public\": {\n      \"description\": \"Whether or not the alert is public\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"lookml_dashboard_id\": {\n      \"description\": \"ID of the LookML dashboard associated with the alert\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"lookml_link_id\": {\n      \"description\": \"ID of the LookML dashboard element associated with the alert\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"owner_id\": {\n      \"description\": \"User id of alert owner\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"query_id\": {\n      \"description\": \"ID of the query\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"show_custom_url\": {\n      \"description\": \"Boolean to determine if the custom url should be used\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"threshold\": {\n      \"description\": \"Value of the alert threshold\",\n      \"format\": \"double\",\n      \"type\": \"number\",\n      \"x-looker-nullable\": false\n    },\n    \"time_series_condition_state\": {\n      \"$ref\": \"#/definitions/AlertConditionState\",\n      \"description\": \"(Write-Only) (Optional) Only used when first creating time series alerts. It's used to pick a starting time reference from which alerts will be evaluated again. Without it, alerts be run against all time series data. Refer to [docs](https://docs.cloud.google.com/looker/docs/sharing-and-publishing/creating-alerts) for details. Example `{ latest_time_series_id: '2020-09-17', previous_time_series_id: '2020-09-16' }`.\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    }\n  },\n  \"required\": [\n    \"comparison_type\",\n    \"cron\",\n    \"destinations\",\n    \"field\",\n    \"owner_id\",\n    \"threshold\"\n  ],\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAlertCmd.AddCommand(apiAlertUpdateAlertCmd)
+	apiAlertUpdateAlertCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAlertUpdateAlertFieldCmd = &cobra.Command{
 	Use:   "update_alert_field [ALERT_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update select fields on an alert",
 	Long:  "### Update select alert fields\n# Available fields: `owner_id`, `is_disabled`, `disabled_reason`, `is_public`, `threshold`, `enhancements`\n#\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAlertUpdateAlertFieldCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/alerts/{alert_id}", []string{"alert_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAlertUpdateAlertFieldCmdBodySchema = "{\n  \"properties\": {\n    \"disabled_reason\": {\n      \"description\": \"The reason this alert is disabled\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"enhancements\": {\n      \"description\": \"Enum of additional alert properties. Valid values are: \\\"NONE\\\", \\\"STRATEGIC_NARRATIVE\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-values\": [\n        \"NONE\",\n        \"STRATEGIC_NARRATIVE\"\n      ]\n    },\n    \"is_disabled\": {\n      \"description\": \"Set alert enabled or disabled\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"is_public\": {\n      \"description\": \"Set alert public or private\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"owner_id\": {\n      \"description\": \"New owner ID of the alert\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"threshold\": {\n      \"description\": \"New threshold value\",\n      \"format\": \"double\",\n      \"type\": \"number\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAlertCmd.AddCommand(apiAlertUpdateAlertFieldCmd)
+	apiAlertUpdateAlertFieldCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 // ApiAuth category
@@ -533,8 +569,17 @@ var apiArtifactUpdateArtifactsCmd = &cobra.Command{
 	Use:   "update_artifacts [NAMESPACE] [BODY_JSON_FILE_OR_-]",
 	Short: "Create or update artifacts",
 	Long:  "### Create or update one or more artifacts\n\nOnly `key` and `value` are required to _create_ an artifact.\nTo _update_ an artifact, its current `version` value must be provided.\n\nIn the following example `body` payload, `one` and `two` are existing artifacts, and `three` is new:\n\n```json\n[\n  { \"key\": \"one\", \"value\": \"[ \\\"updating\\\", \\\"existing\\\", \\\"one\\\" ]\", \"version\": 10, \"content_type\": \"application/json\" },\n  { \"key\": \"two\", \"value\": \"updating existing two\", \"version\": 20 },\n  { \"key\": \"three\", \"value\": \"creating new three\" },\n]\n```\n\nNotes for this body:\n\n- The `value` for `key` **one** is a JSON payload, so a `content_type` override is needed. This override must be done **every** time a JSON value is set.\n- The `version` values for **one** and **two** mean they have been saved 10 and 20 times, respectively.\n- If `version` is **not** provided for an existing artifact, the entire request will be refused and a `Bad Request` response will be sent.\n- If `version` is provided for an artifact, it is only used for helping to prevent inadvertent data overwrites. It cannot be used to **set** the version of an artifact. The Looker server controls `version`.\n- We suggest encoding binary values as base64. Because the MIME content type for base64 is detected as plain text, also provide `content_type` to correctly indicate the value's type for retrieval and client-side processing.\n\nBecause artifacts are stored encrypted, the same value can be written multiple times (provided the correct `version` number is used). Looker does not examine any values stored in the artifact store, and only decrypts when sending artifacts back in an API response.\n\n**Note**: The artifact storage API can only be used by Looker-built extensions.\n\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiArtifactUpdateArtifactsCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -544,8 +589,11 @@ var apiArtifactUpdateArtifactsCmd = &cobra.Command{
 	},
 }
 
+const apiArtifactUpdateArtifactsCmdBodySchema = ""
+
 func init() {
 	apiArtifactCmd.AddCommand(apiArtifactUpdateArtifactsCmd)
+	apiArtifactUpdateArtifactsCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiArtifactUpdateArtifactsCmd.Flags().String("fields", "", "Comma-delimited names of fields to return in responses. Omit for all fields")
 }
 
@@ -563,15 +611,27 @@ var apiAuthAcquireEmbedCookielessSessionCmd = &cobra.Command{
 	Use:   "acquire_embed_cookieless_session [BODY_JSON_FILE_OR_-]",
 	Short: "Create Acquire cookieless embed session",
 	Long:  "### Acquire a cookieless embed session.\n\nThe acquire session endpoint negates the need for signing the embed url and passing it as a parameter\nto the embed login. This endpoint accepts an embed user definition and creates or updates it. This is\nsimilar behavior to the embed SSO login as they both can create and update embed user data.\n\nThe endpoint also accepts an optional `session_reference_token`. If present and the session has not expired\nand the credentials match the credentials for the embed session, a new authentication token will be\ngenerated. This allows the embed session to attach a new embedded IFRAME to the embed session. Note that\nthe session is NOT extended in this scenario. In other words the session_length parameter is ignored.\n\n**IMPORTANT:** If the `session_reference_token` is provided and the session has NOT expired, the embed user\nis NOT updated. This is done for performance reasons and to support the embed SSO usecase where the\nfirst IFRAME created on a page uses a signed url and subsequently created IFRAMEs do not.\n\nIf the `session_reference_token` is provided but the session has expired, the token will be ignored and a\nnew embed session will be created. Note that the embed user definition will be updated in this scenario.\n\nIf the credentials do not match the credentials associated with an existing session_reference_token, a\n404 will be returned.\n\nThe endpoint returns the following:\n- Authentication token - a token that is passed to `/embed/login` endpoint that creates or attaches to the\n  embed session. This token can be used once and has a lifetime of 30 seconds.\n- Session reference token - a token that lives for the length of the session. This token is used to\n  generate new api and navigation tokens OR create new embed IFRAMEs.\n- Api token - lives for 10 minutes. The Looker client will ask for this token once it is loaded into the\n  iframe.\n- Navigation token - lives for 10 minutes. The Looker client will ask for this token once it is loaded into\n  the iframe.\n\n**NOTE**: Calls to this endpoint require [Embedding](https://docs.cloud.google.com/looker/docs/r/looker-core-feature-embed) to be enabled. Usage of this endpoint is not authorized for Looker Core Standard and Looker Core Enterprise.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthAcquireEmbedCookielessSessionCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/embed/cookieless_session/acquire", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthAcquireEmbedCookielessSessionCmdBodySchema = "{\n  \"properties\": {\n    \"embed_domain\": {\n      \"description\": \"The domain of the server embedding the Looker IFRAME. This is an alternative to specifying the domain in the embedded domain allow list in the Looker embed admin page.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"external_group_id\": {\n      \"description\": \"A unique value identifying an embed-exclusive group. Multiple embed users using the same `external_group_id` value will be able to share Looker content with each other. Content and embed users associated with the `external_group_id` will not be accessible to normal Looker users or embed users not associated with this `external_group_id`.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"external_user_id\": {\n      \"description\": \"A value from an external system that uniquely identifies the embed user. Since the user_ids of Looker embed users may change with every embed session, external_user_id provides a way to assign a known, stable user identifier across multiple embed sessions. When the same external user id value is used for a new embed session, any existing session is terminated and existing access grants are replaced with the access grants associated with the new embed session.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"first_name\": {\n      \"description\": \"First name of the embed user. Defaults to 'Embed' if not specified\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"force_logout_login\": {\n      \"description\": \"When true, the embed session will purge any residual Looker login state (such as in browser cookies) before creating a new login state with the given embed user info. Defaults to true.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"group_ids\": {\n      \"description\": \"List of Looker group ids in which to enroll the embed user\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"last_name\": {\n      \"description\": \"Last name of the embed user. Defaults to 'User' if not specified\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"models\": {\n      \"description\": \"List of model names that the embed user may access\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"permissions\": {\n      \"description\": \"List of Looker permission names to grant to the embed user. Requested permissions will be filtered to permissions allowed for embed sessions.\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"session_length\": {\n      \"description\": \"Number of seconds the signed embed session will be valid after the embed session is started. Defaults to 300 seconds. Maximum session length accepted is 2592000 seconds (30 days).\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"session_reference_token\": {\n      \"description\": \"Token referencing the embed session and is used to generate new authentication, navigation and api tokens.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attributes\": {\n      \"additionalProperties\": {\n        \"format\": \"any\",\n        \"type\": \"any\"\n      },\n      \"description\": \"A dictionary of name-value pairs associating a Looker user attribute name with a value.\",\n      \"type\": \"object\",\n      \"x-looker-nullable\": true\n    },\n    \"user_timezone\": {\n      \"description\": \"Sets the user timezone for the embed user session, if the User Specific Timezones setting is enabled in the Looker admin settings. A value of `null` forces the embed user to use the Looker Application Default Timezone. You MUST omit this property from the request if the User Specific Timezones setting is disabled. Timezone values are validated against the IANA Timezone standard and can be seen in the Application Time Zone dropdown list on the Looker General Settings admin page.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthAcquireEmbedCookielessSessionCmd)
+	apiAuthAcquireEmbedCookielessSessionCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthActivateAppUserCmd = &cobra.Command{
@@ -598,15 +658,27 @@ var apiAuthAddSupportAccessAllowlistEntriesCmd = &cobra.Command{
 	Use:   "add_support_access_allowlist_entries [BODY_JSON_FILE_OR_-]",
 	Short: "Add Support Access Allowlist Users",
 	Long:  "### Add Support Access Allowlist Users\n\nAdds a list of emails to the Allowlist, using the provided reason\n\nCalls to this endpoint may be denied by [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/r/looker-core/overview).\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthAddSupportAccessAllowlistEntriesCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/support_access/allowlist", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthAddSupportAccessAllowlistEntriesCmdBodySchema = "{\n  \"properties\": {\n    \"emails\": {\n      \"description\": \"An array of emails to add to the Allowlist\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"reason\": {\n      \"description\": \"Reason for adding emails to the Allowlist\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthAddSupportAccessAllowlistEntriesCmd)
+	apiAuthAddSupportAccessAllowlistEntriesCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthAllOauthClientAppsCmd = &cobra.Command{
@@ -653,75 +725,135 @@ var apiAuthCreateEmbedSecretCmd = &cobra.Command{
 	Use:   "create_embed_secret [BODY_JSON_FILE_OR_-]",
 	Short: "Create Embed Secret",
 	Long:  "### Create an embed secret using the specified information.\n\nThe value of the `secret` field will be set by Looker and returned.\n\n**NOTE**: Calls to this endpoint require [Embedding](https://docs.cloud.google.com/looker/docs/r/looker-core-feature-embed) to be enabled. Usage of this endpoint is not authorized for Looker Core Standard and Looker Core Enterprise.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthCreateEmbedSecretCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/embed_config/secrets", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthCreateEmbedSecretCmdBodySchema = "{\n  \"properties\": {\n    \"algorithm\": {\n      \"description\": \"Signing algorithm to use with this secret. Either `hmac/sha-256`(default) or `hmac/sha-1`\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"enabled\": {\n      \"description\": \"Is this secret currently enabled\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"secret_type\": {\n      \"description\": \"Field to distinguish between SSO secrets and JWT secrets Valid values are: \\\"SSO\\\", \\\"JWT\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false,\n      \"x-looker-values\": [\n        \"SSO\",\n        \"JWT\"\n      ]\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthCreateEmbedSecretCmd)
+	apiAuthCreateEmbedSecretCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthCreateEmbedUrlAsMeCmd = &cobra.Command{
 	Use:   "create_embed_url_as_me [BODY_JSON_FILE_OR_-]",
 	Short: "Create Embed URL",
 	Long:  "### Create an Embed URL\n\nCreates an embed URL that runs as the Looker user making this API call. (\"Embed as me\")\nThis embed URL can then be used to instantiate a Looker embed session in a\n\"Powered by Looker\" (PBL) web application.\n\nThis is similar to Private Embedding (https://docs.cloud.google.com/looker/docs/r/admin/embed/private-embed). Instead of\nlogging into the Web UI to authenticate, the user has already authenticated against the API to be able to\nmake this call. However, unlike Private Embed where the user has access to any other part of the Looker UI,\nthe embed web session created by requesting the EmbedUrlResponse.url in a browser only has access to\ncontent visible under the `/embed` context.\n\nAn embed URL can only be used once, and must be used within 5 minutes of being created. After it\nhas been used to request a page from the Looker server, the URL is invalid. Future requests using\nthe same URL will fail. This is to prevent 'replay attacks'.\n\nThe `target_url` property must be a complete URL of a Looker Embedded UI page - scheme, hostname, path starting with \"/embed\" and query params.\nTo load a dashboard with id 56 and with a filter of `Date=1 years`, the looker Embed URL would look like `https://myname.looker.com/embed/dashboards/56?Date=1%20years`.\nThe best way to obtain this target_url is to navigate to the desired Looker page in your web browser,\ncopy the URL shown in the browser address bar, insert \"/embed\" after the host/port, and paste it into the `target_url` property as a quoted string value in this API request.\n\n#### Security Note\nProtect this signed URL as you would an access token or password credentials - do not write\nit to disk, do not pass it to a third party, and only pass it through a secure HTTPS\nencrypted transport.\n\n\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthCreateEmbedUrlAsMeCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/embed/token_url/me", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthCreateEmbedUrlAsMeCmdBodySchema = "{\n  \"properties\": {\n    \"force_logout_login\": {\n      \"description\": \"When true, the embed session will purge any residual Looker login state (such as in browser cookies) before creating a new login state with the given embed user info. Defaults to true.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"session_length\": {\n      \"description\": \"Number of seconds the signed embed session will be valid after the embed session is started. Defaults to 300 seconds. Maximum session length accepted is 2592000 seconds (30 days).\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"target_url\": {\n      \"description\": \"The complete URL of the Looker UI page to display in the embed context. For example, to display the dashboard with id 34, `target_url` would look like: `https://mycompany.looker.com:9999/dashboards/34`. `target_uri` MUST contain a scheme (HTTPS), domain name, and URL path. Port must be included if it is required to reach the Looker server from browser clients. If the Looker instance is behind a load balancer or other proxy, `target_uri` must be the public-facing domain name and port required to reach the Looker instance, not the actual internal network machine name of the Looker instance.\",\n      \"format\": \"uri-reference\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"required\": [\n    \"target_url\"\n  ],\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthCreateEmbedUrlAsMeCmd)
+	apiAuthCreateEmbedUrlAsMeCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthCreateOidcTestConfigCmd = &cobra.Command{
 	Use:   "create_oidc_test_config [BODY_JSON_FILE_OR_-]",
 	Short: "Create OIDC Test Configuration",
 	Long:  "### Create a OIDC test configuration.\n\nCalls to this endpoint may be denied by [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/r/looker-core/overview).\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthCreateOidcTestConfigCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/oidc_test_configs", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthCreateOidcTestConfigCmdBodySchema = "{\n  \"properties\": {\n    \"allow_direct_roles\": {\n      \"description\": \"Allows roles to be directly assigned to OIDC auth'd users.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allow_normal_group_membership\": {\n      \"description\": \"Allow OIDC auth'd users to be members of non-reflected Looker groups. If 'false', user will be removed from non-reflected groups on login.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allow_roles_from_normal_groups\": {\n      \"description\": \"OIDC auth'd users will inherit roles from non-reflected Looker groups.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"alternate_email_login_allowed\": {\n      \"description\": \"Allow alternate email-based login via '/login/email' for admins and for specified users with the 'login_special_email' permission. This option is useful as a fallback during ldap setup, if ldap config problems occur later, or if you need to support some users who are not in your ldap directory. Looker email/password logins are always disabled for regular users when ldap is enabled.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"audience\": {\n      \"description\": \"OpenID Provider Audience\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"auth_requires_role\": {\n      \"description\": \"Users will not be allowed to login at all unless a role for them is found in OIDC if set to true\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"authorization_endpoint\": {\n      \"description\": \"OpenID Provider Authorization Url\",\n      \"format\": \"uri-reference\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"default_new_user_group_ids\": {\n      \"description\": \"(Write-Only) Array of ids of groups that will be applied to new users the first time they login via OIDC\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"default_new_user_role_ids\": {\n      \"description\": \"(Write-Only) Array of ids of roles that will be applied to new users the first time they login via OIDC\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"enabled\": {\n      \"description\": \"Enable/Disable OIDC authentication for the server\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"groups_attribute\": {\n      \"description\": \"Name of user record attributes used to indicate groups. Used when 'groups_finder_type' is set to 'grouped_attribute_values'\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_with_role_ids\": {\n      \"description\": \"(Read/Write) Array of mappings between OIDC Groups and arrays of Looker Role ids\",\n      \"items\": {\n        \"$ref\": \"#/definitions/OIDCGroupWrite\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"identifier\": {\n      \"description\": \"Relying Party Identifier (provided by OpenID Provider)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"issuer\": {\n      \"description\": \"OpenID Provider Issuer\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"new_user_migration_types\": {\n      \"description\": \"Merge first-time oidc login to existing user account by email addresses. When a user logs in for the first time via oidc this option will connect this user into their existing account by finding the account with a matching email address by testing the given types of credentials for existing users. Otherwise a new user account will be created for the user. This list (if provided) must be a comma separated list of string like 'email,ldap,google'\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"scopes\": {\n      \"description\": \"Array of scopes to request.\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"secret\": {\n      \"description\": \"(Write-Only) Relying Party Secret (provided by OpenID Provider)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"set_roles_from_groups\": {\n      \"description\": \"Set user roles in Looker based on groups from OIDC\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"token_endpoint\": {\n      \"description\": \"OpenID Provider Token Url\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_email\": {\n      \"description\": \"Name of user record attributes used to indicate email address field\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_first_name\": {\n      \"description\": \"Name of user record attributes used to indicate first name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_last_name\": {\n      \"description\": \"Name of user record attributes used to indicate last name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attributes_with_ids\": {\n      \"description\": \"(Read/Write) Array of mappings between OIDC User Attributes and arrays of Looker User Attribute ids\",\n      \"items\": {\n        \"$ref\": \"#/definitions/OIDCUserAttributeWrite\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"userinfo_endpoint\": {\n      \"description\": \"OpenID Provider User Information Url\",\n      \"format\": \"uri-reference\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthCreateOidcTestConfigCmd)
+	apiAuthCreateOidcTestConfigCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthCreateSamlTestConfigCmd = &cobra.Command{
 	Use:   "create_saml_test_config [BODY_JSON_FILE_OR_-]",
 	Short: "Create SAML Test Configuration",
 	Long:  "### Create a SAML test configuration.\n\nCalls to this endpoint may be denied by [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/r/looker-core/overview).\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthCreateSamlTestConfigCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/saml_test_configs", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthCreateSamlTestConfigCmdBodySchema = "{\n  \"properties\": {\n    \"allow_direct_roles\": {\n      \"description\": \"Allows roles to be directly assigned to SAML auth'd users.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allow_normal_group_membership\": {\n      \"description\": \"Allow SAML auth'd users to be members of non-reflected Looker groups. If 'false', user will be removed from non-reflected groups on login.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allow_roles_from_normal_groups\": {\n      \"description\": \"SAML auth'd users will inherit roles from non-reflected Looker groups.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allowed_clock_drift\": {\n      \"description\": \"Count of seconds of clock drift to allow when validating timestamps of assertions.\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"alternate_email_login_allowed\": {\n      \"description\": \"Allow alternate email-based login via '/login/email' for admins and for specified users with the 'login_special_email' permission. This option is useful as a fallback during ldap setup, if ldap config problems occur later, or if you need to support some users who are not in your ldap directory. Looker email/password logins are always disabled for regular users when ldap is enabled.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"auth_requires_role\": {\n      \"description\": \"Users will not be allowed to login at all unless a role for them is found in Saml if set to true\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"bypass_login_page\": {\n      \"description\": \"Bypass the login page when user authentication is required. Redirect to IdP immediately instead.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"default_new_user_group_ids\": {\n      \"description\": \"(Write-Only) Array of ids of groups that will be applied to new users the first time they login via Saml\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"default_new_user_role_ids\": {\n      \"description\": \"(Write-Only) Array of ids of roles that will be applied to new users the first time they login via Saml\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"enabled\": {\n      \"description\": \"Enable/Disable Saml authentication for the server\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"groups_attribute\": {\n      \"description\": \"Name of user record attributes used to indicate groups. Used when 'groups_finder_type' is set to 'grouped_attribute_values'\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_finder_type\": {\n      \"description\": \"Identifier for a strategy for how Looker will find groups in the SAML response. One of ['grouped_attribute_values', 'individual_attributes']\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_member_value\": {\n      \"description\": \"Value for group attribute used to indicate membership. Used when 'groups_finder_type' is set to 'individual_attributes'\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_with_role_ids\": {\n      \"description\": \"(Read/Write) Array of mappings between Saml Groups and arrays of Looker Role ids\",\n      \"items\": {\n        \"$ref\": \"#/definitions/SamlGroupWrite\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"idp_audience\": {\n      \"description\": \"Identity Provider Audience (set in IdP config). Optional in Looker. Set this only if you want Looker to validate the audience value returned by the IdP.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"idp_cert\": {\n      \"description\": \"Identity Provider Certificate (provided by IdP)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"idp_cert_multi\": {\n      \"$ref\": \"#/definitions/SamlIdpCertMulti\",\n      \"description\": \"Identity Provider Multiple Certificates (provided by IdP)\",\n      \"x-looker-nullable\": true\n    },\n    \"idp_issuer\": {\n      \"description\": \"Identity Provider Issuer (provided by IdP)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"idp_url\": {\n      \"description\": \"Identity Provider Url (provided by IdP)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"multi_certs_supported\": {\n      \"description\": \"Indicates whether this SAML configuration is set up to use multiple Identity Provider certificates (idp_cert_multi) or a single certificate (idp_cert). When true, idp_cert_multi is used; otherwise, idp_cert is used.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"new_user_migration_types\": {\n      \"description\": \"Merge first-time saml login to existing user account by email addresses. When a user logs in for the first time via saml this option will connect this user into their existing account by finding the account with a matching email address by testing the given types of credentials for existing users. Otherwise a new user account will be created for the user. This list (if provided) must be a comma separated list of string like 'email,ldap,google'\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"set_roles_from_groups\": {\n      \"description\": \"Set user roles in Looker based on groups from Saml\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"user_attribute_map_email\": {\n      \"description\": \"Name of user record attributes used to indicate email address field\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_first_name\": {\n      \"description\": \"Name of user record attributes used to indicate first name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_last_name\": {\n      \"description\": \"Name of user record attributes used to indicate last name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attributes_with_ids\": {\n      \"description\": \"(Read/Write) Array of mappings between Saml User Attributes and arrays of Looker User Attribute ids\",\n      \"items\": {\n        \"$ref\": \"#/definitions/SamlUserAttributeWrite\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthCreateSamlTestConfigCmd)
+	apiAuthCreateSamlTestConfigCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthCreateSsoEmbedUrlCmd = &cobra.Command{
 	Use:   "create_sso_embed_url [BODY_JSON_FILE_OR_-]",
 	Short: "Create Signed Embed Url",
 	Long:  "### Create Signed Embed URL\n\nCreates a signed embed URL and cryptographically signs it with an embed secret.\nThis signed URL can then be used to instantiate a Looker embed session in a PBL web application.\nDo not make any modifications to the returned URL - any change may invalidate the signature and\ncause the URL to fail to load a Looker embed session.\n\nA signed embed URL can only be **used once**. After the URL has been used to request a page from the\nLooker server, it is invalid. Future requests using the same URL will fail. This is to prevent\n'replay attacks'.\n\nThe `target_url` property must be a complete URL of a Looker UI page - scheme, hostname, path and query params.\nTo load a dashboard with id 56 and with a filter of `Date=1 years`, the looker URL would look like `https:/myname.looker.com/dashboards/56?Date=1%20years`.\nThe best way to obtain this `target_url` is to navigate to the desired Looker page in your web browser and use the \"Get embed URL\" menu option\nto copy it to your clipboard and paste it into the `target_url` property as a quoted string value in this API request.\n\nPermissions for the embed user are defined by the groups in which the embed user is a member (`group_ids` property)\nand the lists of models and permissions assigned to the embed user.\nAt a minimum, you must provide values for either the `group_ids` property, or **both** the models and permissions properties.\nThese properties are additive; an embed user can be a member of certain groups AND be granted access to models and permissions.\n\nThe embed user's access is the union of permissions granted by the `group_ids`, `models`, and `permissions` properties.\n\nThis function does not strictly require all group_ids, user attribute names, or model names to exist at the moment the\nembed url is created. Unknown group_id, user attribute names or model names will be passed through to the output URL.\nBecause of this, **these parameters are not validated** when the API call is made.\n\nThe [Get Embed Url](https://docs.cloud.google.com/looker/docs/r/get-signed-url) dialog can be used to determine and validate the correct permissions for signing an embed url.\nThis dialog also provides the SDK syntax for the API call to make. Alternatively, you can copy the signed URL into the Embed URI Validator text box\nin `<your looker instance>/admin/embed` to diagnose potential problems.\n\nThe `secret_id` parameter is optional. If specified, its value must be the id of an active secret defined in the Looker instance.\nif not specified, the URL will be signed using the most recent active signing secret. If there is no active secret for signing embed urls,\na default secret will be created. This default secret is encrypted using HMAC/SHA-256.\n\nThe `embed_domain` parameter is optional. If specified and valid, the domain will be added to the embed domain allowlist if it is missing.\n\n#### Security Note\nProtect this signed URL as you would an access token or password credentials - do not write\nit to disk, do not pass it to a third party, and only pass it through a secure HTTPS\nencrypted transport.\n\n\n**NOTE**: Calls to this endpoint require [Embedding](https://docs.cloud.google.com/looker/docs/r/looker-core-feature-embed) to be enabled. Usage of this endpoint is not authorized for Looker Core Standard and Looker Core Enterprise.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthCreateSsoEmbedUrlCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/embed/sso_url", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthCreateSsoEmbedUrlCmdBodySchema = "{\n  \"properties\": {\n    \"embed_domain\": {\n      \"description\": \"Optional. URL of the domain hosting the signed embed URL. If provided and valid, the embed_domain will be added to the embed domain allowlist if it is not currently in the list\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"external_group_id\": {\n      \"description\": \"A unique value identifying an embed-exclusive group. Multiple embed users using the same `external_group_id` value will be able to share Looker content with each other. Content and embed users associated with the `external_group_id` will not be accessible to normal Looker users or embed users not associated with this `external_group_id`.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"external_user_id\": {\n      \"description\": \"A value from an external system that uniquely identifies the embed user. Since the user_ids of Looker embed users may change with every embed session, external_user_id provides a way to assign a known, stable user identifier across multiple embed sessions. When the same external user id value is used for a new embed session, any existing session is terminated and existing access grants are replaced with the access grants associated with the new embed session.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"first_name\": {\n      \"description\": \"First name of the embed user. Defaults to 'Embed' if not specified\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"force_logout_login\": {\n      \"description\": \"When true, the embed session will purge any residual Looker login state (such as in browser cookies) before creating a new login state with the given embed user info. Defaults to true.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"group_ids\": {\n      \"description\": \"List of Looker group ids in which to enroll the embed user\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"last_name\": {\n      \"description\": \"Last name of the embed user. Defaults to 'User' if not specified\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"models\": {\n      \"description\": \"List of model names that the embed user may access\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"permissions\": {\n      \"description\": \"List of Looker permission names to grant to the embed user. Requested permissions will be filtered to permissions allowed for embed sessions.\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"secret_id\": {\n      \"description\": \"Id of the embed secret to use to sign this SSO url. If specified, the value must be an id of a valid (active) secret defined in the Looker instance. If not specified, the URL will be signed with the newest active embed secret defined in the Looker instance.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"session_length\": {\n      \"description\": \"Number of seconds the signed embed session will be valid after the embed session is started. Defaults to 300 seconds. Maximum session length accepted is 2592000 seconds (30 days).\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"target_url\": {\n      \"description\": \"The complete URL of the Looker UI page to display in the embed context. For example, to display the dashboard with id 34, `target_url` would look like: `https://mycompany.looker.com:9999/dashboards/34`. `target_uri` MUST contain a scheme (HTTPS), domain name, and URL path. Port must be included if it is required to reach the Looker server from browser clients. If the Looker instance is behind a load balancer or other proxy, `target_uri` must be the public-facing domain name and port required to reach the Looker instance, not the actual internal network machine name of the Looker instance.\",\n      \"format\": \"uri-reference\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"user_attributes\": {\n      \"additionalProperties\": {\n        \"format\": \"any\",\n        \"type\": \"any\"\n      },\n      \"description\": \"A dictionary of name-value pairs associating a Looker user attribute name with a value.\",\n      \"type\": \"object\",\n      \"x-looker-nullable\": true\n    },\n    \"user_timezone\": {\n      \"description\": \"Sets the user timezone for the embed user session, if the User Specific Timezones setting is enabled in the Looker admin settings. A value of `null` forces the embed user to use the Looker Application Default Timezone. You MUST omit this property from the request if the User Specific Timezones setting is disabled. Timezone values are validated against the IANA Timezone standard and can be seen in the Application Time Zone dropdown list on the Looker General Settings admin page.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"required\": [\n    \"target_url\"\n  ],\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthCreateSsoEmbedUrlCmd)
+	apiAuthCreateSsoEmbedUrlCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthDeactivateAppUserCmd = &cobra.Command{
@@ -883,30 +1015,54 @@ var apiAuthEnableSupportAccessCmd = &cobra.Command{
 	Use:   "enable_support_access [BODY_JSON_FILE_OR_-]",
 	Short: "Enable Support Access",
 	Long:  "### Enable Support Access\n\nEnables Support Access for the provided duration\n\nCalls to this endpoint may be denied by [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/r/looker-core/overview).\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthEnableSupportAccessCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PUT", "/support_access/enable", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthEnableSupportAccessCmdBodySchema = "{\n  \"properties\": {\n    \"duration_in_seconds\": {\n      \"description\": \"Duration Support Access will remain enabled\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"required\": [\n    \"duration_in_seconds\"\n  ],\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthEnableSupportAccessCmd)
+	apiAuthEnableSupportAccessCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthFetchAndParseSamlIdpMetadataCmd = &cobra.Command{
 	Use:   "fetch_and_parse_saml_idp_metadata [BODY_JSON_FILE_OR_-]",
 	Short: "Parse SAML IdP Url",
 	Long:  "### Fetch the given url and parse it as a SAML IdP metadata document and return the result.\nNote that this requires that the url be public or at least at a location where the Looker instance\ncan fetch it without requiring any special authentication.\n\nCalls to this endpoint may be denied by [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/r/looker-core/overview).\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthFetchAndParseSamlIdpMetadataCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/fetch_and_parse_saml_idp_metadata", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthFetchAndParseSamlIdpMetadataCmdBodySchema = ""
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthFetchAndParseSamlIdpMetadataCmd)
+	apiAuthFetchAndParseSamlIdpMetadataCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthForcePasswordResetAtNextLoginForAllUsersCmd = &cobra.Command{
@@ -928,15 +1084,27 @@ var apiAuthGenerateTokensForCookielessSessionCmd = &cobra.Command{
 	Use:   "generate_tokens_for_cookieless_session [BODY_JSON_FILE_OR_-]",
 	Short: "Generate tokens for cookieless embed session",
 	Long:  "### Generate api and navigation tokens for a cookieless embed session\n\nThe generate tokens endpoint is used to create new tokens of type:\n- Api token.\n- Navigation token.\nThe generate tokens endpoint should be called every time the Looker client asks for a token (except for the\nfirst time when the tokens returned by the acquire_session endpoint should be used).\n\n#### Embed session expiration handling\n\nThis endpoint does NOT return an error when the embed session expires. This is to simplify processing\nin the caller as errors can happen for non session expiration reasons. Instead the endpoint returns\nthe session time to live in the `session_reference_token_ttl` response property. If this property\ncontains a zero, the embed session has expired.\n\n**NOTE**: Calls to this endpoint require [Embedding](https://docs.cloud.google.com/looker/docs/r/looker-core-feature-embed) to be enabled. Usage of this endpoint is not authorized for Looker Core Standard and Looker Core Enterprise.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthGenerateTokensForCookielessSessionCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PUT", "/embed/cookieless_session/generate_tokens", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthGenerateTokensForCookielessSessionCmdBodySchema = "{\n  \"properties\": {\n    \"api_token\": {\n      \"description\": \"Token to used to call Looker APIs. \",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"navigation_token\": {\n      \"description\": \"Token used to load and navigate between Looker pages.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"session_reference_token\": {\n      \"description\": \"Token referencing the embed session and is used to generate new authentication, navigation and api tokens.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"required\": [\n    \"session_reference_token\"\n  ],\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthGenerateTokensForCookielessSessionCmd)
+	apiAuthGenerateTokensForCookielessSessionCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthGetSupportAccessAllowlistEntriesCmd = &cobra.Command{
@@ -1043,15 +1211,27 @@ var apiAuthParseSamlIdpMetadataCmd = &cobra.Command{
 	Use:   "parse_saml_idp_metadata [BODY_JSON_FILE_OR_-]",
 	Short: "Parse SAML IdP XML",
 	Long:  "### Parse the given xml as a SAML IdP metadata document and return the result.\n\nCalls to this endpoint may be denied by [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/r/looker-core/overview).\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthParseSamlIdpMetadataCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/parse_saml_idp_metadata", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthParseSamlIdpMetadataCmdBodySchema = ""
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthParseSamlIdpMetadataCmd)
+	apiAuthParseSamlIdpMetadataCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthPasswordConfigCmd = &cobra.Command{
@@ -1073,23 +1253,44 @@ var apiAuthRegisterMobileDeviceCmd = &cobra.Command{
 	Use:   "register_mobile_device [BODY_JSON_FILE_OR_-]",
 	Short: "Register Mobile Device",
 	Long:  "### Registers a mobile device.\n# Required fields: [:device_token, :device_type]\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthRegisterMobileDeviceCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/mobile/device", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthRegisterMobileDeviceCmdBodySchema = "{\n  \"properties\": {\n    \"device_token\": {\n      \"description\": \"Specifies the device token\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"device_type\": {\n      \"description\": \"Specifies type of device. Valid values are: \\\"android\\\", \\\"ios\\\", \\\"android_new_looker\\\", \\\"ios_new_looker\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false,\n      \"x-looker-values\": [\n        \"android\",\n        \"ios\",\n        \"android_new_looker\",\n        \"ios_new_looker\"\n      ]\n    }\n  },\n  \"required\": [\n    \"device_token\",\n    \"device_type\"\n  ],\n  \"x-looker-status\": \"beta\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthRegisterMobileDeviceCmd)
+	apiAuthRegisterMobileDeviceCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthRegisterOauthClientAppCmd = &cobra.Command{
 	Use:   "register_oauth_client_app [CLIENT_GUID] [BODY_JSON_FILE_OR_-]",
 	Short: "Register OAuth App",
 	Long:  "### Register an OAuth2 Client App\n\nRegisters details identifying an external web app or native app as an OAuth2 login client of the Looker instance.\nThe app registration must provide a unique client_guid and redirect_uri that the app will present\nin OAuth login requests. If the client_guid and redirect_uri parameters in the login request do not match\nthe app details registered with the Looker instance, the request is assumed to be a forgery and is rejected.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthRegisterOauthClientAppCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -1099,8 +1300,11 @@ var apiAuthRegisterOauthClientAppCmd = &cobra.Command{
 	},
 }
 
+const apiAuthRegisterOauthClientAppCmdBodySchema = "{\n  \"properties\": {\n    \"description\": {\n      \"description\": \"A description of the application that will be displayed to users\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"display_name\": {\n      \"description\": \"The application's display name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"enabled\": {\n      \"description\": \"When enabled is true, OAuth2 and API requests will be accepted from this app. When false, all requests from this app will be refused. Setting disabled invalidates existing tokens.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"group_id\": {\n      \"description\": \"If set, only Looker users who are members of this group can use this web app with Looker. If group_id is not set, any Looker user may use this app to access this Looker instance\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"redirect_uri\": {\n      \"description\": \"The uri with which this application will receive an auth code by browser redirect.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthRegisterOauthClientAppCmd)
+	apiAuthRegisterOauthClientAppCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiAuthRegisterOauthClientAppCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -1238,75 +1442,135 @@ var apiAuthTestLdapConfigAuthCmd = &cobra.Command{
 	Use:   "test_ldap_config_auth [BODY_JSON_FILE_OR_-]",
 	Short: "Test LDAP Auth",
 	Long:  "### Test the connection authentication settings for an LDAP configuration.\n\nThis tests that the connection is possible and that a 'server' account to be used by Looker can authenticate to the LDAP server given connection and authentication information.\n\n**connection_host**, **connection_port**, and **auth_username**, are required. **connection_tls** and **auth_password** are optional.\n\nExample:\n```json\n{\n  \"connection_host\": \"ldap.example.com\",\n  \"connection_port\": \"636\",\n  \"connection_tls\": true,\n  \"auth_username\": \"cn=looker,dc=example,dc=com\",\n  \"auth_password\": \"secret\"\n}\n```\n\nLooker will never return an **auth_password**. If this request omits the **auth_password** field, then the **auth_password** value from the active config (if present) will be used for the test.\n\nThe active LDAP settings are not modified.\n\nCalls to this endpoint may be denied by [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/r/looker-core/overview).\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthTestLdapConfigAuthCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PUT", "/ldap_config/test_auth", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthTestLdapConfigAuthCmdBodySchema = "{\n  \"properties\": {\n    \"allow_direct_roles\": {\n      \"description\": \"Allows roles to be directly assigned to LDAP auth'd users.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allow_normal_group_membership\": {\n      \"description\": \"Allow LDAP auth'd users to be members of non-reflected Looker groups. If 'false', user will be removed from non-reflected groups on login.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allow_roles_from_normal_groups\": {\n      \"description\": \"LDAP auth'd users will be able to inherit roles from non-reflected Looker groups.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"alternate_email_login_allowed\": {\n      \"description\": \"Allow alternate email-based login via '/login/email' for admins and for specified users with the 'login_special_email' permission. This option is useful as a fallback during ldap setup, if ldap config problems occur later, or if you need to support some users who are not in your ldap directory. Looker email/password logins are always disabled for regular users when ldap is enabled.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"auth_password\": {\n      \"description\": \"(Write-Only)  Password for the LDAP account used to access the LDAP server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"auth_requires_role\": {\n      \"description\": \"Users will not be allowed to login at all unless a role for them is found in LDAP if set to true\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"auth_username\": {\n      \"description\": \"Distinguished name of LDAP account used to access the LDAP server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"connection_host\": {\n      \"description\": \"LDAP server hostname\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"connection_port\": {\n      \"description\": \"LDAP host port\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"connection_tls\": {\n      \"description\": \"Use Transport Layer Security\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"connection_tls_no_verify\": {\n      \"description\": \"Do not verify peer when using TLS\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"default_new_user_group_ids\": {\n      \"description\": \"(Write-Only)  Array of ids of groups that will be applied to new users the first time they login via LDAP\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"default_new_user_role_ids\": {\n      \"description\": \"(Write-Only)  Array of ids of roles that will be applied to new users the first time they login via LDAP\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"enabled\": {\n      \"description\": \"Enable/Disable LDAP authentication for the server\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"force_no_page\": {\n      \"description\": \"Don't attempt to do LDAP search result paging (RFC 2696) even if the LDAP server claims to support it.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"groups_base_dn\": {\n      \"description\": \"Base dn for finding groups in LDAP searches\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_finder_type\": {\n      \"description\": \"Identifier for a strategy for how Looker will search for groups in the LDAP server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_member_attribute\": {\n      \"description\": \"LDAP Group attribute that signifies the members of the groups. Most commonly 'member'\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_objectclasses\": {\n      \"description\": \"Optional comma-separated list of supported LDAP objectclass for groups when doing groups searches\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_user_attribute\": {\n      \"description\": \"LDAP Group attribute that signifies the user in a group. Most commonly 'dn'\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_with_role_ids\": {\n      \"description\": \"(Read/Write) Array of mappings between LDAP Groups and arrays of Looker Role ids\",\n      \"items\": {\n        \"$ref\": \"#/definitions/LDAPGroupWrite\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"merge_new_users_by_email\": {\n      \"description\": \"Merge first-time ldap login to existing user account by email addresses. When a user logs in for the first time via ldap this option will connect this user into their existing account by finding the account with a matching email address. Otherwise a new user account will be created for the user.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"set_roles_from_groups\": {\n      \"description\": \"Set user roles in Looker based on groups from LDAP\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"test_ldap_password\": {\n      \"description\": \"(Write-Only)  Test LDAP user password. For ldap tests only.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"test_ldap_user\": {\n      \"description\": \"(Write-Only)  Test LDAP user login id. For ldap tests only.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"user_attribute_map_email\": {\n      \"description\": \"Name of user record attributes used to indicate email address field\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_first_name\": {\n      \"description\": \"Name of user record attributes used to indicate first name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_last_name\": {\n      \"description\": \"Name of user record attributes used to indicate last name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_ldap_id\": {\n      \"description\": \"Name of user record attributes used to indicate unique record id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attributes_with_ids\": {\n      \"description\": \"(Read/Write) Array of mappings between LDAP User Attributes and arrays of Looker User Attribute ids\",\n      \"items\": {\n        \"$ref\": \"#/definitions/LDAPUserAttributeWrite\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"user_bind_base_dn\": {\n      \"description\": \"Distinguished name of LDAP node used as the base for user searches\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_custom_filter\": {\n      \"description\": \"(Optional) Custom RFC-2254 filter clause for use in finding user during login. Combined via 'and' with the other generated filter clauses.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id_attribute_names\": {\n      \"description\": \"Name(s) of user record attributes used for matching user login id (comma separated list)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_objectclass\": {\n      \"description\": \"(Optional) Name of user record objectclass used for finding user during login id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthTestLdapConfigAuthCmd)
+	apiAuthTestLdapConfigAuthCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthTestLdapConfigConnectionCmd = &cobra.Command{
 	Use:   "test_ldap_config_connection [BODY_JSON_FILE_OR_-]",
 	Short: "Test LDAP Connection",
 	Long:  "### Test the connection settings for an LDAP configuration.\n\nThis tests that the connection is possible given a connection_host and connection_port.\n\n**connection_host** and **connection_port** are required. **connection_tls** is optional.\n\nExample:\n```json\n{\n  \"connection_host\": \"ldap.example.com\",\n  \"connection_port\": \"636\",\n  \"connection_tls\": true\n}\n```\n\nNo authentication to the LDAP server is attempted.\n\nThe active LDAP settings are not modified.\n\nCalls to this endpoint may be denied by [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/r/looker-core/overview).\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthTestLdapConfigConnectionCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PUT", "/ldap_config/test_connection", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthTestLdapConfigConnectionCmdBodySchema = "{\n  \"properties\": {\n    \"allow_direct_roles\": {\n      \"description\": \"Allows roles to be directly assigned to LDAP auth'd users.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allow_normal_group_membership\": {\n      \"description\": \"Allow LDAP auth'd users to be members of non-reflected Looker groups. If 'false', user will be removed from non-reflected groups on login.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allow_roles_from_normal_groups\": {\n      \"description\": \"LDAP auth'd users will be able to inherit roles from non-reflected Looker groups.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"alternate_email_login_allowed\": {\n      \"description\": \"Allow alternate email-based login via '/login/email' for admins and for specified users with the 'login_special_email' permission. This option is useful as a fallback during ldap setup, if ldap config problems occur later, or if you need to support some users who are not in your ldap directory. Looker email/password logins are always disabled for regular users when ldap is enabled.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"auth_password\": {\n      \"description\": \"(Write-Only)  Password for the LDAP account used to access the LDAP server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"auth_requires_role\": {\n      \"description\": \"Users will not be allowed to login at all unless a role for them is found in LDAP if set to true\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"auth_username\": {\n      \"description\": \"Distinguished name of LDAP account used to access the LDAP server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"connection_host\": {\n      \"description\": \"LDAP server hostname\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"connection_port\": {\n      \"description\": \"LDAP host port\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"connection_tls\": {\n      \"description\": \"Use Transport Layer Security\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"connection_tls_no_verify\": {\n      \"description\": \"Do not verify peer when using TLS\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"default_new_user_group_ids\": {\n      \"description\": \"(Write-Only)  Array of ids of groups that will be applied to new users the first time they login via LDAP\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"default_new_user_role_ids\": {\n      \"description\": \"(Write-Only)  Array of ids of roles that will be applied to new users the first time they login via LDAP\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"enabled\": {\n      \"description\": \"Enable/Disable LDAP authentication for the server\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"force_no_page\": {\n      \"description\": \"Don't attempt to do LDAP search result paging (RFC 2696) even if the LDAP server claims to support it.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"groups_base_dn\": {\n      \"description\": \"Base dn for finding groups in LDAP searches\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_finder_type\": {\n      \"description\": \"Identifier for a strategy for how Looker will search for groups in the LDAP server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_member_attribute\": {\n      \"description\": \"LDAP Group attribute that signifies the members of the groups. Most commonly 'member'\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_objectclasses\": {\n      \"description\": \"Optional comma-separated list of supported LDAP objectclass for groups when doing groups searches\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_user_attribute\": {\n      \"description\": \"LDAP Group attribute that signifies the user in a group. Most commonly 'dn'\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_with_role_ids\": {\n      \"description\": \"(Read/Write) Array of mappings between LDAP Groups and arrays of Looker Role ids\",\n      \"items\": {\n        \"$ref\": \"#/definitions/LDAPGroupWrite\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"merge_new_users_by_email\": {\n      \"description\": \"Merge first-time ldap login to existing user account by email addresses. When a user logs in for the first time via ldap this option will connect this user into their existing account by finding the account with a matching email address. Otherwise a new user account will be created for the user.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"set_roles_from_groups\": {\n      \"description\": \"Set user roles in Looker based on groups from LDAP\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"test_ldap_password\": {\n      \"description\": \"(Write-Only)  Test LDAP user password. For ldap tests only.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"test_ldap_user\": {\n      \"description\": \"(Write-Only)  Test LDAP user login id. For ldap tests only.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"user_attribute_map_email\": {\n      \"description\": \"Name of user record attributes used to indicate email address field\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_first_name\": {\n      \"description\": \"Name of user record attributes used to indicate first name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_last_name\": {\n      \"description\": \"Name of user record attributes used to indicate last name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_ldap_id\": {\n      \"description\": \"Name of user record attributes used to indicate unique record id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attributes_with_ids\": {\n      \"description\": \"(Read/Write) Array of mappings between LDAP User Attributes and arrays of Looker User Attribute ids\",\n      \"items\": {\n        \"$ref\": \"#/definitions/LDAPUserAttributeWrite\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"user_bind_base_dn\": {\n      \"description\": \"Distinguished name of LDAP node used as the base for user searches\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_custom_filter\": {\n      \"description\": \"(Optional) Custom RFC-2254 filter clause for use in finding user during login. Combined via 'and' with the other generated filter clauses.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id_attribute_names\": {\n      \"description\": \"Name(s) of user record attributes used for matching user login id (comma separated list)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_objectclass\": {\n      \"description\": \"(Optional) Name of user record objectclass used for finding user during login id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthTestLdapConfigConnectionCmd)
+	apiAuthTestLdapConfigConnectionCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthTestLdapConfigUserAuthCmd = &cobra.Command{
 	Use:   "test_ldap_config_user_auth [BODY_JSON_FILE_OR_-]",
 	Short: "Test LDAP User Auth",
 	Long:  "### Test the user authentication settings for an LDAP configuration.\n\nThis test accepts a full LDAP configuration along with a username/password pair and attempts to authenticate the user with the LDAP server. The configuration is validated before attempting the authentication.\n\nLooker will never return an **auth_password**. If this request omits the **auth_password** field, then the **auth_password** value from the active config (if present) will be used for the test.\n\n**test_ldap_user** and **test_ldap_password** are required.\n\nThe active LDAP settings are not modified.\n\nCalls to this endpoint may be denied by [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/r/looker-core/overview).\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthTestLdapConfigUserAuthCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PUT", "/ldap_config/test_user_auth", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthTestLdapConfigUserAuthCmdBodySchema = "{\n  \"properties\": {\n    \"allow_direct_roles\": {\n      \"description\": \"Allows roles to be directly assigned to LDAP auth'd users.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allow_normal_group_membership\": {\n      \"description\": \"Allow LDAP auth'd users to be members of non-reflected Looker groups. If 'false', user will be removed from non-reflected groups on login.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allow_roles_from_normal_groups\": {\n      \"description\": \"LDAP auth'd users will be able to inherit roles from non-reflected Looker groups.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"alternate_email_login_allowed\": {\n      \"description\": \"Allow alternate email-based login via '/login/email' for admins and for specified users with the 'login_special_email' permission. This option is useful as a fallback during ldap setup, if ldap config problems occur later, or if you need to support some users who are not in your ldap directory. Looker email/password logins are always disabled for regular users when ldap is enabled.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"auth_password\": {\n      \"description\": \"(Write-Only)  Password for the LDAP account used to access the LDAP server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"auth_requires_role\": {\n      \"description\": \"Users will not be allowed to login at all unless a role for them is found in LDAP if set to true\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"auth_username\": {\n      \"description\": \"Distinguished name of LDAP account used to access the LDAP server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"connection_host\": {\n      \"description\": \"LDAP server hostname\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"connection_port\": {\n      \"description\": \"LDAP host port\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"connection_tls\": {\n      \"description\": \"Use Transport Layer Security\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"connection_tls_no_verify\": {\n      \"description\": \"Do not verify peer when using TLS\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"default_new_user_group_ids\": {\n      \"description\": \"(Write-Only)  Array of ids of groups that will be applied to new users the first time they login via LDAP\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"default_new_user_role_ids\": {\n      \"description\": \"(Write-Only)  Array of ids of roles that will be applied to new users the first time they login via LDAP\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"enabled\": {\n      \"description\": \"Enable/Disable LDAP authentication for the server\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"force_no_page\": {\n      \"description\": \"Don't attempt to do LDAP search result paging (RFC 2696) even if the LDAP server claims to support it.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"groups_base_dn\": {\n      \"description\": \"Base dn for finding groups in LDAP searches\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_finder_type\": {\n      \"description\": \"Identifier for a strategy for how Looker will search for groups in the LDAP server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_member_attribute\": {\n      \"description\": \"LDAP Group attribute that signifies the members of the groups. Most commonly 'member'\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_objectclasses\": {\n      \"description\": \"Optional comma-separated list of supported LDAP objectclass for groups when doing groups searches\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_user_attribute\": {\n      \"description\": \"LDAP Group attribute that signifies the user in a group. Most commonly 'dn'\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_with_role_ids\": {\n      \"description\": \"(Read/Write) Array of mappings between LDAP Groups and arrays of Looker Role ids\",\n      \"items\": {\n        \"$ref\": \"#/definitions/LDAPGroupWrite\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"merge_new_users_by_email\": {\n      \"description\": \"Merge first-time ldap login to existing user account by email addresses. When a user logs in for the first time via ldap this option will connect this user into their existing account by finding the account with a matching email address. Otherwise a new user account will be created for the user.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"set_roles_from_groups\": {\n      \"description\": \"Set user roles in Looker based on groups from LDAP\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"test_ldap_password\": {\n      \"description\": \"(Write-Only)  Test LDAP user password. For ldap tests only.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"test_ldap_user\": {\n      \"description\": \"(Write-Only)  Test LDAP user login id. For ldap tests only.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"user_attribute_map_email\": {\n      \"description\": \"Name of user record attributes used to indicate email address field\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_first_name\": {\n      \"description\": \"Name of user record attributes used to indicate first name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_last_name\": {\n      \"description\": \"Name of user record attributes used to indicate last name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_ldap_id\": {\n      \"description\": \"Name of user record attributes used to indicate unique record id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attributes_with_ids\": {\n      \"description\": \"(Read/Write) Array of mappings between LDAP User Attributes and arrays of Looker User Attribute ids\",\n      \"items\": {\n        \"$ref\": \"#/definitions/LDAPUserAttributeWrite\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"user_bind_base_dn\": {\n      \"description\": \"Distinguished name of LDAP node used as the base for user searches\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_custom_filter\": {\n      \"description\": \"(Optional) Custom RFC-2254 filter clause for use in finding user during login. Combined via 'and' with the other generated filter clauses.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id_attribute_names\": {\n      \"description\": \"Name(s) of user record attributes used for matching user login id (comma separated list)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_objectclass\": {\n      \"description\": \"(Optional) Name of user record objectclass used for finding user during login id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthTestLdapConfigUserAuthCmd)
+	apiAuthTestLdapConfigUserAuthCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthTestLdapConfigUserInfoCmd = &cobra.Command{
 	Use:   "test_ldap_config_user_info [BODY_JSON_FILE_OR_-]",
 	Short: "Test LDAP User Info",
 	Long:  "### Test the user authentication settings for an LDAP configuration without authenticating the user.\n\nThis test will let you easily test the mapping for user properties and roles for any user withoutneeding to authenticate as that user.\n\nThis test accepts a full LDAP configuration along with a username and attempts to find the full infofor the user from the LDAP server without actually authenticating the user. So, user password is notrequired.The configuration is validated before attempting to contact the server.\n\n**test_ldap_user** is required.\n\nThe active LDAP settings are not modified.\n\nCalls to this endpoint may be denied by [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/r/looker-core/overview).\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthTestLdapConfigUserInfoCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PUT", "/ldap_config/test_user_info", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthTestLdapConfigUserInfoCmdBodySchema = "{\n  \"properties\": {\n    \"allow_direct_roles\": {\n      \"description\": \"Allows roles to be directly assigned to LDAP auth'd users.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allow_normal_group_membership\": {\n      \"description\": \"Allow LDAP auth'd users to be members of non-reflected Looker groups. If 'false', user will be removed from non-reflected groups on login.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allow_roles_from_normal_groups\": {\n      \"description\": \"LDAP auth'd users will be able to inherit roles from non-reflected Looker groups.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"alternate_email_login_allowed\": {\n      \"description\": \"Allow alternate email-based login via '/login/email' for admins and for specified users with the 'login_special_email' permission. This option is useful as a fallback during ldap setup, if ldap config problems occur later, or if you need to support some users who are not in your ldap directory. Looker email/password logins are always disabled for regular users when ldap is enabled.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"auth_password\": {\n      \"description\": \"(Write-Only)  Password for the LDAP account used to access the LDAP server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"auth_requires_role\": {\n      \"description\": \"Users will not be allowed to login at all unless a role for them is found in LDAP if set to true\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"auth_username\": {\n      \"description\": \"Distinguished name of LDAP account used to access the LDAP server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"connection_host\": {\n      \"description\": \"LDAP server hostname\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"connection_port\": {\n      \"description\": \"LDAP host port\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"connection_tls\": {\n      \"description\": \"Use Transport Layer Security\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"connection_tls_no_verify\": {\n      \"description\": \"Do not verify peer when using TLS\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"default_new_user_group_ids\": {\n      \"description\": \"(Write-Only)  Array of ids of groups that will be applied to new users the first time they login via LDAP\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"default_new_user_role_ids\": {\n      \"description\": \"(Write-Only)  Array of ids of roles that will be applied to new users the first time they login via LDAP\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"enabled\": {\n      \"description\": \"Enable/Disable LDAP authentication for the server\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"force_no_page\": {\n      \"description\": \"Don't attempt to do LDAP search result paging (RFC 2696) even if the LDAP server claims to support it.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"groups_base_dn\": {\n      \"description\": \"Base dn for finding groups in LDAP searches\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_finder_type\": {\n      \"description\": \"Identifier for a strategy for how Looker will search for groups in the LDAP server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_member_attribute\": {\n      \"description\": \"LDAP Group attribute that signifies the members of the groups. Most commonly 'member'\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_objectclasses\": {\n      \"description\": \"Optional comma-separated list of supported LDAP objectclass for groups when doing groups searches\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_user_attribute\": {\n      \"description\": \"LDAP Group attribute that signifies the user in a group. Most commonly 'dn'\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_with_role_ids\": {\n      \"description\": \"(Read/Write) Array of mappings between LDAP Groups and arrays of Looker Role ids\",\n      \"items\": {\n        \"$ref\": \"#/definitions/LDAPGroupWrite\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"merge_new_users_by_email\": {\n      \"description\": \"Merge first-time ldap login to existing user account by email addresses. When a user logs in for the first time via ldap this option will connect this user into their existing account by finding the account with a matching email address. Otherwise a new user account will be created for the user.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"set_roles_from_groups\": {\n      \"description\": \"Set user roles in Looker based on groups from LDAP\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"test_ldap_password\": {\n      \"description\": \"(Write-Only)  Test LDAP user password. For ldap tests only.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"test_ldap_user\": {\n      \"description\": \"(Write-Only)  Test LDAP user login id. For ldap tests only.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"user_attribute_map_email\": {\n      \"description\": \"Name of user record attributes used to indicate email address field\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_first_name\": {\n      \"description\": \"Name of user record attributes used to indicate first name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_last_name\": {\n      \"description\": \"Name of user record attributes used to indicate last name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_ldap_id\": {\n      \"description\": \"Name of user record attributes used to indicate unique record id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attributes_with_ids\": {\n      \"description\": \"(Read/Write) Array of mappings between LDAP User Attributes and arrays of Looker User Attribute ids\",\n      \"items\": {\n        \"$ref\": \"#/definitions/LDAPUserAttributeWrite\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"user_bind_base_dn\": {\n      \"description\": \"Distinguished name of LDAP node used as the base for user searches\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_custom_filter\": {\n      \"description\": \"(Optional) Custom RFC-2254 filter clause for use in finding user during login. Combined via 'and' with the other generated filter clauses.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id_attribute_names\": {\n      \"description\": \"Name(s) of user record attributes used for matching user login id (comma separated list)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_objectclass\": {\n      \"description\": \"(Optional) Name of user record objectclass used for finding user during login id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthTestLdapConfigUserInfoCmd)
+	apiAuthTestLdapConfigUserInfoCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthUpdateLdapConfigCmd = &cobra.Command{
 	Use:   "update_ldap_config [BODY_JSON_FILE_OR_-]",
 	Short: "Update LDAP Configuration",
 	Long:  "### Update the LDAP configuration.\n\nConfiguring LDAP impacts authentication for all users. This configuration should be done carefully.\n\nOnly Looker administrators can read and update the LDAP configuration.\n\nLDAP is enabled or disabled for Looker using the **enabled** field.\n\nIt is **highly** recommended that any LDAP setting changes be tested using the APIs below before being set globally.\n\nSee the [Looker LDAP docs](https://docs.cloud.google.com/looker/docs/r/api/ldap_setup) for additional information.\n\nCalls to this endpoint may be denied by [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/r/looker-core/overview).\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthUpdateLdapConfigCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/ldap_config", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthUpdateLdapConfigCmdBodySchema = "{\n  \"properties\": {\n    \"allow_direct_roles\": {\n      \"description\": \"Allows roles to be directly assigned to LDAP auth'd users.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allow_normal_group_membership\": {\n      \"description\": \"Allow LDAP auth'd users to be members of non-reflected Looker groups. If 'false', user will be removed from non-reflected groups on login.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allow_roles_from_normal_groups\": {\n      \"description\": \"LDAP auth'd users will be able to inherit roles from non-reflected Looker groups.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"alternate_email_login_allowed\": {\n      \"description\": \"Allow alternate email-based login via '/login/email' for admins and for specified users with the 'login_special_email' permission. This option is useful as a fallback during ldap setup, if ldap config problems occur later, or if you need to support some users who are not in your ldap directory. Looker email/password logins are always disabled for regular users when ldap is enabled.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"auth_password\": {\n      \"description\": \"(Write-Only)  Password for the LDAP account used to access the LDAP server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"auth_requires_role\": {\n      \"description\": \"Users will not be allowed to login at all unless a role for them is found in LDAP if set to true\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"auth_username\": {\n      \"description\": \"Distinguished name of LDAP account used to access the LDAP server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"connection_host\": {\n      \"description\": \"LDAP server hostname\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"connection_port\": {\n      \"description\": \"LDAP host port\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"connection_tls\": {\n      \"description\": \"Use Transport Layer Security\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"connection_tls_no_verify\": {\n      \"description\": \"Do not verify peer when using TLS\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"default_new_user_group_ids\": {\n      \"description\": \"(Write-Only)  Array of ids of groups that will be applied to new users the first time they login via LDAP\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"default_new_user_role_ids\": {\n      \"description\": \"(Write-Only)  Array of ids of roles that will be applied to new users the first time they login via LDAP\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"enabled\": {\n      \"description\": \"Enable/Disable LDAP authentication for the server\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"force_no_page\": {\n      \"description\": \"Don't attempt to do LDAP search result paging (RFC 2696) even if the LDAP server claims to support it.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"groups_base_dn\": {\n      \"description\": \"Base dn for finding groups in LDAP searches\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_finder_type\": {\n      \"description\": \"Identifier for a strategy for how Looker will search for groups in the LDAP server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_member_attribute\": {\n      \"description\": \"LDAP Group attribute that signifies the members of the groups. Most commonly 'member'\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_objectclasses\": {\n      \"description\": \"Optional comma-separated list of supported LDAP objectclass for groups when doing groups searches\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_user_attribute\": {\n      \"description\": \"LDAP Group attribute that signifies the user in a group. Most commonly 'dn'\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_with_role_ids\": {\n      \"description\": \"(Read/Write) Array of mappings between LDAP Groups and arrays of Looker Role ids\",\n      \"items\": {\n        \"$ref\": \"#/definitions/LDAPGroupWrite\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"merge_new_users_by_email\": {\n      \"description\": \"Merge first-time ldap login to existing user account by email addresses. When a user logs in for the first time via ldap this option will connect this user into their existing account by finding the account with a matching email address. Otherwise a new user account will be created for the user.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"set_roles_from_groups\": {\n      \"description\": \"Set user roles in Looker based on groups from LDAP\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"test_ldap_password\": {\n      \"description\": \"(Write-Only)  Test LDAP user password. For ldap tests only.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"test_ldap_user\": {\n      \"description\": \"(Write-Only)  Test LDAP user login id. For ldap tests only.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"user_attribute_map_email\": {\n      \"description\": \"Name of user record attributes used to indicate email address field\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_first_name\": {\n      \"description\": \"Name of user record attributes used to indicate first name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_last_name\": {\n      \"description\": \"Name of user record attributes used to indicate last name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_ldap_id\": {\n      \"description\": \"Name of user record attributes used to indicate unique record id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attributes_with_ids\": {\n      \"description\": \"(Read/Write) Array of mappings between LDAP User Attributes and arrays of Looker User Attribute ids\",\n      \"items\": {\n        \"$ref\": \"#/definitions/LDAPUserAttributeWrite\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"user_bind_base_dn\": {\n      \"description\": \"Distinguished name of LDAP node used as the base for user searches\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_custom_filter\": {\n      \"description\": \"(Optional) Custom RFC-2254 filter clause for use in finding user during login. Combined via 'and' with the other generated filter clauses.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id_attribute_names\": {\n      \"description\": \"Name(s) of user record attributes used for matching user login id (comma separated list)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_objectclass\": {\n      \"description\": \"(Optional) Name of user record objectclass used for finding user during login id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthUpdateLdapConfigCmd)
+	apiAuthUpdateLdapConfigCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthUpdateMobileDeviceRegistrationCmd = &cobra.Command{
@@ -1328,8 +1592,17 @@ var apiAuthUpdateOauthClientAppCmd = &cobra.Command{
 	Use:   "update_oauth_client_app [CLIENT_GUID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update OAuth App",
 	Long:  "### Update OAuth2 Client App Details\n\nModifies the details a previously registered OAuth2 login client app.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthUpdateOauthClientAppCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -1339,8 +1612,11 @@ var apiAuthUpdateOauthClientAppCmd = &cobra.Command{
 	},
 }
 
+const apiAuthUpdateOauthClientAppCmdBodySchema = "{\n  \"properties\": {\n    \"description\": {\n      \"description\": \"A description of the application that will be displayed to users\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"display_name\": {\n      \"description\": \"The application's display name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"enabled\": {\n      \"description\": \"When enabled is true, OAuth2 and API requests will be accepted from this app. When false, all requests from this app will be refused. Setting disabled invalidates existing tokens.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"group_id\": {\n      \"description\": \"If set, only Looker users who are members of this group can use this web app with Looker. If group_id is not set, any Looker user may use this app to access this Looker instance\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"redirect_uri\": {\n      \"description\": \"The uri with which this application will receive an auth code by browser redirect.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthUpdateOauthClientAppCmd)
+	apiAuthUpdateOauthClientAppCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiAuthUpdateOauthClientAppCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -1348,60 +1624,108 @@ var apiAuthUpdateOidcConfigCmd = &cobra.Command{
 	Use:   "update_oidc_config [BODY_JSON_FILE_OR_-]",
 	Short: "Update OIDC Configuration",
 	Long:  "### Update the OIDC configuration.\n\nConfiguring OIDC impacts authentication for all users. This configuration should be done carefully.\n\nOnly Looker administrators can read and update the OIDC configuration.\n\nOIDC is enabled or disabled for Looker using the **enabled** field.\n\nIt is **highly** recommended that any OIDC setting changes be tested using the APIs below before being set globally.\n\nCalls to this endpoint may be denied by [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/r/looker-core/overview).\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthUpdateOidcConfigCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/oidc_config", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthUpdateOidcConfigCmdBodySchema = "{\n  \"properties\": {\n    \"allow_direct_roles\": {\n      \"description\": \"Allows roles to be directly assigned to OIDC auth'd users.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allow_normal_group_membership\": {\n      \"description\": \"Allow OIDC auth'd users to be members of non-reflected Looker groups. If 'false', user will be removed from non-reflected groups on login.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allow_roles_from_normal_groups\": {\n      \"description\": \"OIDC auth'd users will inherit roles from non-reflected Looker groups.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"alternate_email_login_allowed\": {\n      \"description\": \"Allow alternate email-based login via '/login/email' for admins and for specified users with the 'login_special_email' permission. This option is useful as a fallback during ldap setup, if ldap config problems occur later, or if you need to support some users who are not in your ldap directory. Looker email/password logins are always disabled for regular users when ldap is enabled.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"audience\": {\n      \"description\": \"OpenID Provider Audience\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"auth_requires_role\": {\n      \"description\": \"Users will not be allowed to login at all unless a role for them is found in OIDC if set to true\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"authorization_endpoint\": {\n      \"description\": \"OpenID Provider Authorization Url\",\n      \"format\": \"uri-reference\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"default_new_user_group_ids\": {\n      \"description\": \"(Write-Only) Array of ids of groups that will be applied to new users the first time they login via OIDC\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"default_new_user_role_ids\": {\n      \"description\": \"(Write-Only) Array of ids of roles that will be applied to new users the first time they login via OIDC\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"enabled\": {\n      \"description\": \"Enable/Disable OIDC authentication for the server\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"groups_attribute\": {\n      \"description\": \"Name of user record attributes used to indicate groups. Used when 'groups_finder_type' is set to 'grouped_attribute_values'\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_with_role_ids\": {\n      \"description\": \"(Read/Write) Array of mappings between OIDC Groups and arrays of Looker Role ids\",\n      \"items\": {\n        \"$ref\": \"#/definitions/OIDCGroupWrite\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"identifier\": {\n      \"description\": \"Relying Party Identifier (provided by OpenID Provider)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"issuer\": {\n      \"description\": \"OpenID Provider Issuer\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"new_user_migration_types\": {\n      \"description\": \"Merge first-time oidc login to existing user account by email addresses. When a user logs in for the first time via oidc this option will connect this user into their existing account by finding the account with a matching email address by testing the given types of credentials for existing users. Otherwise a new user account will be created for the user. This list (if provided) must be a comma separated list of string like 'email,ldap,google'\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"scopes\": {\n      \"description\": \"Array of scopes to request.\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"secret\": {\n      \"description\": \"(Write-Only) Relying Party Secret (provided by OpenID Provider)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"set_roles_from_groups\": {\n      \"description\": \"Set user roles in Looker based on groups from OIDC\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"token_endpoint\": {\n      \"description\": \"OpenID Provider Token Url\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_email\": {\n      \"description\": \"Name of user record attributes used to indicate email address field\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_first_name\": {\n      \"description\": \"Name of user record attributes used to indicate first name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_last_name\": {\n      \"description\": \"Name of user record attributes used to indicate last name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attributes_with_ids\": {\n      \"description\": \"(Read/Write) Array of mappings between OIDC User Attributes and arrays of Looker User Attribute ids\",\n      \"items\": {\n        \"$ref\": \"#/definitions/OIDCUserAttributeWrite\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"userinfo_endpoint\": {\n      \"description\": \"OpenID Provider User Information Url\",\n      \"format\": \"uri-reference\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthUpdateOidcConfigCmd)
+	apiAuthUpdateOidcConfigCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthUpdatePasswordConfigCmd = &cobra.Command{
 	Use:   "update_password_config [BODY_JSON_FILE_OR_-]",
 	Short: "Update Password Config",
 	Long:  "### Update password config.\n\nCalls to this endpoint may be denied by [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/r/looker-core/overview).\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthUpdatePasswordConfigCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/password_config", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthUpdatePasswordConfigCmdBodySchema = "{\n  \"properties\": {\n    \"expiration_duration_days\": {\n      \"description\": \"Number of days before passwords expire. Must be between 30 and 365.\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"expiration_enabled\": {\n      \"description\": \"Enable/Disable password expiration policy.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"min_length\": {\n      \"description\": \"Minimum number of characters required for a new password.  Must be between 7 and 100\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"require_numeric\": {\n      \"description\": \"Require at least one numeric character\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"require_special\": {\n      \"description\": \"Require at least one special character\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"require_upperlower\": {\n      \"description\": \"Require at least one uppercase and one lowercase letter\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthUpdatePasswordConfigCmd)
+	apiAuthUpdatePasswordConfigCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthUpdateSamlConfigCmd = &cobra.Command{
 	Use:   "update_saml_config [BODY_JSON_FILE_OR_-]",
 	Short: "Update SAML Configuration",
 	Long:  "### Update the SAML configuration.\n\nConfiguring SAML impacts authentication for all users. This configuration should be done carefully.\n\nOnly Looker administrators can read and update the SAML configuration.\n\nSAML is enabled or disabled for Looker using the **enabled** field.\n\nIt is **highly** recommended that any SAML setting changes be tested using the APIs below before being set globally.\n\nCalls to this endpoint may be denied by [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/r/looker-core/overview).\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthUpdateSamlConfigCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/saml_config", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthUpdateSamlConfigCmdBodySchema = "{\n  \"properties\": {\n    \"allow_direct_roles\": {\n      \"description\": \"Allows roles to be directly assigned to SAML auth'd users.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allow_normal_group_membership\": {\n      \"description\": \"Allow SAML auth'd users to be members of non-reflected Looker groups. If 'false', user will be removed from non-reflected groups on login.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allow_roles_from_normal_groups\": {\n      \"description\": \"SAML auth'd users will inherit roles from non-reflected Looker groups.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allowed_clock_drift\": {\n      \"description\": \"Count of seconds of clock drift to allow when validating timestamps of assertions.\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"alternate_email_login_allowed\": {\n      \"description\": \"Allow alternate email-based login via '/login/email' for admins and for specified users with the 'login_special_email' permission. This option is useful as a fallback during ldap setup, if ldap config problems occur later, or if you need to support some users who are not in your ldap directory. Looker email/password logins are always disabled for regular users when ldap is enabled.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"auth_requires_role\": {\n      \"description\": \"Users will not be allowed to login at all unless a role for them is found in Saml if set to true\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"bypass_login_page\": {\n      \"description\": \"Bypass the login page when user authentication is required. Redirect to IdP immediately instead.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"default_new_user_group_ids\": {\n      \"description\": \"(Write-Only) Array of ids of groups that will be applied to new users the first time they login via Saml\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"default_new_user_role_ids\": {\n      \"description\": \"(Write-Only) Array of ids of roles that will be applied to new users the first time they login via Saml\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"enabled\": {\n      \"description\": \"Enable/Disable Saml authentication for the server\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"groups_attribute\": {\n      \"description\": \"Name of user record attributes used to indicate groups. Used when 'groups_finder_type' is set to 'grouped_attribute_values'\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_finder_type\": {\n      \"description\": \"Identifier for a strategy for how Looker will find groups in the SAML response. One of ['grouped_attribute_values', 'individual_attributes']\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_member_value\": {\n      \"description\": \"Value for group attribute used to indicate membership. Used when 'groups_finder_type' is set to 'individual_attributes'\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"groups_with_role_ids\": {\n      \"description\": \"(Read/Write) Array of mappings between Saml Groups and arrays of Looker Role ids\",\n      \"items\": {\n        \"$ref\": \"#/definitions/SamlGroupWrite\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"idp_audience\": {\n      \"description\": \"Identity Provider Audience (set in IdP config). Optional in Looker. Set this only if you want Looker to validate the audience value returned by the IdP.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"idp_cert\": {\n      \"description\": \"Identity Provider Certificate (provided by IdP)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"idp_cert_multi\": {\n      \"$ref\": \"#/definitions/SamlIdpCertMulti\",\n      \"description\": \"Identity Provider Multiple Certificates (provided by IdP)\",\n      \"x-looker-nullable\": true\n    },\n    \"idp_issuer\": {\n      \"description\": \"Identity Provider Issuer (provided by IdP)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"idp_url\": {\n      \"description\": \"Identity Provider Url (provided by IdP)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"multi_certs_supported\": {\n      \"description\": \"Indicates whether this SAML configuration is set up to use multiple Identity Provider certificates (idp_cert_multi) or a single certificate (idp_cert). When true, idp_cert_multi is used; otherwise, idp_cert is used.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"new_user_migration_types\": {\n      \"description\": \"Merge first-time saml login to existing user account by email addresses. When a user logs in for the first time via saml this option will connect this user into their existing account by finding the account with a matching email address by testing the given types of credentials for existing users. Otherwise a new user account will be created for the user. This list (if provided) must be a comma separated list of string like 'email,ldap,google'\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"set_roles_from_groups\": {\n      \"description\": \"Set user roles in Looker based on groups from Saml\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"user_attribute_map_email\": {\n      \"description\": \"Name of user record attributes used to indicate email address field\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_first_name\": {\n      \"description\": \"Name of user record attributes used to indicate first name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_map_last_name\": {\n      \"description\": \"Name of user record attributes used to indicate last name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attributes_with_ids\": {\n      \"description\": \"(Read/Write) Array of mappings between Saml User Attributes and arrays of Looker User Attribute ids\",\n      \"items\": {\n        \"$ref\": \"#/definitions/SamlUserAttributeWrite\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthUpdateSamlConfigCmd)
+	apiAuthUpdateSamlConfigCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthUpdateSessionConfigCmd = &cobra.Command{
 	Use:   "update_session_config [BODY_JSON_FILE_OR_-]",
 	Short: "Update Session Config",
 	Long:  "### Update session config.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiAuthUpdateSessionConfigCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/session_config", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiAuthUpdateSessionConfigCmdBodySchema = "{\n  \"properties\": {\n    \"allow_persistent_sessions\": {\n      \"description\": \"Allow users to have persistent sessions when they login\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"session_minutes\": {\n      \"description\": \"Number of minutes for user sessions.  Must be between 5 and 43200\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"track_session_location\": {\n      \"description\": \"Track location of session when user logs in.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"unlimited_sessions_per_user\": {\n      \"description\": \"Allow users to have an unbounded number of concurrent sessions (otherwise, users will be limited to only one session at a time).\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"use_inactivity_based_logout\": {\n      \"description\": \"Enforce session logout for sessions that are inactive for 15 minutes.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiAuthCmd.AddCommand(apiAuthUpdateSessionConfigCmd)
+	apiAuthUpdateSessionConfigCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiAuthValidateEmbedUrlCmd = &cobra.Command{
@@ -1573,8 +1897,17 @@ var apiBoardCreateBoardCmd = &cobra.Command{
 	Use:   "create_board [BODY_JSON_FILE_OR_-]",
 	Short: "Create Board",
 	Long:  "### Create a new board.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiBoardCreateBoardCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -1584,8 +1917,11 @@ var apiBoardCreateBoardCmd = &cobra.Command{
 	},
 }
 
+const apiBoardCreateBoardCmdBodySchema = "{\n  \"properties\": {\n    \"deleted_at\": {\n      \"description\": \"Date of board deletion\",\n      \"format\": \"date-time\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"description\": {\n      \"description\": \"Description of the board\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"section_order\": {\n      \"description\": \"ids of the board sections in the order they should be displayed\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Title of the board\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiBoardCmd.AddCommand(apiBoardCreateBoardCmd)
+	apiBoardCreateBoardCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiBoardCreateBoardCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -1593,8 +1929,17 @@ var apiBoardCreateBoardItemCmd = &cobra.Command{
 	Use:   "create_board_item [BODY_JSON_FILE_OR_-]",
 	Short: "Create Board Item",
 	Long:  "### Create a new board item.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiBoardCreateBoardItemCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -1604,8 +1949,11 @@ var apiBoardCreateBoardItemCmd = &cobra.Command{
 	},
 }
 
+const apiBoardCreateBoardItemCmdBodySchema = "{\n  \"properties\": {\n    \"board_section_id\": {\n      \"description\": \"Associated Board Section\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_description\": {\n      \"description\": \"Custom description entered by the user, if present\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_image_data_base64\": {\n      \"description\": \"(Write-Only) base64 encoded image data\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"custom_title\": {\n      \"description\": \"Custom title entered by the user, if present\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_url\": {\n      \"description\": \"Custom url entered by the user, if present\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_id\": {\n      \"description\": \"Dashboard to base this item on\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"look_id\": {\n      \"description\": \"Look to base this item on\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"lookml_dashboard_id\": {\n      \"description\": \"LookML Dashboard to base this item on\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"order\": {\n      \"description\": \"An arbitrary integer representing the sort order within the section\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"use_custom_description\": {\n      \"description\": \"Whether the custom description should be used instead of the content description, if the item is associated with content\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"use_custom_image\": {\n      \"description\": \"Whether the custom image should be used instead of the content image, if the item is associated with content\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"use_custom_title\": {\n      \"description\": \"Whether the custom title should be used instead of the content title, if the item is associated with content\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"use_custom_url\": {\n      \"description\": \"Whether the custom url should be used instead of the content url, if the item is associated with content\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiBoardCmd.AddCommand(apiBoardCreateBoardItemCmd)
+	apiBoardCreateBoardItemCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiBoardCreateBoardItemCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -1613,8 +1961,17 @@ var apiBoardCreateBoardSectionCmd = &cobra.Command{
 	Use:   "create_board_section [BODY_JSON_FILE_OR_-]",
 	Short: "Create Board section",
 	Long:  "### Create a new board section.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiBoardCreateBoardSectionCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -1624,8 +1981,11 @@ var apiBoardCreateBoardSectionCmd = &cobra.Command{
 	},
 }
 
+const apiBoardCreateBoardSectionCmdBodySchema = "{\n  \"properties\": {\n    \"board_id\": {\n      \"description\": \"Id reference to parent board\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"deleted_at\": {\n      \"description\": \"Time at which this section was deleted.\",\n      \"format\": \"date-time\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"description\": {\n      \"description\": \"Description of the content found in this section.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"item_order\": {\n      \"description\": \"ids of the board items in the order they should be displayed\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Name of row\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiBoardCmd.AddCommand(apiBoardCreateBoardSectionCmd)
+	apiBoardCreateBoardSectionCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiBoardCreateBoardSectionCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -1763,8 +2123,17 @@ var apiBoardUpdateBoardCmd = &cobra.Command{
 	Use:   "update_board [BOARD_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Board",
 	Long:  "### Update a board definition.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiBoardUpdateBoardCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -1774,8 +2143,11 @@ var apiBoardUpdateBoardCmd = &cobra.Command{
 	},
 }
 
+const apiBoardUpdateBoardCmdBodySchema = "{\n  \"properties\": {\n    \"deleted_at\": {\n      \"description\": \"Date of board deletion\",\n      \"format\": \"date-time\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"description\": {\n      \"description\": \"Description of the board\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"section_order\": {\n      \"description\": \"ids of the board sections in the order they should be displayed\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Title of the board\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiBoardCmd.AddCommand(apiBoardUpdateBoardCmd)
+	apiBoardUpdateBoardCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiBoardUpdateBoardCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -1783,8 +2155,17 @@ var apiBoardUpdateBoardItemCmd = &cobra.Command{
 	Use:   "update_board_item [BOARD_ITEM_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Board Item",
 	Long:  "### Update a board item definition.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiBoardUpdateBoardItemCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -1794,8 +2175,11 @@ var apiBoardUpdateBoardItemCmd = &cobra.Command{
 	},
 }
 
+const apiBoardUpdateBoardItemCmdBodySchema = "{\n  \"properties\": {\n    \"board_section_id\": {\n      \"description\": \"Associated Board Section\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_description\": {\n      \"description\": \"Custom description entered by the user, if present\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_image_data_base64\": {\n      \"description\": \"(Write-Only) base64 encoded image data\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"custom_title\": {\n      \"description\": \"Custom title entered by the user, if present\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_url\": {\n      \"description\": \"Custom url entered by the user, if present\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_id\": {\n      \"description\": \"Dashboard to base this item on\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"look_id\": {\n      \"description\": \"Look to base this item on\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"lookml_dashboard_id\": {\n      \"description\": \"LookML Dashboard to base this item on\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"order\": {\n      \"description\": \"An arbitrary integer representing the sort order within the section\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"use_custom_description\": {\n      \"description\": \"Whether the custom description should be used instead of the content description, if the item is associated with content\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"use_custom_image\": {\n      \"description\": \"Whether the custom image should be used instead of the content image, if the item is associated with content\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"use_custom_title\": {\n      \"description\": \"Whether the custom title should be used instead of the content title, if the item is associated with content\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"use_custom_url\": {\n      \"description\": \"Whether the custom url should be used instead of the content url, if the item is associated with content\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiBoardCmd.AddCommand(apiBoardUpdateBoardItemCmd)
+	apiBoardUpdateBoardItemCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiBoardUpdateBoardItemCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -1803,8 +2187,17 @@ var apiBoardUpdateBoardSectionCmd = &cobra.Command{
 	Use:   "update_board_section [BOARD_SECTION_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Board section",
 	Long:  "### Update a board section definition.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiBoardUpdateBoardSectionCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -1814,8 +2207,11 @@ var apiBoardUpdateBoardSectionCmd = &cobra.Command{
 	},
 }
 
+const apiBoardUpdateBoardSectionCmdBodySchema = "{\n  \"properties\": {\n    \"board_id\": {\n      \"description\": \"Id reference to parent board\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"deleted_at\": {\n      \"description\": \"Time at which this section was deleted.\",\n      \"format\": \"date-time\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"description\": {\n      \"description\": \"Description of the content found in this section.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"item_order\": {\n      \"description\": \"ids of the board items in the order they should be displayed\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Name of row\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiBoardCmd.AddCommand(apiBoardUpdateBoardSectionCmd)
+	apiBoardUpdateBoardSectionCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiBoardUpdateBoardSectionCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -1913,15 +2309,27 @@ var apiColorCollectionCreateColorCollectionCmd = &cobra.Command{
 	Use:   "create_color_collection [BODY_JSON_FILE_OR_-]",
 	Short: "Create ColorCollection",
 	Long:  "### Create a custom color collection with the specified information\n\nCreates a new custom color collection object, returning the details, including the created id.\n\n**Update** an existing color collection with [Update Color Collection](#!/ColorCollection/update_color_collection)\n\n**Permanently delete** an existing custom color collection with [Delete Color Collection](#!/ColorCollection/delete_color_collection)\n\n**Note**: Only an API user with the Admin role can call this endpoint. Unauthorized requests will return `Not Found` (404) errors.\n\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiColorCollectionCreateColorCollectionCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/color_collections", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiColorCollectionCreateColorCollectionCmdBodySchema = "{\n  \"properties\": {\n    \"categoricalPalettes\": {\n      \"description\": \"Array of categorical palette definitions\",\n      \"items\": {\n        \"$ref\": \"#/definitions/DiscretePalette\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": false\n    },\n    \"divergingPalettes\": {\n      \"description\": \"Array of diverging palette definitions\",\n      \"items\": {\n        \"$ref\": \"#/definitions/ContinuousPalette\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": false\n    },\n    \"label\": {\n      \"description\": \"Label of color collection\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"sequentialPalettes\": {\n      \"description\": \"Array of discrete palette definitions\",\n      \"items\": {\n        \"$ref\": \"#/definitions/ContinuousPalette\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiColorCollectionCmd.AddCommand(apiColorCollectionCreateColorCollectionCmd)
+	apiColorCollectionCreateColorCollectionCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiColorCollectionDefaultColorCollectionCmd = &cobra.Command{
@@ -1973,15 +2381,27 @@ var apiColorCollectionUpdateColorCollectionCmd = &cobra.Command{
 	Use:   "update_color_collection [COLLECTION_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Custom Color collection",
 	Long:  "### Update a custom color collection by id.\n**Note**: Only an API user with the Admin role can call this endpoint. Unauthorized requests will return `Not Found` (404) errors.\n\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiColorCollectionUpdateColorCollectionCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/color_collections/{collection_id}", []string{"collection_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiColorCollectionUpdateColorCollectionCmdBodySchema = "{\n  \"properties\": {\n    \"categoricalPalettes\": {\n      \"description\": \"Array of categorical palette definitions\",\n      \"items\": {\n        \"$ref\": \"#/definitions/DiscretePalette\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": false\n    },\n    \"divergingPalettes\": {\n      \"description\": \"Array of diverging palette definitions\",\n      \"items\": {\n        \"$ref\": \"#/definitions/ContinuousPalette\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": false\n    },\n    \"label\": {\n      \"description\": \"Label of color collection\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"sequentialPalettes\": {\n      \"description\": \"Array of discrete palette definitions\",\n      \"items\": {\n        \"$ref\": \"#/definitions/ContinuousPalette\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiColorCollectionCmd.AddCommand(apiColorCollectionUpdateColorCollectionCmd)
+	apiColorCollectionUpdateColorCollectionCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 // Config category
@@ -2213,8 +2633,17 @@ var apiConfigSetSettingCmd = &cobra.Command{
 	Use:   "set_setting [BODY_JSON_FILE_OR_-]",
 	Short: "Set Setting",
 	Long:  "### Configure Looker Settings\n\nAvailable settings are:\n - allow_user_timezones\n - auto_certify_lookml_content\n - content_certification_documentation_link\n - custom_welcome_email\n - data_connector_default_enabled\n - dashboard_auto_refresh_restriction\n - dashboard_auto_refresh_minimum_interval\n - extension_framework_enabled\n - extension_load_url_enabled\n - instance_config\n - is_content_certification_enabled\n - managed_certificate_uri\n - marketplace_auto_install_enabled\n - marketplace_automation\n - marketplace_terms_accepted\n - marketplace_enabled\n - marketplace_site\n - onboarding_enabled\n - privatelabel_configuration\n - revoke_certification_on_edits\n - timezone\n - host_url\n - email_domain_allowlist\n - embed_cookieless_v2\n - embed_enabled\n - embed_config\n - mcp_tools\n\nSee the `Setting` type for more information on the specific values that can be configured.\n\nIf a setting update is rejected, the API error payload should provide information on the cause of the rejection.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConfigSetSettingCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -2224,8 +2653,11 @@ var apiConfigSetSettingCmd = &cobra.Command{
 	},
 }
 
+const apiConfigSetSettingCmdBodySchema = "{\n  \"properties\": {\n    \"allow_user_timezones\": {\n      \"description\": \"Toggle user-specific timezones on or off\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"auto_certify_lookml_content\": {\n      \"description\": \"Allow auto certification of lookml content.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"ca_agent_observability\": {\n      \"description\": \"Toggle CA agent observability\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"content_certification_documentation_link\": {\n      \"description\": \"Link to content certification documentation.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_auto_refresh_minimum_interval\": {\n      \"description\": \"Minimum time interval for dashboard element automatic refresh. Examples: (30 seconds, 1 minute)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_auto_refresh_restriction\": {\n      \"description\": \"Toggle Dashboard Auto Refresh restriction\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"data_connector_default_enabled\": {\n      \"description\": \"Toggle default future connectors on or off\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"email_domain_allowlist\": {\n      \"description\": \"An array of Email Domain Allowlist of type string for Scheduled Content\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": false\n    },\n    \"embed_cookieless_v2\": {\n      \"description\": \"(DEPRECATED) Use embed_config.embed_cookieless_v2 instead. If embed_config.embed_cookieless_v2 is specified, it overrides this value.\",\n      \"type\": \"boolean\",\n      \"x-looker-deprecated\": true,\n      \"x-looker-nullable\": false\n    },\n    \"extension_framework_enabled\": {\n      \"description\": \"Toggle extension framework on or off\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"extension_load_url_enabled\": {\n      \"description\": \"(DEPRECATED) Toggle extension load url on or off. Do not use. This is temporary setting that will eventually become a noop and subsequently deleted.\",\n      \"type\": \"boolean\",\n      \"x-looker-deprecated\": true,\n      \"x-looker-nullable\": false\n    },\n    \"host_url\": {\n      \"description\": \"Change the base portion of your Looker instance URL setting\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"is_content_certification_enabled\": {\n      \"description\": \"Allow content certification.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"managed_certificate_uri\": {\n      \"description\": \"Array of URIs pointing to the location of a root certificate in Secret Manager\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"marketplace_auto_install_enabled\": {\n      \"description\": \"(DEPRECATED) Toggle marketplace auto install on or off. Deprecated - do not use. Auto install can now be enabled via marketplace automation settings\",\n      \"type\": \"boolean\",\n      \"x-looker-deprecated\": true,\n      \"x-looker-nullable\": false\n    },\n    \"marketplace_enabled\": {\n      \"description\": \"Toggle marketplace on or off\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"marketplace_terms_accepted\": {\n      \"description\": \"Accept marketplace terms by setting this value to true, or get the current status. Marketplace terms CANNOT be declined once accepted. Accepting marketplace terms automatically enables the marketplace. The marketplace can still be disabled after it has been enabled.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"mcp_tools\": {\n      \"$ref\": \"#/definitions/McpTools\",\n      \"description\": \"Configuration for MCP Tools\",\n      \"x-looker-nullable\": false\n    },\n    \"onboarding_enabled\": {\n      \"description\": \"Toggle onboarding on or off\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"override_warnings\": {\n      \"description\": \"(Write-Only) If warnings are preventing a host URL change, this parameter allows for overriding warnings to force update the setting. Does not directly change any Looker settings.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false,\n      \"x-looker-write-only\": true\n    },\n    \"revoke_certification_on_edits\": {\n      \"description\": \"Allow content certification to be revoked on edits.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"timezone\": {\n      \"description\": \"Change instance-wide default timezone\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiConfigCmd.AddCommand(apiConfigSetSettingCmd)
+	apiConfigSetSettingCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiConfigSetSettingCmd.Flags().String("fields", "", "Requested fields")
 }
 
@@ -2233,15 +2665,27 @@ var apiConfigSetSmtpSettingsCmd = &cobra.Command{
 	Use:   "set_smtp_settings [BODY_JSON_FILE_OR_-]",
 	Short: "Set SMTP Setting",
 	Long:  "### Configure SMTP Settings\n  This API allows users to configure the SMTP settings on the Looker instance.\n  Only admin users are authorised to call this API.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConfigSetSmtpSettingsCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/smtp_settings", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiConfigSetSmtpSettingsCmdBodySchema = "{\n  \"properties\": {\n    \"address\": {\n      \"description\": \"SMTP Server url\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"auth_type\": {\n      \"description\": \"Auth Type\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"client_id\": {\n      \"description\": \"The OAuth Client ID\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"client_secret\": {\n      \"description\": \"The OAuth Client Secret\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"default_smtp\": {\n      \"description\": \"Whether to enable built-in Looker SMTP\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"enable_starttls_auto\": {\n      \"description\": \"Is TLS encryption enabled?\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"from\": {\n      \"description\": \"From e-mail address\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"password\": {\n      \"description\": \"Password\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"port\": {\n      \"description\": \"SMTP Server's port\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": false\n    },\n    \"scopes\": {\n      \"description\": \"The OAuth Scopes\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"ssl_version\": {\n      \"description\": \"TLS version selected Valid values are: \\\"TLSv1_1\\\", \\\"SSLv23\\\", \\\"TLSv1_2\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-values\": [\n        \"TLSv1_1\",\n        \"SSLv23\",\n        \"TLSv1_2\"\n      ]\n    },\n    \"token_endpoint\": {\n      \"description\": \"The OAuth Token Endpoint\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_name\": {\n      \"description\": \"User name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiConfigCmd.AddCommand(apiConfigSetSmtpSettingsCmd)
+	apiConfigSetSmtpSettingsCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiConfigSmtpStatusCmd = &cobra.Command{
@@ -2268,23 +2712,44 @@ var apiConfigUpdateCloudStorageConfigurationCmd = &cobra.Command{
 	Use:   "update_cloud_storage_configuration [BODY_JSON_FILE_OR_-]",
 	Short: "Update Cloud Storage",
 	Long:  "Update the current Cloud Storage Configuration.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConfigUpdateCloudStorageConfigurationCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/cloud_storage", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiConfigUpdateCloudStorageConfigurationCmdBodySchema = "{\n  \"properties\": {\n    \"custom_s3_bucket\": {\n      \"description\": \"Name of bucket for custom-s3 backups\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_s3_bucket_region\": {\n      \"description\": \"Name of region where the bucket is located\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_s3_key\": {\n      \"description\": \"(Write-Only) AWS S3 key used for custom-s3 backups\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"custom_s3_secret\": {\n      \"description\": \"(Write-Only) AWS S3 secret used for custom-s3 backups\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"type\": {\n      \"description\": \"Type of backup: looker-s3 or custom-s3\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiConfigCmd.AddCommand(apiConfigUpdateCloudStorageConfigurationCmd)
+	apiConfigUpdateCloudStorageConfigurationCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiConfigUpdateCustomWelcomeEmailCmd = &cobra.Command{
 	Use:   "update_custom_welcome_email [BODY_JSON_FILE_OR_-]",
 	Short: "Update Custom Welcome Email Content",
 	Long:  "Update custom welcome email setting and values. Optionally send a test email with the new content to the currently logged in user.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConfigUpdateCustomWelcomeEmailCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("send_test_welcome_email") {
 			val, _ := cmd.Flags().GetBool("send_test_welcome_email")
@@ -2294,8 +2759,11 @@ var apiConfigUpdateCustomWelcomeEmailCmd = &cobra.Command{
 	},
 }
 
+const apiConfigUpdateCustomWelcomeEmailCmdBodySchema = "{\n  \"properties\": {\n    \"content\": {\n      \"description\": \"The HTML to use as custom content for welcome emails. Script elements and other potentially dangerous markup will be removed.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"enabled\": {\n      \"description\": \"If true, custom email content will replace the default body of welcome emails\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"header\": {\n      \"description\": \"The text to appear in the header line of the email body. Only available with a whitelabel license and whitelabel_configuration.advanced_custom_welcome_email enabled.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"subject\": {\n      \"description\": \"The text to appear in the email subject line. Only available with a whitelabel license and whitelabel_configuration.advanced_custom_welcome_email enabled.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiConfigCmd.AddCommand(apiConfigUpdateCustomWelcomeEmailCmd)
+	apiConfigUpdateCustomWelcomeEmailCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiConfigUpdateCustomWelcomeEmailCmd.Flags().Bool("send_test_welcome_email", false, "If true a test email with the content from the request will be sent to the current user after saving")
 }
 
@@ -2303,90 +2771,162 @@ var apiConfigUpdateCustomWelcomeEmailTestCmd = &cobra.Command{
 	Use:   "update_custom_welcome_email_test [BODY_JSON_FILE_OR_-]",
 	Short: "Send a test welcome email to the currently logged in user with the supplied content ",
 	Long:  "Requests to this endpoint will send a welcome email with the custom content provided in the body to the currently logged in user.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConfigUpdateCustomWelcomeEmailTestCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PUT", "/custom_welcome_email_test", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiConfigUpdateCustomWelcomeEmailTestCmdBodySchema = "{\n  \"properties\": {\n    \"content\": {\n      \"description\": \"The content that would be sent in the body of a custom welcome email\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"header\": {\n      \"description\": \"The header that would be sent in the body of a custom welcome email\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"subject\": {\n      \"description\": \"The subject that would be sent for the custom welcome email\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiConfigCmd.AddCommand(apiConfigUpdateCustomWelcomeEmailTestCmd)
+	apiConfigUpdateCustomWelcomeEmailTestCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiConfigUpdateDigestEmailsEnabledCmd = &cobra.Command{
 	Use:   "update_digest_emails_enabled [BODY_JSON_FILE_OR_-]",
 	Short: "Update Digest_emails",
 	Long:  "### Update the setting for enabling/disabling digest emails\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConfigUpdateDigestEmailsEnabledCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/digest_emails_enabled", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiConfigUpdateDigestEmailsEnabledCmdBodySchema = "{\n  \"properties\": {\n    \"is_enabled\": {\n      \"description\": \"Whether or not digest emails are enabled\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiConfigCmd.AddCommand(apiConfigUpdateDigestEmailsEnabledCmd)
+	apiConfigUpdateDigestEmailsEnabledCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiConfigUpdateInternalHelpResourcesCmd = &cobra.Command{
 	Use:   "update_internal_help_resources [BODY_JSON_FILE_OR_-]",
 	Short: "Update internal help resources configuration",
 	Long:  "Update internal help resources settings\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConfigUpdateInternalHelpResourcesCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/internal_help_resources", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiConfigUpdateInternalHelpResourcesCmdBodySchema = "{\n  \"properties\": {\n    \"enabled\": {\n      \"description\": \"If true and internal help resources content is not blank then the link for internal help resources will be shown in the help menu and the content displayed within Looker\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiConfigCmd.AddCommand(apiConfigUpdateInternalHelpResourcesCmd)
+	apiConfigUpdateInternalHelpResourcesCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiConfigUpdateInternalHelpResourcesContentCmd = &cobra.Command{
 	Use:   "update_internal_help_resources_content [BODY_JSON_FILE_OR_-]",
 	Short: "Update internal help resources content",
 	Long:  "Update internal help resources content\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConfigUpdateInternalHelpResourcesContentCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/internal_help_resources_content", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiConfigUpdateInternalHelpResourcesContentCmdBodySchema = "{\n  \"properties\": {\n    \"markdown_content\": {\n      \"description\": \"Content to be displayed in the internal help resources page/modal\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"organization_name\": {\n      \"description\": \"Text to display in the help menu item which will display the internal help resources\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiConfigCmd.AddCommand(apiConfigUpdateInternalHelpResourcesContentCmd)
+	apiConfigUpdateInternalHelpResourcesContentCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiConfigUpdateLegacyFeatureCmd = &cobra.Command{
 	Use:   "update_legacy_feature [LEGACY_FEATURE_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Legacy Feature",
 	Long:  "### Update information about the legacy feature with a specific id.\n\nCalls to this endpoint may be denied by [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/r/looker-core/overview).\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConfigUpdateLegacyFeatureCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/legacy_features/{legacy_feature_id}", []string{"legacy_feature_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiConfigUpdateLegacyFeatureCmdBodySchema = "{\n  \"properties\": {\n    \"enabled_locally\": {\n      \"description\": \"Whether this feature has been enabled by a user\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiConfigCmd.AddCommand(apiConfigUpdateLegacyFeatureCmd)
+	apiConfigUpdateLegacyFeatureCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiConfigUpdateWhitelabelConfigurationCmd = &cobra.Command{
 	Use:   "update_whitelabel_configuration [BODY_JSON_FILE_OR_-]",
 	Short: "Update Private label configuration",
 	Long:  "### Update the private label configuration\n\nThis endpoint is deprecated. [Set Setting](#!/Config/set_setting) should be used to update private label settings instead\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConfigUpdateWhitelabelConfigurationCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PUT", "/whitelabel_configuration", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiConfigUpdateWhitelabelConfigurationCmdBodySchema = "{\n  \"properties\": {\n    \"alerts_links\": {\n      \"description\": \"Remove Looker links from Alerts\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"alerts_logo\": {\n      \"description\": \"Remove Looker logo from Alerts\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allow_looker_links\": {\n      \"description\": \"Boolean to toggle links to Looker in emails\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"allow_looker_mentions\": {\n      \"description\": \"Boolean to toggle mentions of Looker in emails\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"custom_welcome_email_advanced\": {\n      \"description\": \"Allow subject line and email heading customization in customized emails”\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"default_title\": {\n      \"description\": \"Default page title\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"favicon_file\": {\n      \"description\": \"Custom favicon image. Expected base64 encoded data (write-only)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"folders_mentions\": {\n      \"description\": \"Remove Looker mentions in home folder page when you don’t have any items saved\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"logo_file\": {\n      \"description\": \"Customer logo image. Expected base64 encoded data (write-only)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"setup_mentions\": {\n      \"description\": \"Remove the word Looker from appearing in the account setup page\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"show_docs\": {\n      \"description\": \"Boolean to toggle showing docs\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"show_email_sub_options\": {\n      \"description\": \"Boolean to toggle showing email subscription options.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"show_help_menu\": {\n      \"description\": \"Boolean to toggle showing help menus\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiConfigCmd.AddCommand(apiConfigUpdateWhitelabelConfigurationCmd)
+	apiConfigUpdateWhitelabelConfigurationCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiConfigVersionsCmd = &cobra.Command{
@@ -2568,75 +3108,135 @@ var apiConnectionCreateConnectionCmd = &cobra.Command{
 	Use:   "create_connection [BODY_JSON_FILE_OR_-]",
 	Short: "Create Connection",
 	Long:  "### Create a connection using the specified configuration.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConnectionCreateConnectionCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/connections", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiConnectionCreateConnectionCmdBodySchema = "{\n  \"properties\": {\n    \"after_connect_statements\": {\n      \"description\": \"SQL statements (semicolon separated) to issue after connecting to the database. Requires `custom_after_connect_statements` license feature\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"always_retry_failed_builds\": {\n      \"description\": \"When true, error PDTs will be retried every regenerator cycle\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"bq_roles_verified\": {\n      \"description\": \"When true, represents that all project roles have been verified.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"bq_storage_project_id\": {\n      \"description\": \"The project id of the default BigQuery storage project.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"certificate\": {\n      \"description\": \"(Write-Only) Base64 encoded Certificate body for server authentication (when appropriate for dialect).\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"connection_pooling\": {\n      \"description\": \"Enable database connection pooling.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"cost_estimate_enabled\": {\n      \"description\": \"When true, query cost estimate will be displayed in explore.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_local_port\": {\n      \"description\": \"This field is only applicable to connections over an SSH Tunnel. The value of this field would be the local port associated with the SSH tunnel if configured manually. Otherwise either enter NULL or exclude this field.\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"database\": {\n      \"description\": \"Database name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"db_timezone\": {\n      \"description\": \"Time zone of database\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dialect_name\": {\n      \"description\": \"(Read/Write) SQL Dialect name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"disable_context_comment\": {\n      \"description\": \"When disable_context_comment is true comment will not be added to SQL\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"file_type\": {\n      \"description\": \"(Write-Only) Certificate keyfile type - .json, .p8 or .p12\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"host\": {\n      \"description\": \"Host name/address of server; or the string 'localhost' in case of a connection over an SSH tunnel.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"impersonated_service_account\": {\n      \"description\": \"An alternative Service Account to use for querying datasets (used primarily with `uses_application_default_credentials`) (limited to GCP and certain dialects).\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"jdbc_additional_params\": {\n      \"description\": \"Additional params to add to JDBC connection string\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"maintenance_cron\": {\n      \"description\": \"Cron string specifying when maintenance such as PDT trigger checks and drops should be performed\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"max_billing_gigabytes\": {\n      \"description\": \"Maximum size of query in GBs (BigQuery only, can be a user_attribute name)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"max_connections\": {\n      \"description\": \"Maximum number of concurrent connection to use\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"max_queries\": {\n      \"description\": \"Maximum number of concurrent queries to begin on this connection\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"max_queries_per_user\": {\n      \"description\": \"Maximum number of concurrent queries per user to begin on this connection\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Name of the connection. Also used as the unique identifier\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"named_driver_version_requested\": {\n      \"description\": \"Requested JDBC driver version name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"oauth_application_id\": {\n      \"description\": \"An External OAuth Application to use for authenticating to the database\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"password\": {\n      \"description\": \"(Write-Only) Password for server authentication\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"pdt_api_control_enabled\": {\n      \"description\": \"PDT builds on this connection can be kicked off and cancelled via API.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"pdt_concurrency\": {\n      \"description\": \"Maximum number of threads to use to build PDTs in parallel\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"pdt_context_override\": {\n      \"$ref\": \"#/definitions/DBConnectionOverride\",\n      \"description\": \"db_connection_override for this connection in the `pdt` maintenance context\",\n      \"x-looker-nullable\": true\n    },\n    \"pool_timeout\": {\n      \"description\": \"Connection Pool Timeout, in seconds\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"port\": {\n      \"description\": \"Port number on server. If the connection is over an SSH tunnel, then the local port associated with the SSH tunnel.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"query_holding_disabled\": {\n      \"description\": \"Disable query holding for this connection.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"query_timezone\": {\n      \"description\": \"Timezone to use in queries\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"schema\": {\n      \"description\": \"Schema name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"service_name\": {\n      \"description\": \"Service name used for connections with TNS enabled\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"sql_runner_precache_tables\": {\n      \"description\": \"Precache tables in the SQL Runner\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"sql_writing_with_info_schema\": {\n      \"description\": \"Fetch Information Schema For SQL Writing\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"ssl\": {\n      \"description\": \"Use SSL/TLS when connecting to server\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"tmp_db_host\": {\n      \"description\": \"Name of temporary host (if used)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tmp_db_name\": {\n      \"description\": \"Name of temporary database (if used)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tunnel_id\": {\n      \"description\": \"The Id of the ssh tunnel this connection uses\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_fields\": {\n      \"description\": \"Fields whose values map to user attribute names\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"user_db_credentials\": {\n      \"description\": \"(Limited access feature) Are per user db credentials enabled. Enabling will remove previously set username and password\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"username\": {\n      \"description\": \"Username for server authentication\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"uses_application_default_credentials\": {\n      \"description\": \"Whether the connection should authenticate with the Application Default Credentials of the host environment (limited to GCP and certain dialects).\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"uses_key_pair_auth\": {\n      \"description\": \"Whether the connection uses key-pair for authentication.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"uses_tns\": {\n      \"description\": \"Enable Transparent Network Substrate (TNS) connections\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"verify_ssl\": {\n      \"description\": \"Verify the SSL\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiConnectionCmd.AddCommand(apiConnectionCreateConnectionCmd)
+	apiConnectionCreateConnectionCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiConnectionCreateExternalOauthApplicationCmd = &cobra.Command{
 	Use:   "create_external_oauth_application [BODY_JSON_FILE_OR_-]",
 	Short: "Create External OAuth Application",
 	Long:  "### Create an OAuth Application using the specified configuration.\n\nThis is an OAuth Application which Looker uses to access external systems.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConnectionCreateExternalOauthApplicationCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/external_oauth_applications", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiConnectionCreateExternalOauthApplicationCmdBodySchema = "{\n  \"properties\": {\n    \"bi_directional_data_access\": {\n      \"description\": \"Whether this application supports bi-directional data access.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"client_id\": {\n      \"description\": \"The OAuth Client ID for this application\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"client_secret\": {\n      \"description\": \"(Write-Only) The OAuth Client Secret for this application\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false,\n      \"x-looker-write-only\": true\n    },\n    \"dialect_name\": {\n      \"description\": \"The database dialect for this application.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"The name of this application.  For Snowflake connections, this should be the name of the host database.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"tenant_id\": {\n      \"description\": \"The OAuth Tenant ID for this application\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"beta\"\n}"
+
 func init() {
 	apiConnectionCmd.AddCommand(apiConnectionCreateExternalOauthApplicationCmd)
+	apiConnectionCreateExternalOauthApplicationCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiConnectionCreateOauthApplicationUserStateCmd = &cobra.Command{
 	Use:   "create_oauth_application_user_state [BODY_JSON_FILE_OR_-]",
 	Short: "Create Create OAuth user state.",
 	Long:  "### Create OAuth User state.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConnectionCreateOauthApplicationUserStateCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/external_oauth_applications/user_state", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiConnectionCreateOauthApplicationUserStateCmdBodySchema = "{\n  \"properties\": {\n    \"access_token\": {\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"access_token_expires_at\": {\n      \"format\": \"date-time\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"oauth_application_id\": {\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"refresh_token\": {\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"refresh_token_expires_at\": {\n      \"format\": \"date-time\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id\": {\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"required\": [\n    \"user_id\",\n    \"oauth_application_id\",\n    \"access_token\",\n    \"access_token_expires_at\"\n  ],\n  \"x-looker-status\": \"beta\"\n}"
+
 func init() {
 	apiConnectionCmd.AddCommand(apiConnectionCreateOauthApplicationUserStateCmd)
+	apiConnectionCreateOauthApplicationUserStateCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiConnectionCreateSshServerCmd = &cobra.Command{
 	Use:   "create_ssh_server [BODY_JSON_FILE_OR_-]",
 	Short: "Create SSH Server",
 	Long:  "### Create an SSH Server.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConnectionCreateSshServerCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/ssh_servers", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiConnectionCreateSshServerCmdBodySchema = "{\n  \"properties\": {\n    \"ssh_server_host\": {\n      \"description\": \"The hostname or ip address of the SSH Server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"ssh_server_name\": {\n      \"description\": \"The name to identify this SSH Server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"ssh_server_port\": {\n      \"description\": \"The port to connect to on the SSH Server\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": false\n    },\n    \"ssh_server_user\": {\n      \"description\": \"The username used to connect to the SSH Server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiConnectionCmd.AddCommand(apiConnectionCreateSshServerCmd)
+	apiConnectionCreateSshServerCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiConnectionCreateSshTunnelCmd = &cobra.Command{
 	Use:   "create_ssh_tunnel [BODY_JSON_FILE_OR_-]",
 	Short: "Create SSH Tunnel",
 	Long:  "### Create an SSH Tunnel\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConnectionCreateSshTunnelCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/ssh_tunnels", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiConnectionCreateSshTunnelCmdBodySchema = "{\n  \"properties\": {\n    \"database_host\": {\n      \"description\": \"Hostname or IP Address of the Database Server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"database_port\": {\n      \"description\": \"Port that the Database Server is listening on\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": false\n    },\n    \"local_host_port\": {\n      \"description\": \"Localhost Port used by the Looker instance to connect to the remote DB\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": false\n    },\n    \"ssh_server_id\": {\n      \"description\": \"SSH Server ID\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiConnectionCmd.AddCommand(apiConnectionCreateSshTunnelCmd)
+	apiConnectionCreateSshTunnelCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiConnectionDeleteConnectionCmd = &cobra.Command{
@@ -2783,8 +3383,17 @@ var apiConnectionTestConnectionConfigCmd = &cobra.Command{
 	Use:   "test_connection_config [BODY_JSON_FILE_OR_-]",
 	Short: "Test Connection Configuration",
 	Long:  "### Test a connection configuration.\n\nNote that a connection's 'dialect' property has a 'connection_tests' property that lists the\nspecific types of tests that the connection supports.\n\nThis API is rate limited.\n\nUnsupported tests in the request will be ignored.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConnectionTestConnectionConfigCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("tests") {
 			val, _ := cmd.Flags().GetString("tests")
@@ -2794,8 +3403,11 @@ var apiConnectionTestConnectionConfigCmd = &cobra.Command{
 	},
 }
 
+const apiConnectionTestConnectionConfigCmdBodySchema = "{\n  \"properties\": {\n    \"after_connect_statements\": {\n      \"description\": \"SQL statements (semicolon separated) to issue after connecting to the database. Requires `custom_after_connect_statements` license feature\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"always_retry_failed_builds\": {\n      \"description\": \"When true, error PDTs will be retried every regenerator cycle\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"bq_roles_verified\": {\n      \"description\": \"When true, represents that all project roles have been verified.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"bq_storage_project_id\": {\n      \"description\": \"The project id of the default BigQuery storage project.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"certificate\": {\n      \"description\": \"(Write-Only) Base64 encoded Certificate body for server authentication (when appropriate for dialect).\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"connection_pooling\": {\n      \"description\": \"Enable database connection pooling.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"cost_estimate_enabled\": {\n      \"description\": \"When true, query cost estimate will be displayed in explore.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_local_port\": {\n      \"description\": \"This field is only applicable to connections over an SSH Tunnel. The value of this field would be the local port associated with the SSH tunnel if configured manually. Otherwise either enter NULL or exclude this field.\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"database\": {\n      \"description\": \"Database name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"db_timezone\": {\n      \"description\": \"Time zone of database\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dialect_name\": {\n      \"description\": \"(Read/Write) SQL Dialect name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"disable_context_comment\": {\n      \"description\": \"When disable_context_comment is true comment will not be added to SQL\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"file_type\": {\n      \"description\": \"(Write-Only) Certificate keyfile type - .json, .p8 or .p12\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"host\": {\n      \"description\": \"Host name/address of server; or the string 'localhost' in case of a connection over an SSH tunnel.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"impersonated_service_account\": {\n      \"description\": \"An alternative Service Account to use for querying datasets (used primarily with `uses_application_default_credentials`) (limited to GCP and certain dialects).\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"jdbc_additional_params\": {\n      \"description\": \"Additional params to add to JDBC connection string\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"maintenance_cron\": {\n      \"description\": \"Cron string specifying when maintenance such as PDT trigger checks and drops should be performed\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"max_billing_gigabytes\": {\n      \"description\": \"Maximum size of query in GBs (BigQuery only, can be a user_attribute name)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"max_connections\": {\n      \"description\": \"Maximum number of concurrent connection to use\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"max_queries\": {\n      \"description\": \"Maximum number of concurrent queries to begin on this connection\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"max_queries_per_user\": {\n      \"description\": \"Maximum number of concurrent queries per user to begin on this connection\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Name of the connection. Also used as the unique identifier\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"named_driver_version_requested\": {\n      \"description\": \"Requested JDBC driver version name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"oauth_application_id\": {\n      \"description\": \"An External OAuth Application to use for authenticating to the database\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"password\": {\n      \"description\": \"(Write-Only) Password for server authentication\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"pdt_api_control_enabled\": {\n      \"description\": \"PDT builds on this connection can be kicked off and cancelled via API.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"pdt_concurrency\": {\n      \"description\": \"Maximum number of threads to use to build PDTs in parallel\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"pdt_context_override\": {\n      \"$ref\": \"#/definitions/DBConnectionOverride\",\n      \"description\": \"db_connection_override for this connection in the `pdt` maintenance context\",\n      \"x-looker-nullable\": true\n    },\n    \"pool_timeout\": {\n      \"description\": \"Connection Pool Timeout, in seconds\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"port\": {\n      \"description\": \"Port number on server. If the connection is over an SSH tunnel, then the local port associated with the SSH tunnel.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"query_holding_disabled\": {\n      \"description\": \"Disable query holding for this connection.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"query_timezone\": {\n      \"description\": \"Timezone to use in queries\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"schema\": {\n      \"description\": \"Schema name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"service_name\": {\n      \"description\": \"Service name used for connections with TNS enabled\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"sql_runner_precache_tables\": {\n      \"description\": \"Precache tables in the SQL Runner\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"sql_writing_with_info_schema\": {\n      \"description\": \"Fetch Information Schema For SQL Writing\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"ssl\": {\n      \"description\": \"Use SSL/TLS when connecting to server\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"tmp_db_host\": {\n      \"description\": \"Name of temporary host (if used)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tmp_db_name\": {\n      \"description\": \"Name of temporary database (if used)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tunnel_id\": {\n      \"description\": \"The Id of the ssh tunnel this connection uses\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_fields\": {\n      \"description\": \"Fields whose values map to user attribute names\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"user_db_credentials\": {\n      \"description\": \"(Limited access feature) Are per user db credentials enabled. Enabling will remove previously set username and password\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"username\": {\n      \"description\": \"Username for server authentication\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"uses_application_default_credentials\": {\n      \"description\": \"Whether the connection should authenticate with the Application Default Credentials of the host environment (limited to GCP and certain dialects).\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"uses_key_pair_auth\": {\n      \"description\": \"Whether the connection uses key-pair for authentication.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"uses_tns\": {\n      \"description\": \"Enable Transparent Network Substrate (TNS) connections\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"verify_ssl\": {\n      \"description\": \"Verify the SSL\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiConnectionCmd.AddCommand(apiConnectionTestConnectionConfigCmd)
+	apiConnectionTestConnectionConfigCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiConnectionTestConnectionConfigCmd.Flags().String("tests", "", "Array of names of tests to run")
 }
 
@@ -2833,60 +3445,108 @@ var apiConnectionUpdateConnectionCmd = &cobra.Command{
 	Use:   "update_connection [CONNECTION_NAME] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Connection",
 	Long:  "### Update a connection using the specified configuration.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConnectionUpdateConnectionCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/connections/{connection_name}", []string{"connection_name"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiConnectionUpdateConnectionCmdBodySchema = "{\n  \"properties\": {\n    \"after_connect_statements\": {\n      \"description\": \"SQL statements (semicolon separated) to issue after connecting to the database. Requires `custom_after_connect_statements` license feature\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"always_retry_failed_builds\": {\n      \"description\": \"When true, error PDTs will be retried every regenerator cycle\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"bq_roles_verified\": {\n      \"description\": \"When true, represents that all project roles have been verified.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"bq_storage_project_id\": {\n      \"description\": \"The project id of the default BigQuery storage project.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"certificate\": {\n      \"description\": \"(Write-Only) Base64 encoded Certificate body for server authentication (when appropriate for dialect).\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"connection_pooling\": {\n      \"description\": \"Enable database connection pooling.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"cost_estimate_enabled\": {\n      \"description\": \"When true, query cost estimate will be displayed in explore.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_local_port\": {\n      \"description\": \"This field is only applicable to connections over an SSH Tunnel. The value of this field would be the local port associated with the SSH tunnel if configured manually. Otherwise either enter NULL or exclude this field.\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"database\": {\n      \"description\": \"Database name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"db_timezone\": {\n      \"description\": \"Time zone of database\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dialect_name\": {\n      \"description\": \"(Read/Write) SQL Dialect name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"disable_context_comment\": {\n      \"description\": \"When disable_context_comment is true comment will not be added to SQL\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"file_type\": {\n      \"description\": \"(Write-Only) Certificate keyfile type - .json, .p8 or .p12\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"host\": {\n      \"description\": \"Host name/address of server; or the string 'localhost' in case of a connection over an SSH tunnel.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"impersonated_service_account\": {\n      \"description\": \"An alternative Service Account to use for querying datasets (used primarily with `uses_application_default_credentials`) (limited to GCP and certain dialects).\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"jdbc_additional_params\": {\n      \"description\": \"Additional params to add to JDBC connection string\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"maintenance_cron\": {\n      \"description\": \"Cron string specifying when maintenance such as PDT trigger checks and drops should be performed\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"max_billing_gigabytes\": {\n      \"description\": \"Maximum size of query in GBs (BigQuery only, can be a user_attribute name)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"max_connections\": {\n      \"description\": \"Maximum number of concurrent connection to use\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"max_queries\": {\n      \"description\": \"Maximum number of concurrent queries to begin on this connection\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"max_queries_per_user\": {\n      \"description\": \"Maximum number of concurrent queries per user to begin on this connection\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Name of the connection. Also used as the unique identifier\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"named_driver_version_requested\": {\n      \"description\": \"Requested JDBC driver version name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"oauth_application_id\": {\n      \"description\": \"An External OAuth Application to use for authenticating to the database\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"password\": {\n      \"description\": \"(Write-Only) Password for server authentication\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"pdt_api_control_enabled\": {\n      \"description\": \"PDT builds on this connection can be kicked off and cancelled via API.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"pdt_concurrency\": {\n      \"description\": \"Maximum number of threads to use to build PDTs in parallel\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"pdt_context_override\": {\n      \"$ref\": \"#/definitions/DBConnectionOverride\",\n      \"description\": \"db_connection_override for this connection in the `pdt` maintenance context\",\n      \"x-looker-nullable\": true\n    },\n    \"pool_timeout\": {\n      \"description\": \"Connection Pool Timeout, in seconds\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"port\": {\n      \"description\": \"Port number on server. If the connection is over an SSH tunnel, then the local port associated with the SSH tunnel.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"query_holding_disabled\": {\n      \"description\": \"Disable query holding for this connection.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"query_timezone\": {\n      \"description\": \"Timezone to use in queries\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"schema\": {\n      \"description\": \"Schema name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"service_name\": {\n      \"description\": \"Service name used for connections with TNS enabled\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"sql_runner_precache_tables\": {\n      \"description\": \"Precache tables in the SQL Runner\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"sql_writing_with_info_schema\": {\n      \"description\": \"Fetch Information Schema For SQL Writing\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"ssl\": {\n      \"description\": \"Use SSL/TLS when connecting to server\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"tmp_db_host\": {\n      \"description\": \"Name of temporary host (if used)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tmp_db_name\": {\n      \"description\": \"Name of temporary database (if used)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tunnel_id\": {\n      \"description\": \"The Id of the ssh tunnel this connection uses\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_attribute_fields\": {\n      \"description\": \"Fields whose values map to user attribute names\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"user_db_credentials\": {\n      \"description\": \"(Limited access feature) Are per user db credentials enabled. Enabling will remove previously set username and password\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"username\": {\n      \"description\": \"Username for server authentication\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"uses_application_default_credentials\": {\n      \"description\": \"Whether the connection should authenticate with the Application Default Credentials of the host environment (limited to GCP and certain dialects).\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"uses_key_pair_auth\": {\n      \"description\": \"Whether the connection uses key-pair for authentication.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"uses_tns\": {\n      \"description\": \"Enable Transparent Network Substrate (TNS) connections\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"verify_ssl\": {\n      \"description\": \"Verify the SSL\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiConnectionCmd.AddCommand(apiConnectionUpdateConnectionCmd)
+	apiConnectionUpdateConnectionCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiConnectionUpdateExternalOauthApplicationCmd = &cobra.Command{
 	Use:   "update_external_oauth_application [CLIENT_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update External OAuth Application",
 	Long:  "### Update an OAuth Application's client secret.\n\nThis is an OAuth Application which Looker uses to access external systems.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConnectionUpdateExternalOauthApplicationCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/external_oauth_applications/{client_id}", []string{"client_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiConnectionUpdateExternalOauthApplicationCmdBodySchema = "{\n  \"properties\": {\n    \"bi_directional_data_access\": {\n      \"description\": \"Whether this application supports bi-directional data access.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"client_id\": {\n      \"description\": \"The OAuth Client ID for this application\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"client_secret\": {\n      \"description\": \"(Write-Only) The OAuth Client Secret for this application\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false,\n      \"x-looker-write-only\": true\n    },\n    \"dialect_name\": {\n      \"description\": \"The database dialect for this application.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"The name of this application.  For Snowflake connections, this should be the name of the host database.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"tenant_id\": {\n      \"description\": \"The OAuth Tenant ID for this application\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"beta\"\n}"
+
 func init() {
 	apiConnectionCmd.AddCommand(apiConnectionUpdateExternalOauthApplicationCmd)
+	apiConnectionUpdateExternalOauthApplicationCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiConnectionUpdateSshServerCmd = &cobra.Command{
 	Use:   "update_ssh_server [SSH_SERVER_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update SSH Server",
 	Long:  "### Update an SSH Server.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConnectionUpdateSshServerCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/ssh_server/{ssh_server_id}", []string{"ssh_server_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiConnectionUpdateSshServerCmdBodySchema = "{\n  \"properties\": {\n    \"ssh_server_host\": {\n      \"description\": \"The hostname or ip address of the SSH Server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"ssh_server_name\": {\n      \"description\": \"The name to identify this SSH Server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"ssh_server_port\": {\n      \"description\": \"The port to connect to on the SSH Server\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": false\n    },\n    \"ssh_server_user\": {\n      \"description\": \"The username used to connect to the SSH Server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiConnectionCmd.AddCommand(apiConnectionUpdateSshServerCmd)
+	apiConnectionUpdateSshServerCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiConnectionUpdateSshTunnelCmd = &cobra.Command{
 	Use:   "update_ssh_tunnel [SSH_TUNNEL_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update SSH Tunnel",
 	Long:  "### Update an SSH Tunnel\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConnectionUpdateSshTunnelCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/ssh_tunnel/{ssh_tunnel_id}", []string{"ssh_tunnel_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiConnectionUpdateSshTunnelCmdBodySchema = "{\n  \"properties\": {\n    \"database_host\": {\n      \"description\": \"Hostname or IP Address of the Database Server\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"database_port\": {\n      \"description\": \"Port that the Database Server is listening on\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": false\n    },\n    \"local_host_port\": {\n      \"description\": \"Localhost Port used by the Looker instance to connect to the remote DB\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": false\n    },\n    \"ssh_server_id\": {\n      \"description\": \"SSH Server ID\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiConnectionCmd.AddCommand(apiConnectionUpdateSshTunnelCmd)
+	apiConnectionUpdateSshTunnelCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 // Content category
@@ -3103,23 +3763,44 @@ var apiContentCreateContentFavoriteCmd = &cobra.Command{
 	Use:   "create_content_favorite [BODY_JSON_FILE_OR_-]",
 	Short: "Create Favorite Content",
 	Long:  "### Create favorite content",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiContentCreateContentFavoriteCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/content_favorite", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiContentCreateContentFavoriteCmdBodySchema = "{\n  \"properties\": {\n    \"content_metadata_id\": {\n      \"description\": \"Content Metadata Id associated with this ContentFavorite\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"user_id\": {\n      \"description\": \"User Id which owns this ContentFavorite\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiContentCmd.AddCommand(apiContentCreateContentFavoriteCmd)
+	apiContentCreateContentFavoriteCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiContentCreateContentMetadataAccessCmd = &cobra.Command{
 	Use:   "create_content_metadata_access [BODY_JSON_FILE_OR_-]",
 	Short: "Create Content Metadata Access",
 	Long:  "### Create content metadata access.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiContentCreateContentMetadataAccessCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("send_boards_notification_email") {
 			val, _ := cmd.Flags().GetBool("send_boards_notification_email")
@@ -3129,8 +3810,11 @@ var apiContentCreateContentMetadataAccessCmd = &cobra.Command{
 	},
 }
 
+const apiContentCreateContentMetadataAccessCmdBodySchema = "{\n  \"properties\": {},\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiContentCmd.AddCommand(apiContentCreateContentMetadataAccessCmd)
+	apiContentCreateContentMetadataAccessCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiContentCreateContentMetadataAccessCmd.Flags().Bool("send_boards_notification_email", false, "Optionally sends notification email when granting access to a board.")
 }
 
@@ -3373,30 +4057,54 @@ var apiContentUpdateContentMetadataCmd = &cobra.Command{
 	Use:   "update_content_metadata [CONTENT_METADATA_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Content Metadata",
 	Long:  "### Move a piece of content.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiContentUpdateContentMetadataCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/content_metadata/{content_metadata_id}", []string{"content_metadata_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiContentUpdateContentMetadataCmdBodySchema = "{\n  \"properties\": {\n    \"inherits\": {\n      \"description\": \"Whether content inherits its access levels from parent. Can be false only if the associated content is a folder, an agent or a board.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiContentCmd.AddCommand(apiContentUpdateContentMetadataCmd)
+	apiContentUpdateContentMetadataCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiContentUpdateContentMetadataAccessCmd = &cobra.Command{
 	Use:   "update_content_metadata_access [CONTENT_METADATA_ACCESS_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Content Metadata Access",
 	Long:  "### Update type of access for content metadata.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiContentUpdateContentMetadataAccessCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PUT", "/content_metadata_access/{content_metadata_access_id}", []string{"content_metadata_access_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiContentUpdateContentMetadataAccessCmdBodySchema = "{\n  \"properties\": {},\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiContentCmd.AddCommand(apiContentUpdateContentMetadataAccessCmd)
+	apiContentUpdateContentMetadataAccessCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiContentVectorThumbnailCmd = &cobra.Command{
@@ -3453,23 +4161,44 @@ var apiConversationalAnalyticsConversationalAnalyticsChatCmd = &cobra.Command{
 	Use:   "conversational_analytics_chat [BODY_JSON_FILE_OR_-]",
 	Short: "Chat",
 	Long:  "## Takes the latest conversation context (ID and a user message) and\n## returns a list of newly generated system messages.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConversationalAnalyticsConversationalAnalyticsChatCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/conversational_analytics/chat", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiConversationalAnalyticsConversationalAnalyticsChatCmdBodySchema = "{\n  \"properties\": {\n    \"conversation_id\": {\n      \"description\": \"A unique identifier for the conversation.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"user_message\": {\n      \"description\": \"The text content of the most recent message in the conversation.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"required\": [\n    \"conversation_id\",\n    \"user_message\"\n  ],\n  \"x-looker-status\": \"beta\"\n}"
+
 func init() {
 	apiConversationalAnalyticsCmd.AddCommand(apiConversationalAnalyticsConversationalAnalyticsChatCmd)
+	apiConversationalAnalyticsConversationalAnalyticsChatCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiConversationalAnalyticsCreateAgentCmd = &cobra.Command{
 	Use:   "create_agent [BODY_JSON_FILE_OR_-]",
 	Short: "Create Agent",
 	Long:  "### Create Agent\n\nCreates an agent.\nRequired fields: `name`, `description`, `sources`.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConversationalAnalyticsCreateAgentCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -3479,8 +4208,11 @@ var apiConversationalAnalyticsCreateAgentCmd = &cobra.Command{
 	},
 }
 
+const apiConversationalAnalyticsCreateAgentCmdBodySchema = "{\n  \"properties\": {\n    \"category\": {\n      \"description\": \"The category of the agent (e.g., dashboard, conversation)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"code_interpreter\": {\n      \"description\": \"Enables Code Interpreter for this Agent\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"context\": {\n      \"$ref\": \"#/definitions/Context\",\n      \"description\": \"Agent context\",\n      \"x-looker-nullable\": true\n    },\n    \"deleted\": {\n      \"description\": \"Is Agent soft deleted\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"description\": {\n      \"description\": \"Agent description\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"name\": {\n      \"description\": \"Agent name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"sources\": {\n      \"description\": \"Agent sources\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Source\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"beta\"\n}"
+
 func init() {
 	apiConversationalAnalyticsCmd.AddCommand(apiConversationalAnalyticsCreateAgentCmd)
+	apiConversationalAnalyticsCreateAgentCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiConversationalAnalyticsCreateAgentCmd.Flags().String("fields", "", "Requested fields")
 }
 
@@ -3488,8 +4220,17 @@ var apiConversationalAnalyticsCreateConversationCmd = &cobra.Command{
 	Use:   "create_conversation [BODY_JSON_FILE_OR_-]",
 	Short: "Create Conversation",
 	Long:  "### Create Conversation\n\nCreates a conversation.\nRequired fields: `name`.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConversationalAnalyticsCreateConversationCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -3499,8 +4240,11 @@ var apiConversationalAnalyticsCreateConversationCmd = &cobra.Command{
 	},
 }
 
+const apiConversationalAnalyticsCreateConversationCmdBodySchema = "{\n  \"properties\": {\n    \"agent_id\": {\n      \"description\": \"Agent id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"category\": {\n      \"description\": \"The category of the conversation (e.g., dashboard, conversation)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"deleted\": {\n      \"description\": \"Is conversation soft deleted\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"name\": {\n      \"description\": \"Conversation name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"sources\": {\n      \"description\": \"Conversation sources\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Source\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"beta\"\n}"
+
 func init() {
 	apiConversationalAnalyticsCmd.AddCommand(apiConversationalAnalyticsCreateConversationCmd)
+	apiConversationalAnalyticsCreateConversationCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiConversationalAnalyticsCreateConversationCmd.Flags().String("fields", "", "Requested fields")
 }
 
@@ -3508,8 +4252,17 @@ var apiConversationalAnalyticsCreateConversationMessageCmd = &cobra.Command{
 	Use:   "create_conversation_message [CONVERSATION_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Create Conversation Message",
 	Long:  "### Create Conversation Message\n\nCreate one or more conversation messages.\nRequired fields for each message: `type`, `message`.\n\nThe `order` for a message will be determined based on the highest order for previously saved\nmessages for the provided `conversation_id`.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConversationalAnalyticsCreateConversationMessageCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -3519,8 +4272,11 @@ var apiConversationalAnalyticsCreateConversationMessageCmd = &cobra.Command{
 	},
 }
 
+const apiConversationalAnalyticsCreateConversationMessageCmdBodySchema = "{\n  \"properties\": {\n    \"messages\": {\n      \"description\": \"Array of conversation messages to create\",\n      \"items\": {\n        \"format\": \"any\",\n        \"type\": \"any\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"beta\"\n}"
+
 func init() {
 	apiConversationalAnalyticsCmd.AddCommand(apiConversationalAnalyticsCreateConversationMessageCmd)
+	apiConversationalAnalyticsCreateConversationMessageCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiConversationalAnalyticsCreateConversationMessageCmd.Flags().String("fields", "", "Requested fields")
 }
 
@@ -3788,8 +4544,17 @@ var apiConversationalAnalyticsUpdateAgentCmd = &cobra.Command{
 	Use:   "update_agent [AGENT_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Agent",
 	Long:  "### Update Agent\n\nUpdate an agent.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConversationalAnalyticsUpdateAgentCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -3799,8 +4564,11 @@ var apiConversationalAnalyticsUpdateAgentCmd = &cobra.Command{
 	},
 }
 
+const apiConversationalAnalyticsUpdateAgentCmdBodySchema = "{\n  \"properties\": {\n    \"category\": {\n      \"description\": \"The category of the agent (e.g., dashboard, conversation)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"code_interpreter\": {\n      \"description\": \"Enables Code Interpreter for this Agent\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"context\": {\n      \"$ref\": \"#/definitions/Context\",\n      \"description\": \"Agent context\",\n      \"x-looker-nullable\": true\n    },\n    \"deleted\": {\n      \"description\": \"Is Agent soft deleted\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"description\": {\n      \"description\": \"Agent description\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"name\": {\n      \"description\": \"Agent name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"sources\": {\n      \"description\": \"Agent sources\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Source\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"beta\"\n}"
+
 func init() {
 	apiConversationalAnalyticsCmd.AddCommand(apiConversationalAnalyticsUpdateAgentCmd)
+	apiConversationalAnalyticsUpdateAgentCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiConversationalAnalyticsUpdateAgentCmd.Flags().String("fields", "", "Requested fields")
 }
 
@@ -3808,8 +4576,17 @@ var apiConversationalAnalyticsUpdateConversationCmd = &cobra.Command{
 	Use:   "update_conversation [CONVERSATION_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Conversation",
 	Long:  "### Update Conversation\n\nUpdate an conversation.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConversationalAnalyticsUpdateConversationCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -3819,8 +4596,11 @@ var apiConversationalAnalyticsUpdateConversationCmd = &cobra.Command{
 	},
 }
 
+const apiConversationalAnalyticsUpdateConversationCmdBodySchema = "{\n  \"properties\": {\n    \"agent_id\": {\n      \"description\": \"Agent id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"category\": {\n      \"description\": \"The category of the conversation (e.g., dashboard, conversation)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"deleted\": {\n      \"description\": \"Is conversation soft deleted\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"name\": {\n      \"description\": \"Conversation name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"sources\": {\n      \"description\": \"Conversation sources\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Source\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"beta\"\n}"
+
 func init() {
 	apiConversationalAnalyticsCmd.AddCommand(apiConversationalAnalyticsUpdateConversationCmd)
+	apiConversationalAnalyticsUpdateConversationCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiConversationalAnalyticsUpdateConversationCmd.Flags().String("fields", "", "Requested fields")
 }
 
@@ -3828,8 +4608,17 @@ var apiConversationalAnalyticsUpdateConversationMessageCmd = &cobra.Command{
 	Use:   "update_conversation_message [CONVERSATION_ID] [MESSAGE_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Conversation Message",
 	Long:  "### Update Conversation Message\n\nUpdate an conversation message.\n",
-	Args:  cobra.ExactArgs(3),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(3)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConversationalAnalyticsUpdateConversationMessageCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -3839,8 +4628,11 @@ var apiConversationalAnalyticsUpdateConversationMessageCmd = &cobra.Command{
 	},
 }
 
+const apiConversationalAnalyticsUpdateConversationMessageCmdBodySchema = "{\n  \"properties\": {\n    \"message\": {\n      \"additionalProperties\": {\n        \"format\": \"any\",\n        \"type\": \"any\"\n      },\n      \"description\": \"Message content\",\n      \"type\": \"object\",\n      \"x-looker-nullable\": false\n    },\n    \"type\": {\n      \"description\": \"Message type\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"beta\"\n}"
+
 func init() {
 	apiConversationalAnalyticsCmd.AddCommand(apiConversationalAnalyticsUpdateConversationMessageCmd)
+	apiConversationalAnalyticsUpdateConversationMessageCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiConversationalAnalyticsUpdateConversationMessageCmd.Flags().String("fields", "", "Requested fields")
 }
 
@@ -3898,23 +4690,44 @@ var apiDashboardCreateDashboardCmd = &cobra.Command{
 	Use:   "create_dashboard [BODY_JSON_FILE_OR_-]",
 	Short: "Create Dashboard",
 	Long:  "### Create a new dashboard\n\nCreates a new dashboard object and returns the details of the newly created dashboard.\n\n`Title` and `space_id` are required fields.\n`Space_id` must contain the id of an existing space.\nA dashboard's `title` must be unique within the space in which it resides.\n\nIf you receive a 422 error response when creating a dashboard, be sure to look at the\nresponse body for information about exactly which fields are missing or contain invalid data.\n\nYou can **update** an existing dashboard with [update_dashboard()](#!/Dashboard/update_dashboard)\n\nYou can **permanently delete** an existing dashboard with [delete_dashboard()](#!/Dashboard/delete_dashboard)\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiDashboardCreateDashboardCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/dashboards", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiDashboardCreateDashboardCmdBodySchema = "{\n  \"properties\": {\n    \"alert_sync_with_dashboard_filter_enabled\": {\n      \"description\": \"Enables alerts to keep in sync with dashboard filter changes\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"appearance\": {\n      \"$ref\": \"#/definitions/DashboardAppearance\",\n      \"description\": \"Dashboard visual settings only applicable to dashboards-next (beta)\",\n      \"x-looker-nullable\": true\n    },\n    \"background_color\": {\n      \"description\": \"Background color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"crossfilter_enabled\": {\n      \"description\": \"Enables crossfiltering in dashboards - only available in dashboards-next (beta)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"deleted\": {\n      \"description\": \"Whether or not a dashboard is 'soft' deleted.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"description\": {\n      \"description\": \"Description\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"download_settings\": {\n      \"$ref\": \"#/definitions/DashboardDownloadSettings\",\n      \"description\": \"Default download settings for the tiles on the dashboard.\",\n      \"x-looker-nullable\": true\n    },\n    \"enable_viz_full_screen\": {\n      \"description\": \"Allow visualizations to be viewed in full screen mode\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_bar_collapsed\": {\n      \"description\": \"Sets the default state of the filters bar to collapsed or open\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_location_top\": {\n      \"description\": \"Sets the default state of the filters location to top(true) or right(false)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"folder_id\": {\n      \"description\": \"Id of folder\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"hidden\": {\n      \"description\": \"Is Hidden\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"load_configuration\": {\n      \"description\": \"configuration option that governs how dashboard loading will happen.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"lookml_link_id\": {\n      \"description\": \"Links this dashboard to a particular LookML dashboard such that calling a **sync** operation on that LookML dashboard will update this dashboard to match.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"preferred_viewer\": {\n      \"description\": \"The preferred route for viewing this dashboard (ie: dashboards or dashboards-next)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"query_timezone\": {\n      \"description\": \"Timezone in which the Dashboard will run by default.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"refresh_interval\": {\n      \"description\": \"Refresh Interval, as a time duration phrase like \\\"2 hours 30 minutes\\\". A number with no time units will be interpreted as whole seconds.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"show_filters_bar\": {\n      \"description\": \"Show filters bar.  **Security Note:** This property only affects the *cosmetic* appearance of the dashboard, not a user's ability to access data. Hiding the filters bar does **NOT** prevent users from changing filters by other means. For information on how to set up secure data access control policies, see [Control User Access to Data](https://docs.cloud.google.com/looker/docs/r/api/control-access)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"show_title\": {\n      \"description\": \"Show title\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"slug\": {\n      \"description\": \"Content Metadata Slug\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"text_tile_text_color\": {\n      \"description\": \"Color of text on text tiles\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tile_background_color\": {\n      \"description\": \"Tile background color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tile_text_color\": {\n      \"description\": \"Tile text color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Dashboard Title\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title_color\": {\n      \"description\": \"Title color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id\": {\n      \"description\": \"Id of User\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiDashboardCmd.AddCommand(apiDashboardCreateDashboardCmd)
+	apiDashboardCreateDashboardCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiDashboardCreateDashboardElementCmd = &cobra.Command{
 	Use:   "create_dashboard_element [BODY_JSON_FILE_OR_-]",
 	Short: "Create DashboardElement",
 	Long:  "### Create a dashboard element on the dashboard with a specific id.",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiDashboardCreateDashboardElementCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("apply_filters") {
 			val, _ := cmd.Flags().GetBool("apply_filters")
@@ -3928,8 +4741,11 @@ var apiDashboardCreateDashboardElementCmd = &cobra.Command{
 	},
 }
 
+const apiDashboardCreateDashboardElementCmdBodySchema = "{\n  \"properties\": {\n    \"aria_description\": {\n      \"description\": \"Custom ARIA description text\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"body_text\": {\n      \"description\": \"Text tile body text\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_id\": {\n      \"description\": \"Id of Dashboard\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_layout_id\": {\n      \"description\": \"Id of Dashboard Layout\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"extension_id\": {\n      \"description\": \"Extension ID\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"filter_id\": {\n      \"description\": \"ID of the filter this element represents\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"look_id\": {\n      \"description\": \"Id Of Look\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"merge_result_id\": {\n      \"description\": \"ID of merge result\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"note_display\": {\n      \"description\": \"Note Display\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"note_state\": {\n      \"description\": \"Note State\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"note_text\": {\n      \"description\": \"Note Text\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"query_id\": {\n      \"description\": \"Id Of Query\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"refresh_interval\": {\n      \"description\": \"Refresh Interval\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"result_maker\": {\n      \"$ref\": \"#/definitions/ResultMakerWithIdVisConfigAndDynamicFields\",\n      \"description\": \"Data about the result maker.\",\n      \"x-looker-nullable\": true\n    },\n    \"result_maker_id\": {\n      \"description\": \"ID of the ResultMakerLookup entry.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"rich_content_json\": {\n      \"description\": \"JSON with all the properties required for rich editor and buttons elements\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"subtitle_text\": {\n      \"description\": \"Text tile subtitle text\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Title of dashboard element\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title_hidden\": {\n      \"description\": \"Whether title is hidden\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"title_text\": {\n      \"description\": \"Text tile title\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"type\": {\n      \"description\": \"Type\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiDashboardCmd.AddCommand(apiDashboardCreateDashboardElementCmd)
+	apiDashboardCreateDashboardElementCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiDashboardCreateDashboardElementCmd.Flags().Bool("apply_filters", false, "Apply relevant filters on dashboard to this tile")
 	apiDashboardCreateDashboardElementCmd.Flags().String("fields", "", "Requested fields.")
 }
@@ -3938,8 +4754,17 @@ var apiDashboardCreateDashboardFilterCmd = &cobra.Command{
 	Use:   "create_dashboard_filter [BODY_JSON_FILE_OR_-]",
 	Short: "Create Dashboard Filter",
 	Long:  "### Create a dashboard filter on the dashboard with a specific id.",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiDashboardCreateDashboardFilterCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -3949,8 +4774,11 @@ var apiDashboardCreateDashboardFilterCmd = &cobra.Command{
 	},
 }
 
+const apiDashboardCreateDashboardFilterCmdBodySchema = "{\n  \"properties\": {\n    \"allow_multiple_values\": {\n      \"description\": \"Whether the filter allows multiple filter values (deprecated in the latest version of dashboards)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"dashboard_id\": {\n      \"description\": \"Id of Dashboard\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"default_value\": {\n      \"description\": \"Default value of filter\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dimension\": {\n      \"description\": \"Dimension of filter (required if type = field)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"explore\": {\n      \"description\": \"Explore of filter (required if type = field)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"listens_to_filters\": {\n      \"description\": \"Array of listeners for faceted filters\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"model\": {\n      \"description\": \"Model of filter (required if type = field)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Name of filter\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"required\": {\n      \"description\": \"Whether the filter requires a value to run the dashboard\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"row\": {\n      \"description\": \"Display order of this filter relative to other filters\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Title of filter\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"type\": {\n      \"description\": \"Type of filter: one of date, number, string, or field\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"ui_config\": {\n      \"additionalProperties\": {\n        \"format\": \"any\",\n        \"type\": \"any\"\n      },\n      \"description\": \"The visual configuration for this filter. Used to set up how the UI for this filter should appear.\",\n      \"type\": \"object\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"required\": [\n    \"dashboard_id\",\n    \"name\",\n    \"title\",\n    \"type\"\n  ],\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiDashboardCmd.AddCommand(apiDashboardCreateDashboardFilterCmd)
+	apiDashboardCreateDashboardFilterCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiDashboardCreateDashboardFilterCmd.Flags().String("fields", "", "Requested fields")
 }
 
@@ -3958,23 +4786,44 @@ var apiDashboardCreateDashboardFromLookmlCmd = &cobra.Command{
 	Use:   "create_dashboard_from_lookml [BODY_JSON_FILE_OR_-]",
 	Short: "Create Dashboard from LookML",
 	Long:  "# DEPRECATED:  Use [import_dashboard_from_lookml()](#!/Dashboard/import_dashboard_from_lookml)\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiDashboardCreateDashboardFromLookmlCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/dashboards/from_lookml", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiDashboardCreateDashboardFromLookmlCmdBodySchema = "{\n  \"properties\": {\n    \"folder_id\": {\n      \"description\": \"(Write-Only) Id of the folder\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"lookml\": {\n      \"description\": \"lookml of UDD\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiDashboardCmd.AddCommand(apiDashboardCreateDashboardFromLookmlCmd)
+	apiDashboardCreateDashboardFromLookmlCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiDashboardCreateDashboardLayoutCmd = &cobra.Command{
 	Use:   "create_dashboard_layout [BODY_JSON_FILE_OR_-]",
 	Short: "Create DashboardLayout",
 	Long:  "### Create a dashboard layout on the dashboard with a specific id.",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiDashboardCreateDashboardLayoutCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -3984,8 +4833,11 @@ var apiDashboardCreateDashboardLayoutCmd = &cobra.Command{
 	},
 }
 
+const apiDashboardCreateDashboardLayoutCmdBodySchema = "{\n  \"properties\": {\n    \"active\": {\n      \"description\": \"Is Active\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"column_width\": {\n      \"description\": \"Column Width\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_id\": {\n      \"description\": \"Id of Dashboard\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"description\": {\n      \"description\": \"Description\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"label\": {\n      \"description\": \"Label\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"lookml_link_id\": {\n      \"description\": \"LookML link ID (stable name)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"order\": {\n      \"description\": \"Order\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"type\": {\n      \"description\": \"Type\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"width\": {\n      \"description\": \"Width\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiDashboardCmd.AddCommand(apiDashboardCreateDashboardLayoutCmd)
+	apiDashboardCreateDashboardLayoutCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiDashboardCreateDashboardLayoutCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -4263,23 +5115,44 @@ var apiDashboardImportDashboardFromLookmlCmd = &cobra.Command{
 	Use:   "import_dashboard_from_lookml [BODY_JSON_FILE_OR_-]",
 	Short: "Import Dashboard from LookML",
 	Long:  "### Creates a dashboard object based on LookML Dashboard YAML, and returns the details of the newly created dashboard.\n\nIf a dashboard exists with the YAML-defined \"preferred_slug\", the new dashboard will overwrite it. Otherwise, a new\ndashboard will be created. Note that when a dashboard is overwritten, alerts will not be maintained.\n\nIf a folder_id is specified: new dashboards will be placed in that folder, and overwritten dashboards will be moved to it\nIf the folder_id isn't specified: new dashboards will be placed in the caller's personal folder, and overwritten dashboards\nwill remain where they were\n\nLookML must contain valid LookML YAML code. It's recommended to use the LookML format returned\nfrom [dashboard_lookml()](#!/Dashboard/dashboard_lookml) as the input LookML (newlines replaced with \n).\n\nNote that the created dashboard is not linked to any LookML Dashboard,\ni.e. [sync_lookml_dashboard()](#!/Dashboard/sync_lookml_dashboard) will not update dashboards created by this method.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiDashboardImportDashboardFromLookmlCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/dashboards/lookml", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiDashboardImportDashboardFromLookmlCmdBodySchema = "{\n  \"properties\": {\n    \"folder_id\": {\n      \"description\": \"(Write-Only) Id of the folder\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"lookml\": {\n      \"description\": \"lookml of UDD\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiDashboardCmd.AddCommand(apiDashboardImportDashboardFromLookmlCmd)
+	apiDashboardImportDashboardFromLookmlCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiDashboardImportLookmlDashboardCmd = &cobra.Command{
 	Use:   "import_lookml_dashboard [LOOKML_DASHBOARD_ID] [SPACE_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Import LookML Dashboard",
 	Long:  "### Import a LookML dashboard to a space as a UDD\nCreates a UDD (a dashboard which exists in the Looker database rather than as a LookML file) from the LookML dashboard\nand places it in the space specified. The created UDD will have a lookml_link_id which links to the original LookML dashboard.\n\nTo give the imported dashboard specify a (e.g. title: \"my title\") in the body of your request, otherwise the imported\ndashboard will have the same title as the original LookML dashboard.\n\nFor this operation to succeed the user must have permission to see the LookML dashboard in question, and have permission to\ncreate content in the space the dashboard is being imported to.\n\n**Sync** a linked UDD with [sync_lookml_dashboard()](#!/Dashboard/sync_lookml_dashboard)\n**Unlink** a linked UDD by setting lookml_link_id to null with [update_dashboard()](#!/Dashboard/update_dashboard)\n",
-	Args:  cobra.ExactArgs(3),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(3)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiDashboardImportLookmlDashboardCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("raw_locale") {
 			val, _ := cmd.Flags().GetBool("raw_locale")
@@ -4289,8 +5162,11 @@ var apiDashboardImportLookmlDashboardCmd = &cobra.Command{
 	},
 }
 
+const apiDashboardImportLookmlDashboardCmdBodySchema = "{\n  \"properties\": {\n    \"alert_sync_with_dashboard_filter_enabled\": {\n      \"description\": \"Enables alerts to keep in sync with dashboard filter changes\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"appearance\": {\n      \"$ref\": \"#/definitions/DashboardAppearance\",\n      \"description\": \"Dashboard visual settings only applicable to dashboards-next (beta)\",\n      \"x-looker-nullable\": true\n    },\n    \"background_color\": {\n      \"description\": \"Background color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"crossfilter_enabled\": {\n      \"description\": \"Enables crossfiltering in dashboards - only available in dashboards-next (beta)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"deleted\": {\n      \"description\": \"Whether or not a dashboard is 'soft' deleted.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"description\": {\n      \"description\": \"Description\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"download_settings\": {\n      \"$ref\": \"#/definitions/DashboardDownloadSettings\",\n      \"description\": \"Default download settings for the tiles on the dashboard.\",\n      \"x-looker-nullable\": true\n    },\n    \"enable_viz_full_screen\": {\n      \"description\": \"Allow visualizations to be viewed in full screen mode\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_bar_collapsed\": {\n      \"description\": \"Sets the default state of the filters bar to collapsed or open\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_location_top\": {\n      \"description\": \"Sets the default state of the filters location to top(true) or right(false)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"folder_id\": {\n      \"description\": \"Id of folder\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"hidden\": {\n      \"description\": \"Is Hidden\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"load_configuration\": {\n      \"description\": \"configuration option that governs how dashboard loading will happen.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"lookml_link_id\": {\n      \"description\": \"Links this dashboard to a particular LookML dashboard such that calling a **sync** operation on that LookML dashboard will update this dashboard to match.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"preferred_viewer\": {\n      \"description\": \"The preferred route for viewing this dashboard (ie: dashboards or dashboards-next)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"query_timezone\": {\n      \"description\": \"Timezone in which the Dashboard will run by default.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"refresh_interval\": {\n      \"description\": \"Refresh Interval, as a time duration phrase like \\\"2 hours 30 minutes\\\". A number with no time units will be interpreted as whole seconds.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"show_filters_bar\": {\n      \"description\": \"Show filters bar.  **Security Note:** This property only affects the *cosmetic* appearance of the dashboard, not a user's ability to access data. Hiding the filters bar does **NOT** prevent users from changing filters by other means. For information on how to set up secure data access control policies, see [Control User Access to Data](https://docs.cloud.google.com/looker/docs/r/api/control-access)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"show_title\": {\n      \"description\": \"Show title\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"slug\": {\n      \"description\": \"Content Metadata Slug\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"text_tile_text_color\": {\n      \"description\": \"Color of text on text tiles\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tile_background_color\": {\n      \"description\": \"Tile background color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tile_text_color\": {\n      \"description\": \"Tile text color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Dashboard Title\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title_color\": {\n      \"description\": \"Title color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id\": {\n      \"description\": \"Id of User\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiDashboardCmd.AddCommand(apiDashboardImportLookmlDashboardCmd)
+	apiDashboardImportLookmlDashboardCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiDashboardImportLookmlDashboardCmd.Flags().Bool("raw_locale", false, "If true, and this dashboard is localized, export it with the raw keys, not localized.")
 }
 
@@ -4553,38 +5429,71 @@ var apiDashboardUpdateDashboardCmd = &cobra.Command{
 	Use:   "update_dashboard [DASHBOARD_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Dashboard",
 	Long:  "### Update a dashboard\n\nYou can use this function to change the string and integer properties of\na dashboard. Nested objects such as filters, dashboard elements, or dashboard layout components\ncannot be modified by this function - use the update functions for the respective\nnested object types (like [update_dashboard_filter()](#!/Dashboard/update_dashboard_filter) to change a filter)\nto modify nested objects referenced by a dashboard.\n\nIf you receive a 422 error response when updating a dashboard, be sure to look at the\nresponse body for information about exactly which fields are missing or contain invalid data.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiDashboardUpdateDashboardCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/dashboards/{dashboard_id}", []string{"dashboard_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiDashboardUpdateDashboardCmdBodySchema = "{\n  \"properties\": {\n    \"alert_sync_with_dashboard_filter_enabled\": {\n      \"description\": \"Enables alerts to keep in sync with dashboard filter changes\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"appearance\": {\n      \"$ref\": \"#/definitions/DashboardAppearance\",\n      \"description\": \"Dashboard visual settings only applicable to dashboards-next (beta)\",\n      \"x-looker-nullable\": true\n    },\n    \"background_color\": {\n      \"description\": \"Background color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"crossfilter_enabled\": {\n      \"description\": \"Enables crossfiltering in dashboards - only available in dashboards-next (beta)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"deleted\": {\n      \"description\": \"Whether or not a dashboard is 'soft' deleted.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"description\": {\n      \"description\": \"Description\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"download_settings\": {\n      \"$ref\": \"#/definitions/DashboardDownloadSettings\",\n      \"description\": \"Default download settings for the tiles on the dashboard.\",\n      \"x-looker-nullable\": true\n    },\n    \"enable_viz_full_screen\": {\n      \"description\": \"Allow visualizations to be viewed in full screen mode\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_bar_collapsed\": {\n      \"description\": \"Sets the default state of the filters bar to collapsed or open\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_location_top\": {\n      \"description\": \"Sets the default state of the filters location to top(true) or right(false)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"folder_id\": {\n      \"description\": \"Id of folder\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"hidden\": {\n      \"description\": \"Is Hidden\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"load_configuration\": {\n      \"description\": \"configuration option that governs how dashboard loading will happen.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"lookml_link_id\": {\n      \"description\": \"Links this dashboard to a particular LookML dashboard such that calling a **sync** operation on that LookML dashboard will update this dashboard to match.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"preferred_viewer\": {\n      \"description\": \"The preferred route for viewing this dashboard (ie: dashboards or dashboards-next)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"query_timezone\": {\n      \"description\": \"Timezone in which the Dashboard will run by default.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"refresh_interval\": {\n      \"description\": \"Refresh Interval, as a time duration phrase like \\\"2 hours 30 minutes\\\". A number with no time units will be interpreted as whole seconds.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"show_filters_bar\": {\n      \"description\": \"Show filters bar.  **Security Note:** This property only affects the *cosmetic* appearance of the dashboard, not a user's ability to access data. Hiding the filters bar does **NOT** prevent users from changing filters by other means. For information on how to set up secure data access control policies, see [Control User Access to Data](https://docs.cloud.google.com/looker/docs/r/api/control-access)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"show_title\": {\n      \"description\": \"Show title\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"slug\": {\n      \"description\": \"Content Metadata Slug\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"text_tile_text_color\": {\n      \"description\": \"Color of text on text tiles\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tile_background_color\": {\n      \"description\": \"Tile background color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tile_text_color\": {\n      \"description\": \"Tile text color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Dashboard Title\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title_color\": {\n      \"description\": \"Title color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id\": {\n      \"description\": \"Id of User\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiDashboardCmd.AddCommand(apiDashboardUpdateDashboardCmd)
+	apiDashboardUpdateDashboardCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiDashboardUpdateDashboardCertificationCmd = &cobra.Command{
 	Use:   "update_dashboard_certification [DASHBOARD_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Dashboard Certification",
 	Long:  "### Update dashboard certification\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiDashboardUpdateDashboardCertificationCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/dashboards/{dashboard_id}/certification", []string{"dashboard_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiDashboardUpdateDashboardCertificationCmdBodySchema = "{\n  \"properties\": {\n    \"certification_status\": {\n      \"description\": \"Certification status: \\\"certified\\\" or \\\"revoked\\\" Valid values are: \\\"certified\\\", \\\"revoked\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-values\": [\n        \"certified\",\n        \"revoked\"\n      ]\n    },\n    \"notes\": {\n      \"description\": \"Certification notes\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiDashboardCmd.AddCommand(apiDashboardUpdateDashboardCertificationCmd)
+	apiDashboardUpdateDashboardCertificationCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiDashboardUpdateDashboardElementCmd = &cobra.Command{
 	Use:   "update_dashboard_element [DASHBOARD_ELEMENT_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update DashboardElement",
 	Long:  "### Update the dashboard element with a specific id.",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiDashboardUpdateDashboardElementCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -4594,8 +5503,11 @@ var apiDashboardUpdateDashboardElementCmd = &cobra.Command{
 	},
 }
 
+const apiDashboardUpdateDashboardElementCmdBodySchema = "{\n  \"properties\": {\n    \"aria_description\": {\n      \"description\": \"Custom ARIA description text\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"body_text\": {\n      \"description\": \"Text tile body text\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_id\": {\n      \"description\": \"Id of Dashboard\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_layout_id\": {\n      \"description\": \"Id of Dashboard Layout\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"extension_id\": {\n      \"description\": \"Extension ID\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"filter_id\": {\n      \"description\": \"ID of the filter this element represents\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"look_id\": {\n      \"description\": \"Id Of Look\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"merge_result_id\": {\n      \"description\": \"ID of merge result\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"note_display\": {\n      \"description\": \"Note Display\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"note_state\": {\n      \"description\": \"Note State\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"note_text\": {\n      \"description\": \"Note Text\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"query_id\": {\n      \"description\": \"Id Of Query\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"refresh_interval\": {\n      \"description\": \"Refresh Interval\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"result_maker\": {\n      \"$ref\": \"#/definitions/ResultMakerWithIdVisConfigAndDynamicFields\",\n      \"description\": \"Data about the result maker.\",\n      \"x-looker-nullable\": true\n    },\n    \"result_maker_id\": {\n      \"description\": \"ID of the ResultMakerLookup entry.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"rich_content_json\": {\n      \"description\": \"JSON with all the properties required for rich editor and buttons elements\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"subtitle_text\": {\n      \"description\": \"Text tile subtitle text\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Title of dashboard element\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title_hidden\": {\n      \"description\": \"Whether title is hidden\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"title_text\": {\n      \"description\": \"Text tile title\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"type\": {\n      \"description\": \"Type\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiDashboardCmd.AddCommand(apiDashboardUpdateDashboardElementCmd)
+	apiDashboardUpdateDashboardElementCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiDashboardUpdateDashboardElementCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -4603,8 +5515,17 @@ var apiDashboardUpdateDashboardFilterCmd = &cobra.Command{
 	Use:   "update_dashboard_filter [DASHBOARD_FILTER_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Dashboard Filter",
 	Long:  "### Update the dashboard filter with a specific id.",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiDashboardUpdateDashboardFilterCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -4614,8 +5535,11 @@ var apiDashboardUpdateDashboardFilterCmd = &cobra.Command{
 	},
 }
 
+const apiDashboardUpdateDashboardFilterCmdBodySchema = "{\n  \"properties\": {\n    \"allow_multiple_values\": {\n      \"description\": \"Whether the filter allows multiple filter values (deprecated in the latest version of dashboards)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"default_value\": {\n      \"description\": \"Default value of filter\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dimension\": {\n      \"description\": \"Dimension of filter (required if type = field)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"explore\": {\n      \"description\": \"Explore of filter (required if type = field)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"listens_to_filters\": {\n      \"description\": \"Array of listeners for faceted filters\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"model\": {\n      \"description\": \"Model of filter (required if type = field)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Name of filter\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"required\": {\n      \"description\": \"Whether the filter requires a value to run the dashboard\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"row\": {\n      \"description\": \"Display order of this filter relative to other filters\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Title of filter\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"type\": {\n      \"description\": \"Type of filter: one of date, number, string, or field\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"ui_config\": {\n      \"additionalProperties\": {\n        \"format\": \"any\",\n        \"type\": \"any\"\n      },\n      \"description\": \"The visual configuration for this filter. Used to set up how the UI for this filter should appear.\",\n      \"type\": \"object\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiDashboardCmd.AddCommand(apiDashboardUpdateDashboardFilterCmd)
+	apiDashboardUpdateDashboardFilterCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiDashboardUpdateDashboardFilterCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -4623,8 +5547,17 @@ var apiDashboardUpdateDashboardLayoutCmd = &cobra.Command{
 	Use:   "update_dashboard_layout [DASHBOARD_LAYOUT_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update DashboardLayout",
 	Long:  "### Update the dashboard layout with a specific id.",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiDashboardUpdateDashboardLayoutCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -4634,8 +5567,11 @@ var apiDashboardUpdateDashboardLayoutCmd = &cobra.Command{
 	},
 }
 
+const apiDashboardUpdateDashboardLayoutCmdBodySchema = "{\n  \"properties\": {\n    \"active\": {\n      \"description\": \"Is Active\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"column_width\": {\n      \"description\": \"Column Width\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_id\": {\n      \"description\": \"Id of Dashboard\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"description\": {\n      \"description\": \"Description\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"label\": {\n      \"description\": \"Label\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"lookml_link_id\": {\n      \"description\": \"LookML link ID (stable name)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"order\": {\n      \"description\": \"Order\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"type\": {\n      \"description\": \"Type\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"width\": {\n      \"description\": \"Width\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiDashboardCmd.AddCommand(apiDashboardUpdateDashboardLayoutCmd)
+	apiDashboardUpdateDashboardLayoutCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiDashboardUpdateDashboardLayoutCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -4643,8 +5579,17 @@ var apiDashboardUpdateDashboardLayoutComponentCmd = &cobra.Command{
 	Use:   "update_dashboard_layout_component [DASHBOARD_LAYOUT_COMPONENT_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update DashboardLayoutComponent",
 	Long:  "### Update the dashboard element with a specific id.",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiDashboardUpdateDashboardLayoutComponentCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -4654,8 +5599,11 @@ var apiDashboardUpdateDashboardLayoutComponentCmd = &cobra.Command{
 	},
 }
 
+const apiDashboardUpdateDashboardLayoutComponentCmdBodySchema = "{\n  \"properties\": {\n    \"column\": {\n      \"description\": \"Column\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_element_id\": {\n      \"description\": \"Id Of Dashboard Element\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_layout_id\": {\n      \"description\": \"Id of Dashboard Layout\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"deleted\": {\n      \"description\": \"Whether or not the dashboard layout component is deleted\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"granular_column\": {\n      \"description\": \"Column (granular layout)\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"granular_height\": {\n      \"description\": \"Height (granular layout)\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"granular_row\": {\n      \"description\": \"Row (granular layout)\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"granular_width\": {\n      \"description\": \"Width (granular layout)\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"height\": {\n      \"description\": \"Height\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"row\": {\n      \"description\": \"Row\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"width\": {\n      \"description\": \"Width\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiDashboardCmd.AddCommand(apiDashboardUpdateDashboardLayoutComponentCmd)
+	apiDashboardUpdateDashboardLayoutComponentCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiDashboardUpdateDashboardLayoutComponentCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -4663,15 +5611,27 @@ var apiDashboardUpdateLookmlCertificationCmd = &cobra.Command{
 	Use:   "update_lookml_certification [DASHBOARD_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update LookML Dashboard Certification",
 	Long:  "### Update LookML dashboard certification\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiDashboardUpdateLookmlCertificationCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/dashboards/lookml/{dashboard_id}/certification", []string{"dashboard_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiDashboardUpdateLookmlCertificationCmdBodySchema = "{\n  \"properties\": {\n    \"certification_status\": {\n      \"description\": \"Certification status: \\\"certified\\\" or \\\"revoked\\\" Valid values are: \\\"certified\\\", \\\"revoked\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-values\": [\n        \"certified\",\n        \"revoked\"\n      ]\n    },\n    \"notes\": {\n      \"description\": \"Certification notes\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiDashboardCmd.AddCommand(apiDashboardUpdateLookmlCertificationCmd)
+	apiDashboardUpdateLookmlCertificationCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 // DataAction category
@@ -4688,30 +5648,54 @@ var apiDataActionFetchRemoteDataActionFormCmd = &cobra.Command{
 	Use:   "fetch_remote_data_action_form [BODY_JSON_FILE_OR_-]",
 	Short: "Fetch Remote Data Action Form",
 	Long:  "For some data actions, the remote server may supply a form requesting further user input. This endpoint takes a data action, asks the remote server to generate a form for it, and returns that form to you for presentation to the user.",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiDataActionFetchRemoteDataActionFormCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/data_actions/form", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiDataActionFetchRemoteDataActionFormCmdBodySchema = ""
+
 func init() {
 	apiDataActionCmd.AddCommand(apiDataActionFetchRemoteDataActionFormCmd)
+	apiDataActionFetchRemoteDataActionFormCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiDataActionPerformDataActionCmd = &cobra.Command{
 	Use:   "perform_data_action [BODY_JSON_FILE_OR_-]",
 	Short: "Send a Data Action",
 	Long:  "Perform a data action. The data action object can be obtained from query results, and used to perform an arbitrary action.",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiDataActionPerformDataActionCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/data_actions", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiDataActionPerformDataActionCmdBodySchema = "{\n  \"properties\": {\n    \"action\": {\n      \"additionalProperties\": {\n        \"format\": \"any\",\n        \"type\": \"any\"\n      },\n      \"description\": \"The JSON describing the data action. This JSON should be considered opaque and should be passed through unmodified from the query result it came from.\",\n      \"type\": \"object\",\n      \"x-looker-nullable\": true\n    },\n    \"form_values\": {\n      \"additionalProperties\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"User input for any form values the data action might use.\",\n      \"type\": \"object\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiDataActionCmd.AddCommand(apiDataActionPerformDataActionCmd)
+	apiDataActionPerformDataActionCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 // Datagroup category
@@ -4758,15 +5742,27 @@ var apiDatagroupUpdateDatagroupCmd = &cobra.Command{
 	Use:   "update_datagroup [DATAGROUP_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Datagroup",
 	Long:  "### Update a datagroup using the specified params.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiDatagroupUpdateDatagroupCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/datagroups/{datagroup_id}", []string{"datagroup_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiDatagroupUpdateDatagroupCmdBodySchema = "{\n  \"properties\": {\n    \"stale_before\": {\n      \"description\": \"UNIX timestamp before which cache entries are considered stale. Cannot be in the future.\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"triggered_at\": {\n      \"description\": \"UNIX timestamp at which this entry became triggered. Cannot be in the future.\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiDatagroupCmd.AddCommand(apiDatagroupUpdateDatagroupCmd)
+	apiDatagroupUpdateDatagroupCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 // DerivedTable category
@@ -4933,15 +5929,27 @@ var apiFolderCreateFolderCmd = &cobra.Command{
 	Use:   "create_folder [BODY_JSON_FILE_OR_-]",
 	Short: "Create Folder",
 	Long:  "### Create a folder with specified information.\n\nCaller must have permission to edit the parent folder and to create folders, otherwise the request\nreturns 404 Not Found.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiFolderCreateFolderCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/folders", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiFolderCreateFolderCmdBodySchema = "{\n  \"properties\": {\n    \"name\": {\n      \"description\": \"Unique Name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"parent_id\": {\n      \"description\": \"Id of Parent. If the parent id is null, this is a root-level entry\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"required\": [\n    \"name\",\n    \"parent_id\"\n  ],\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiFolderCmd.AddCommand(apiFolderCreateFolderCmd)
+	apiFolderCreateFolderCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiFolderDeleteFolderCmd = &cobra.Command{
@@ -5218,15 +6226,27 @@ var apiFolderUpdateFolderCmd = &cobra.Command{
 	Use:   "update_folder [FOLDER_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Folder",
 	Long:  "### Update the folder with a specific id.",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiFolderUpdateFolderCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/folders/{folder_id}", []string{"folder_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiFolderUpdateFolderCmdBodySchema = "{\n  \"properties\": {\n    \"name\": {\n      \"description\": \"Unique Name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"parent_id\": {\n      \"description\": \"Id of Parent. If the parent id is null, this is a root-level entry\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiFolderCmd.AddCommand(apiFolderUpdateFolderCmd)
+	apiFolderUpdateFolderCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 // Group category
@@ -5243,30 +6263,54 @@ var apiGroupAddGroupGroupCmd = &cobra.Command{
 	Use:   "add_group_group [GROUP_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Add a Group to Group",
 	Long:  "### Adds a new group to a group.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiGroupAddGroupGroupCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/groups/{group_id}/groups", []string{"group_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiGroupAddGroupGroupCmdBodySchema = "{\n  \"properties\": {},\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiGroupCmd.AddCommand(apiGroupAddGroupGroupCmd)
+	apiGroupAddGroupGroupCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiGroupAddGroupUserCmd = &cobra.Command{
 	Use:   "add_group_user [GROUP_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Add a User to Group",
 	Long:  "### Adds a new user to a group.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiGroupAddGroupUserCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/groups/{group_id}/users", []string{"group_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiGroupAddGroupUserCmdBodySchema = "{\n  \"properties\": {},\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiGroupCmd.AddCommand(apiGroupAddGroupUserCmd)
+	apiGroupAddGroupUserCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiGroupAllGroupGroupsCmd = &cobra.Command{
@@ -5398,8 +6442,17 @@ var apiGroupCreateGroupCmd = &cobra.Command{
 	Use:   "create_group [BODY_JSON_FILE_OR_-]",
 	Short: "Create Group",
 	Long:  "### Creates a new group (admin only).\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiGroupCreateGroupCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -5409,8 +6462,11 @@ var apiGroupCreateGroupCmd = &cobra.Command{
 	},
 }
 
+const apiGroupCreateGroupCmdBodySchema = "{\n  \"properties\": {\n    \"can_add_to_content_metadata\": {\n      \"description\": \"Group can be used in content access controls\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"name\": {\n      \"description\": \"Name of group\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiGroupCmd.AddCommand(apiGroupCreateGroupCmd)
+	apiGroupCreateGroupCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiGroupCreateGroupCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -5693,8 +6749,17 @@ var apiGroupUpdateGroupCmd = &cobra.Command{
 	Use:   "update_group [GROUP_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Group",
 	Long:  "### Updates the a group (admin only).",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiGroupUpdateGroupCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -5704,8 +6769,11 @@ var apiGroupUpdateGroupCmd = &cobra.Command{
 	},
 }
 
+const apiGroupUpdateGroupCmdBodySchema = "{\n  \"properties\": {\n    \"can_add_to_content_metadata\": {\n      \"description\": \"Group can be used in content access controls\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"name\": {\n      \"description\": \"Name of group\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiGroupCmd.AddCommand(apiGroupUpdateGroupCmd)
+	apiGroupUpdateGroupCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiGroupUpdateGroupCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -5713,15 +6781,27 @@ var apiGroupUpdateUserAttributeGroupValueCmd = &cobra.Command{
 	Use:   "update_user_attribute_group_value [GROUP_ID] [USER_ATTRIBUTE_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Set User Attribute Group Value",
 	Long:  "### Set the value of a user attribute for a group.\n\nFor information about how user attribute values are calculated, see [Set User Attribute Group Values](#!/UserAttribute/set_user_attribute_group_values).\n",
-	Args:  cobra.ExactArgs(3),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(3)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiGroupUpdateUserAttributeGroupValueCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/groups/{group_id}/attribute_values/{user_attribute_id}", []string{"group_id", "user_attribute_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiGroupUpdateUserAttributeGroupValueCmdBodySchema = "{\n  \"properties\": {},\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiGroupCmd.AddCommand(apiGroupUpdateUserAttributeGroupValueCmd)
+	apiGroupUpdateUserAttributeGroupValueCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 // Homepage category
@@ -5828,8 +6908,17 @@ var apiIntegrationCreateIntegrationHubCmd = &cobra.Command{
 	Use:   "create_integration_hub [BODY_JSON_FILE_OR_-]",
 	Short: "Create Integration Hub",
 	Long:  "### Create a new Integration Hub.\n\nThis API is rate limited to prevent it from being used for SSRF attacks\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiIntegrationCreateIntegrationHubCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -5839,8 +6928,11 @@ var apiIntegrationCreateIntegrationHubCmd = &cobra.Command{
 	},
 }
 
+const apiIntegrationCreateIntegrationHubCmdBodySchema = "{\n  \"properties\": {\n    \"authorization_token\": {\n      \"description\": \"(Write-Only) An authorization key that will be sent to the integration hub on every request.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"url\": {\n      \"description\": \"URL of the hub.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiIntegrationCmd.AddCommand(apiIntegrationCreateIntegrationHubCmd)
+	apiIntegrationCreateIntegrationHubCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiIntegrationCreateIntegrationHubCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -5863,15 +6955,27 @@ var apiIntegrationFetchIntegrationFormCmd = &cobra.Command{
 	Use:   "fetch_integration_form [INTEGRATION_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Fetch Remote Integration Form",
 	Long:  "Returns the Integration form for presentation to the user.",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiIntegrationFetchIntegrationFormCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/integrations/{integration_id}/form", []string{"integration_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiIntegrationFetchIntegrationFormCmdBodySchema = ""
+
 func init() {
 	apiIntegrationCmd.AddCommand(apiIntegrationFetchIntegrationFormCmd)
+	apiIntegrationFetchIntegrationFormCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiIntegrationGetIntegrationHubHealthCmd = &cobra.Command{
@@ -5953,8 +7057,17 @@ var apiIntegrationUpdateIntegrationCmd = &cobra.Command{
 	Use:   "update_integration [INTEGRATION_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Integration",
 	Long:  "### Update parameters on a Integration.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiIntegrationUpdateIntegrationCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -5964,8 +7077,11 @@ var apiIntegrationUpdateIntegrationCmd = &cobra.Command{
 	},
 }
 
+const apiIntegrationUpdateIntegrationCmdBodySchema = "{\n  \"properties\": {\n    \"enabled\": {\n      \"description\": \"Whether the integration is available to users.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"installed_delegate_oauth_targets\": {\n      \"description\": \"Whether the integration is available to users.\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": false\n    },\n    \"params\": {\n      \"description\": \"Array of params for the integration.\",\n      \"items\": {\n        \"$ref\": \"#/definitions/IntegrationParam\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiIntegrationCmd.AddCommand(apiIntegrationUpdateIntegrationCmd)
+	apiIntegrationUpdateIntegrationCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiIntegrationUpdateIntegrationCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -5973,8 +7089,17 @@ var apiIntegrationUpdateIntegrationHubCmd = &cobra.Command{
 	Use:   "update_integration_hub [INTEGRATION_HUB_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Integration Hub",
 	Long:  "### Update a Integration Hub definition.\n\nThis API is rate limited to prevent it from being used for SSRF attacks\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiIntegrationUpdateIntegrationHubCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -5984,8 +7109,11 @@ var apiIntegrationUpdateIntegrationHubCmd = &cobra.Command{
 	},
 }
 
+const apiIntegrationUpdateIntegrationHubCmdBodySchema = "{\n  \"properties\": {\n    \"authorization_token\": {\n      \"description\": \"(Write-Only) An authorization key that will be sent to the integration hub on every request.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"url\": {\n      \"description\": \"URL of the hub.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiIntegrationCmd.AddCommand(apiIntegrationUpdateIntegrationHubCmd)
+	apiIntegrationUpdateIntegrationHubCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiIntegrationUpdateIntegrationHubCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -6003,15 +7131,27 @@ var apiKeyDriverAnalysisRunKeyDriverAnalysisCmd = &cobra.Command{
 	Use:   "run_key_driver_analysis [BODY_JSON_FILE_OR_-]",
 	Short: "Analyze Key Drivers",
 	Long:  "### Analyze Key Drivers\n\nIdentifies the dimensional segments that most significantly drove a metric's change between two time periods.\n\nGiven a data source (a saved query or a model/explore pair), a contribution metric, and a list of\ndimensions to analyse, this endpoint compares a test (breach) period against a control (baseline)\nperiod and returns a ranked list of segment-level insights.\nEach insight reports the metric value in both periods, the absolute and relative difference, \nthe unexpected deviation (how much a segment over or under-performed relative to the overall trend), \nits proportional contribution to the total change, and its a-priori support (what share of total volume that segment represents).\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiKeyDriverAnalysisRunKeyDriverAnalysisCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/internal/kda/analyze", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiKeyDriverAnalysisRunKeyDriverAnalysisCmdBodySchema = "{\n  \"properties\": {\n    \"base_filters\": {\n      \"additionalProperties\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"Optional Looker-syntax filters to scope the entire dataset (e.g., {'users.country': 'India'}).\",\n      \"type\": \"object\",\n      \"x-looker-nullable\": true\n    },\n    \"baseline_filters\": {\n      \"additionalProperties\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"Defines the EXPECTED, PAST, or NORMAL group (State A). For time KDA, put the past date filter here (e.g., {'orders.created_date': 'last week'}). For cohort KDA, put the baseline segment here (e.g., {'users.status': 'Active'}).\",\n      \"type\": \"object\",\n      \"x-looker-nullable\": true\n    },\n    \"breach_filters\": {\n      \"additionalProperties\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"Defines the ANOMALOUS, CURRENT, or COMPARISON group (State B). For time KDA, put the current date here. For 'Rest of Population' cohort comparisons, use a minus sign to negate the baseline (e.g., {'users.status': '-Active'}).\",\n      \"type\": \"object\",\n      \"x-looker-nullable\": true\n    },\n    \"contribution_metric\": {\n      \"description\": \"The LookML measure to analyze (e.g., 'orders.total_revenue').\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"data_source\": {\n      \"$ref\": \"#/definitions/KdaDataSource\",\n      \"description\": \"Defines the Looker dataset. Must provide either query_id OR (model_name + explore_name).\",\n      \"x-looker-nullable\": true\n    },\n    \"dimensions\": {\n      \"description\": \"List of LookML dimensions to analyze as drivers. Max 6 dimensions allowed.\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"required\": [\n    \"data_source\",\n    \"contribution_metric\",\n    \"dimensions\"\n  ],\n  \"x-looker-status\": \"beta\"\n}"
+
 func init() {
 	apiKeyDriverAnalysisCmd.AddCommand(apiKeyDriverAnalysisRunKeyDriverAnalysisCmd)
+	apiKeyDriverAnalysisRunKeyDriverAnalysisCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 // Look category
@@ -6068,8 +7208,17 @@ var apiLookCreateLookCmd = &cobra.Command{
 	Use:   "create_look [BODY_JSON_FILE_OR_-]",
 	Short: "Create Look",
 	Long:  "### Create a Look\n\nTo create a look to display query data, first create the query with [create_query()](#!/Query/create_query)\nthen assign the query's id to the `query_id` property in the call to `create_look()`.\n\nTo place the look into a particular space, assign the space's id to the `space_id` property\nin the call to `create_look()`.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiLookCreateLookCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -6079,8 +7228,11 @@ var apiLookCreateLookCmd = &cobra.Command{
 	},
 }
 
+const apiLookCreateLookCmdBodySchema = "{\n  \"properties\": {\n    \"deleted\": {\n      \"description\": \"Whether or not a look is 'soft' deleted.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"description\": {\n      \"description\": \"Description\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"folder_id\": {\n      \"description\": \"Folder Id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"is_run_on_load\": {\n      \"description\": \"auto-run query when Look viewed\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"public\": {\n      \"description\": \"Is Public\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"query_id\": {\n      \"description\": \"Query Id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Look Title\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id\": {\n      \"description\": \"User Id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiLookCmd.AddCommand(apiLookCreateLookCmd)
+	apiLookCreateLookCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiLookCreateLookCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -6318,8 +7470,17 @@ var apiLookUpdateLookCmd = &cobra.Command{
 	Use:   "update_look [LOOK_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Look",
 	Long:  "### Modify a Look\n\nUse this function to modify parts of a look. Property values given in a call to `update_look` are\napplied to the existing look, so there's no need to include properties whose values are not changing.\nIt's best to specify only the properties you want to change and leave everything else out\nof your `update_look` call. **Look properties marked 'read-only' will be ignored.**\n\nWhen a user deletes a look in the Looker UI, the look data remains in the database but is\nmarked with a deleted flag (\"soft-deleted\"). Soft-deleted looks can be undeleted (by an admin)\nif the delete was in error.\n\nTo soft-delete a look via the API, use [update_look()](#!/Look/update_look) to change the look's `deleted` property to `true`.\nYou can undelete a look by calling `update_look` to change the look's `deleted` property to `false`.\n\nSoft-deleted looks are excluded from the results of [all_looks()](#!/Look/all_looks) and [search_looks()](#!/Look/search_looks), so they\nessentially disappear from view even though they still reside in the db.\nYou can pass `deleted: true` as a parameter to [search_looks()](#!/Look/search_looks) to list soft-deleted looks.\n\nNOTE: [delete_look()](#!/Look/delete_look) performs a \"hard delete\" - the look data is removed from the Looker\ndatabase and destroyed. There is no \"undo\" for `delete_look()`.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiLookUpdateLookCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -6329,8 +7490,11 @@ var apiLookUpdateLookCmd = &cobra.Command{
 	},
 }
 
+const apiLookUpdateLookCmdBodySchema = "{\n  \"properties\": {\n    \"deleted\": {\n      \"description\": \"Whether or not a look is 'soft' deleted.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"description\": {\n      \"description\": \"Description\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"folder_id\": {\n      \"description\": \"Folder Id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"is_run_on_load\": {\n      \"description\": \"auto-run query when Look viewed\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"public\": {\n      \"description\": \"Is Public\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"query_id\": {\n      \"description\": \"Query Id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Look Title\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id\": {\n      \"description\": \"User Id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiLookCmd.AddCommand(apiLookUpdateLookCmd)
+	apiLookUpdateLookCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiLookUpdateLookCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -6338,15 +7502,27 @@ var apiLookUpdateLookCertificationCmd = &cobra.Command{
 	Use:   "update_look_certification [LOOK_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Look Certification",
 	Long:  "### Update look certification\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiLookUpdateLookCertificationCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/looks/{look_id}/certification", []string{"look_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiLookUpdateLookCertificationCmdBodySchema = "{\n  \"properties\": {\n    \"certification_status\": {\n      \"description\": \"Certification status: \\\"certified\\\" or \\\"revoked\\\" Valid values are: \\\"certified\\\", \\\"revoked\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-values\": [\n        \"certified\",\n        \"revoked\"\n      ]\n    },\n    \"notes\": {\n      \"description\": \"Certification notes\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiLookCmd.AddCommand(apiLookUpdateLookCertificationCmd)
+	apiLookUpdateLookCertificationCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 // LookmlModel category
@@ -6413,15 +7589,27 @@ var apiLookmlModelCreateLookmlModelCmd = &cobra.Command{
 	Use:   "create_lookml_model [BODY_JSON_FILE_OR_-]",
 	Short: "Create LookML Model",
 	Long:  "### Create a lookml model using the specified configuration.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiLookmlModelCreateLookmlModelCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/lookml_models", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiLookmlModelCreateLookmlModelCmdBodySchema = "{\n  \"properties\": {\n    \"allowed_db_connection_names\": {\n      \"description\": \"Array of names of connections this model is allowed to use\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Name of the model. Also used as the unique identifier\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"project_name\": {\n      \"description\": \"Name of project containing the model\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"unlimited_db_connections\": {\n      \"description\": \"Is this model allowed to use all current and future connections\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiLookmlModelCmd.AddCommand(apiLookmlModelCreateLookmlModelCmd)
+	apiLookmlModelCreateLookmlModelCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiLookmlModelDeleteLookmlModelCmd = &cobra.Command{
@@ -6488,15 +7676,27 @@ var apiLookmlModelUpdateLookmlModelCmd = &cobra.Command{
 	Use:   "update_lookml_model [LOOKML_MODEL_NAME] [BODY_JSON_FILE_OR_-]",
 	Short: "Update LookML Model",
 	Long:  "### Update a lookml model using the specified configuration.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiLookmlModelUpdateLookmlModelCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/lookml_models/{lookml_model_name}", []string{"lookml_model_name"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiLookmlModelUpdateLookmlModelCmdBodySchema = "{\n  \"properties\": {\n    \"allowed_db_connection_names\": {\n      \"description\": \"Array of names of connections this model is allowed to use\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Name of the model. Also used as the unique identifier\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"project_name\": {\n      \"description\": \"Name of project containing the model\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"unlimited_db_connections\": {\n      \"description\": \"Is this model allowed to use all current and future connections\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiLookmlModelCmd.AddCommand(apiLookmlModelUpdateLookmlModelCmd)
+	apiLookmlModelUpdateLookmlModelCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 // Metadata category
@@ -6558,8 +7758,17 @@ var apiMetadataConnectionCostEstimateCmd = &cobra.Command{
 	Use:   "connection_cost_estimate [CONNECTION_NAME] [BODY_JSON_FILE_OR_-]",
 	Short: "Estimate costs for a connection",
 	Long:  "### Connection cost estimating\n\nAssign a `sql` statement to the body of the request. e.g., for Ruby, `{sql: 'select * from users'}`\n\n**Note**: If the connection's dialect has no support for cost estimates, an error will be returned\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiMetadataConnectionCostEstimateCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -6569,8 +7778,11 @@ var apiMetadataConnectionCostEstimateCmd = &cobra.Command{
 	},
 }
 
+const apiMetadataConnectionCostEstimateCmdBodySchema = "{\n  \"properties\": {},\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiMetadataCmd.AddCommand(apiMetadataConnectionCostEstimateCmd)
+	apiMetadataConnectionCostEstimateCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiMetadataConnectionCostEstimateCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -6858,8 +8070,17 @@ var apiProjectCreateCiRunCmd = &cobra.Command{
 	Use:   "create_ci_run [PROJECT_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Create a Continuous Integration run",
 	Long:  "### Creates a CI Run.\n\nThis endpoint is deprecated. [Create Continuous Integration Run](#!/Project/create_continuous_integration_run) should be used instead.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiProjectCreateCiRunCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -6869,8 +8090,11 @@ var apiProjectCreateCiRunCmd = &cobra.Command{
 	},
 }
 
+const apiProjectCreateCiRunCmdBodySchema = "{\n  \"properties\": {\n    \"branch\": {\n      \"description\": \"Branch that the CI run should validate. Omit to test production.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"commit\": {\n      \"description\": \"Commit that the CI run should validate. Omit to test production.\",\n      \"format\": \"uri-reference\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"suite_id\": {\n      \"description\": \"ID of the CI suite\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"beta\"\n}"
+
 func init() {
 	apiProjectCmd.AddCommand(apiProjectCreateCiRunCmd)
+	apiProjectCreateCiRunCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiProjectCreateCiRunCmd.Flags().String("fields", "", "Requested fields")
 }
 
@@ -6878,8 +8102,17 @@ var apiProjectCreateContinuousIntegrationRunCmd = &cobra.Command{
 	Use:   "create_continuous_integration_run [PROJECT_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Create and queue a Continuous Integration run",
 	Long:  "### Creates and queues a Continuous Integration Run.\n\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiProjectCreateContinuousIntegrationRunCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -6889,8 +8122,11 @@ var apiProjectCreateContinuousIntegrationRunCmd = &cobra.Command{
 	},
 }
 
+const apiProjectCreateContinuousIntegrationRunCmdBodySchema = "{\n  \"properties\": {\n    \"branch\": {\n      \"description\": \"The git branch to use. Required for dev workspace. Omit to test production.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"commit\": {\n      \"description\": \"Commit that the CI run should validate. Omit to test production.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"suite_id\": {\n      \"description\": \"The suite ID.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"user_attributes\": {\n      \"description\": \"User attributes to override for the CI run.\",\n      \"items\": {\n        \"$ref\": \"#/definitions/UserAttributeOverride\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"beta\"\n}"
+
 func init() {
 	apiProjectCmd.AddCommand(apiProjectCreateContinuousIntegrationRunCmd)
+	apiProjectCreateContinuousIntegrationRunCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiProjectCreateContinuousIntegrationRunCmd.Flags().String("fields", "", "Requested fields")
 }
 
@@ -6898,15 +8134,27 @@ var apiProjectCreateGitBranchCmd = &cobra.Command{
 	Use:   "create_git_branch [PROJECT_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Checkout New Git Branch",
 	Long:  "### Create and Checkout a Git Branch\n\nCreates and checks out a new branch in the given project repository\nOnly allowed in development mode\n  - Call `update_session` to select the 'dev' workspace.\n\nOptionally specify a branch name, tag name or commit SHA as the start point in the ref field.\n  If no ref is specified, HEAD of the current branch will be used as the start point for the new branch.\n\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiProjectCreateGitBranchCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/projects/{project_id}/git_branch", []string{"project_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiProjectCreateGitBranchCmdBodySchema = "{\n  \"properties\": {\n    \"name\": {\n      \"description\": \"The short name on the local. Updating `name` results in `git checkout \\u003cnew_name\\u003e`\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"ref\": {\n      \"description\": \"The resolved ref of this branch. Updating `ref` results in `git reset --hard \\u003cnew_ref\\u003e``.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiProjectCmd.AddCommand(apiProjectCreateGitBranchCmd)
+	apiProjectCreateGitBranchCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiProjectCreateGitDeployKeyCmd = &cobra.Command{
@@ -6928,15 +8176,27 @@ var apiProjectCreateProjectCmd = &cobra.Command{
 	Use:   "create_project [BODY_JSON_FILE_OR_-]",
 	Short: "Create Project",
 	Long:  "### Create A Project\n\ndev mode required.\n- Call `update_session` to select the 'dev' workspace.\n\n`name` is required.\n`git_remote_url` is not allowed. To configure Git for the newly created project, follow the instructions in `update_project`.\n\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiProjectCreateProjectCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/projects", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiProjectCreateProjectCmdBodySchema = "{\n  \"properties\": {\n    \"allow_warnings\": {\n      \"description\": \"Validation policy: If true, the project can be committed with warnings when `validation_required` is true. (`allow_warnings` does nothing if `validation_required` is false).\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"dependency_status\": {\n      \"description\": \"Status of dependencies in your manifest \\u0026 lockfile\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"deploy_secret\": {\n      \"description\": \"(Write-Only) Optional secret token with which to authenticate requests to the webhook deploy endpoint. If not set, endpoint is unauthenticated.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"git_application_server_http_port\": {\n      \"description\": \"Port that HTTP(S) application server is running on (for PRs, file browsing, etc.)\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"git_application_server_http_scheme\": {\n      \"description\": \"Scheme that is running on application server (for PRs, file browsing, etc.)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"git_password\": {\n      \"description\": \"(Write-Only) Git password for HTTPS authentication. (For production only, if using user attributes.)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"git_password_user_attribute\": {\n      \"description\": \"User attribute name for password in per-user HTTPS authentication.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"git_production_branch_name\": {\n      \"description\": \"Git production branch name. Defaults to master. Supported only in Looker 21.0 and higher.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"git_release_mgmt_enabled\": {\n      \"description\": \"If true, advanced git release management is enabled for this project\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"git_remote_url\": {\n      \"description\": \"Git remote repository url\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"git_service_name\": {\n      \"description\": \"Name of the git service provider\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"git_username\": {\n      \"description\": \"Git username for HTTPS authentication. (For production only, if using user attributes.)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"git_username_user_attribute\": {\n      \"description\": \"User attribute name for username in per-user HTTPS authentication.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Project display name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"pull_request_mode\": {\n      \"description\": \"The git pull request policy for this project. Valid values are: \\\"off\\\", \\\"links\\\", \\\"recommended\\\", \\\"required\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false,\n      \"x-looker-values\": [\n        \"off\",\n        \"links\",\n        \"recommended\",\n        \"required\"\n      ]\n    },\n    \"unset_deploy_secret\": {\n      \"description\": \"(Write-Only) When true, unsets the deploy secret to allow unauthenticated access to the webhook deploy endpoint.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false,\n      \"x-looker-write-only\": true\n    },\n    \"use_git_cookie_auth\": {\n      \"description\": \"If true, the project uses a git cookie for authentication.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"validation_required\": {\n      \"description\": \"Validation policy: If true, the project must pass validation checks before project changes can be committed to the git repository\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiProjectCmd.AddCommand(apiProjectCreateProjectCmd)
+	apiProjectCreateProjectCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiProjectDeleteGitBranchCmd = &cobra.Command{
@@ -7313,8 +8573,17 @@ var apiProjectTagRefCmd = &cobra.Command{
 	Use:   "tag_ref [PROJECT_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Tag Ref",
 	Long:  "### Creates a tag for the most recent commit, or a specific ref is a SHA is provided\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiProjectTagRefCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("commit_sha") {
 			val, _ := cmd.Flags().GetString("commit_sha")
@@ -7332,8 +8601,11 @@ var apiProjectTagRefCmd = &cobra.Command{
 	},
 }
 
+const apiProjectTagRefCmdBodySchema = "{\n  \"properties\": {\n    \"allow_warnings\": {\n      \"description\": \"Validation policy: If true, the project can be committed with warnings when `validation_required` is true. (`allow_warnings` does nothing if `validation_required` is false).\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"dependency_status\": {\n      \"description\": \"Status of dependencies in your manifest \\u0026 lockfile\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"deploy_secret\": {\n      \"description\": \"(Write-Only) Optional secret token with which to authenticate requests to the webhook deploy endpoint. If not set, endpoint is unauthenticated.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"git_application_server_http_port\": {\n      \"description\": \"Port that HTTP(S) application server is running on (for PRs, file browsing, etc.)\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"git_application_server_http_scheme\": {\n      \"description\": \"Scheme that is running on application server (for PRs, file browsing, etc.)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"git_password\": {\n      \"description\": \"(Write-Only) Git password for HTTPS authentication. (For production only, if using user attributes.)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"git_password_user_attribute\": {\n      \"description\": \"User attribute name for password in per-user HTTPS authentication.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"git_production_branch_name\": {\n      \"description\": \"Git production branch name. Defaults to master. Supported only in Looker 21.0 and higher.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"git_release_mgmt_enabled\": {\n      \"description\": \"If true, advanced git release management is enabled for this project\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"git_remote_url\": {\n      \"description\": \"Git remote repository url\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"git_service_name\": {\n      \"description\": \"Name of the git service provider\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"git_username\": {\n      \"description\": \"Git username for HTTPS authentication. (For production only, if using user attributes.)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"git_username_user_attribute\": {\n      \"description\": \"User attribute name for username in per-user HTTPS authentication.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Project display name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"pull_request_mode\": {\n      \"description\": \"The git pull request policy for this project. Valid values are: \\\"off\\\", \\\"links\\\", \\\"recommended\\\", \\\"required\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false,\n      \"x-looker-values\": [\n        \"off\",\n        \"links\",\n        \"recommended\",\n        \"required\"\n      ]\n    },\n    \"unset_deploy_secret\": {\n      \"description\": \"(Write-Only) When true, unsets the deploy secret to allow unauthenticated access to the webhook deploy endpoint.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false,\n      \"x-looker-write-only\": true\n    },\n    \"use_git_cookie_auth\": {\n      \"description\": \"If true, the project uses a git cookie for authentication.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"validation_required\": {\n      \"description\": \"Validation policy: If true, the project must pass validation checks before project changes can be committed to the git repository\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiProjectCmd.AddCommand(apiProjectTagRefCmd)
+	apiProjectTagRefCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiProjectTagRefCmd.Flags().String("commit_sha", "", "(Optional): Commit Sha to Tag")
 	apiProjectTagRefCmd.Flags().String("tag_message", "", "(Optional): Tag Message")
 	apiProjectTagRefCmd.Flags().String("tag_name", "", "Tag Name")
@@ -7343,23 +8615,44 @@ var apiProjectUpdateGitBranchCmd = &cobra.Command{
 	Use:   "update_git_branch [PROJECT_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Project Git Branch",
 	Long:  "### Checkout and/or reset --hard an existing Git Branch\n\nOnly allowed in development mode\n  - Call `update_session` to select the 'dev' workspace.\n\nCheckout an existing branch if name field is different from the name of the currently checked out branch.\n\nOptionally specify a branch name, tag name or commit SHA to which the branch should be reset.\n  **DANGER** hard reset will be force pushed to the remote. Unsaved changes and commits may be permanently lost.\n\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiProjectUpdateGitBranchCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PUT", "/projects/{project_id}/git_branch", []string{"project_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiProjectUpdateGitBranchCmdBodySchema = "{\n  \"properties\": {\n    \"name\": {\n      \"description\": \"The short name on the local. Updating `name` results in `git checkout \\u003cnew_name\\u003e`\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"ref\": {\n      \"description\": \"The resolved ref of this branch. Updating `ref` results in `git reset --hard \\u003cnew_ref\\u003e``.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiProjectCmd.AddCommand(apiProjectUpdateGitBranchCmd)
+	apiProjectUpdateGitBranchCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiProjectUpdateProjectCmd = &cobra.Command{
 	Use:   "update_project [PROJECT_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Project",
 	Long:  "### Update Project Configuration\n\nApply changes to a project's configuration.\n\n\n#### Configuring Git for a Project\n\nTo set up a Looker project with a remote git repository, follow these steps:\n\n1. Call `update_session` to select the 'dev' workspace.\n1. Call `create_git_deploy_key` to create a new deploy key for the project\n1. Copy the deploy key text into the remote git repository's ssh key configuration\n1. Call `update_project` to set project's `git_remote_url` ()and `git_service_name`, if necessary).\n\nWhen you modify a project's `git_remote_url`, Looker connects to the remote repository to fetch\nmetadata. The remote git repository MUST be configured with the Looker-generated deploy\nkey for this project prior to setting the project's `git_remote_url`.\n\nNote that Looker will validate the git connection when the `git_remote_url` is modified.\nIf Looker cannot connect to the remote repository (e.g. because the deploy key has not\nbeen added), the update will fail with a 400 Bad Request error.\n\nTo set up a Looker project with a git repository residing on the Looker server (a 'bare' git repo):\n\n1. Call `update_session` to select the 'dev' workspace.\n1. Call `update_project` setting `git_remote_url` to null and `git_service_name` to \"bare\".\n\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiProjectUpdateProjectCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -7369,8 +8662,11 @@ var apiProjectUpdateProjectCmd = &cobra.Command{
 	},
 }
 
+const apiProjectUpdateProjectCmdBodySchema = "{\n  \"properties\": {\n    \"allow_warnings\": {\n      \"description\": \"Validation policy: If true, the project can be committed with warnings when `validation_required` is true. (`allow_warnings` does nothing if `validation_required` is false).\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"dependency_status\": {\n      \"description\": \"Status of dependencies in your manifest \\u0026 lockfile\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"deploy_secret\": {\n      \"description\": \"(Write-Only) Optional secret token with which to authenticate requests to the webhook deploy endpoint. If not set, endpoint is unauthenticated.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"git_application_server_http_port\": {\n      \"description\": \"Port that HTTP(S) application server is running on (for PRs, file browsing, etc.)\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"git_application_server_http_scheme\": {\n      \"description\": \"Scheme that is running on application server (for PRs, file browsing, etc.)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"git_password\": {\n      \"description\": \"(Write-Only) Git password for HTTPS authentication. (For production only, if using user attributes.)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"git_password_user_attribute\": {\n      \"description\": \"User attribute name for password in per-user HTTPS authentication.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"git_production_branch_name\": {\n      \"description\": \"Git production branch name. Defaults to master. Supported only in Looker 21.0 and higher.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"git_release_mgmt_enabled\": {\n      \"description\": \"If true, advanced git release management is enabled for this project\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"git_remote_url\": {\n      \"description\": \"Git remote repository url\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"git_service_name\": {\n      \"description\": \"Name of the git service provider\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"git_username\": {\n      \"description\": \"Git username for HTTPS authentication. (For production only, if using user attributes.)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"git_username_user_attribute\": {\n      \"description\": \"User attribute name for username in per-user HTTPS authentication.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Project display name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"pull_request_mode\": {\n      \"description\": \"The git pull request policy for this project. Valid values are: \\\"off\\\", \\\"links\\\", \\\"recommended\\\", \\\"required\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false,\n      \"x-looker-values\": [\n        \"off\",\n        \"links\",\n        \"recommended\",\n        \"required\"\n      ]\n    },\n    \"unset_deploy_secret\": {\n      \"description\": \"(Write-Only) When true, unsets the deploy secret to allow unauthenticated access to the webhook deploy endpoint.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false,\n      \"x-looker-write-only\": true\n    },\n    \"use_git_cookie_auth\": {\n      \"description\": \"If true, the project uses a git cookie for authentication.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"validation_required\": {\n      \"description\": \"Validation policy: If true, the project must pass validation checks before project changes can be committed to the git repository\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiProjectCmd.AddCommand(apiProjectUpdateProjectCmd)
+	apiProjectUpdateProjectCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiProjectUpdateProjectCmd.Flags().String("fields", "", "Requested fields")
 }
 
@@ -7378,15 +8674,27 @@ var apiProjectUpdateRepositoryCredentialCmd = &cobra.Command{
 	Use:   "update_repository_credential [ROOT_PROJECT_ID] [CREDENTIAL_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Create Repository Credential",
 	Long:  "### Configure Repository Credential for a remote dependency\n\nAdmin required.\n\n`root_project_id` is required.\n`credential_id` is required.\n\n",
-	Args:  cobra.ExactArgs(3),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(3)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiProjectUpdateRepositoryCredentialCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PUT", "/projects/{root_project_id}/credential/{credential_id}", []string{"root_project_id", "credential_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiProjectUpdateRepositoryCredentialCmdBodySchema = "{\n  \"properties\": {\n    \"git_password\": {\n      \"description\": \"(Write-Only) Git password for HTTPS authentication.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"git_username\": {\n      \"description\": \"Git username for HTTPS authentication.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"ssh_public_key\": {\n      \"description\": \"Public deploy key for SSH authentication.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiProjectCmd.AddCommand(apiProjectUpdateRepositoryCredentialCmd)
+	apiProjectUpdateRepositoryCredentialCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiProjectValidateProjectCmd = &cobra.Command{
@@ -7438,8 +8746,17 @@ var apiQueryCreateMergeQueryCmd = &cobra.Command{
 	Use:   "create_merge_query [BODY_JSON_FILE_OR_-]",
 	Short: "Create Merge Query",
 	Long:  "### Create Merge Query\n\nCreates a new merge query object.\n\nA merge query takes the results of one or more queries and combines (merges) the results\naccording to field mapping definitions. The result is similar to a SQL left outer join.\n\nA merge query can merge results of queries from different SQL databases.\n\nThe order that queries are defined in the source_queries array property is significant. The\nfirst query in the array defines the primary key into which the results of subsequent\nqueries will be merged.\n\nLike model/view query objects, merge queries are immutable and have structural identity - if\nyou make a request to create a new merge query that is identical to an existing merge query,\nthe existing merge query will be returned instead of creating a duplicate. Conversely, any\nchange to the contents of a merge query will produce a new object with a new id.\n\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiQueryCreateMergeQueryCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -7449,8 +8766,11 @@ var apiQueryCreateMergeQueryCmd = &cobra.Command{
 	},
 }
 
+const apiQueryCreateMergeQueryCmdBodySchema = "{\n  \"properties\": {\n    \"column_limit\": {\n      \"description\": \"Column Limit\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dynamic_fields\": {\n      \"description\": \"Dynamic Fields\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"limit\": {\n      \"description\": \"Limit\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"pivots\": {\n      \"description\": \"Pivots\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"sorts\": {\n      \"description\": \"Sorts\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"source_queries\": {\n      \"description\": \"Source Queries defining the results to be merged.\",\n      \"items\": {\n        \"$ref\": \"#/definitions/MergeQuerySourceQuery\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"total\": {\n      \"description\": \"Total\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"vis_config\": {\n      \"additionalProperties\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"Visualization Config\",\n      \"type\": \"object\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiQueryCmd.AddCommand(apiQueryCreateMergeQueryCmd)
+	apiQueryCreateMergeQueryCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiQueryCreateMergeQueryCmd.Flags().String("fields", "", "Requested fields")
 }
 
@@ -7458,8 +8778,17 @@ var apiQueryCreateQueryCmd = &cobra.Command{
 	Use:   "create_query [BODY_JSON_FILE_OR_-]",
 	Short: "Create Query",
 	Long:  "### Create a query.\n\nThis allows you to create a new query that you can later run. Looker queries are immutable once created\nand are not deleted. If you create a query that is exactly like an existing query then the existing query\nwill be returned and no new query will be created. Whether a new query is created or not, you can use\nthe 'id' in the returned query with the 'run' method.\n\nThe query parameters are passed as json in the body of the request.\n\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiQueryCreateQueryCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -7469,8 +8798,11 @@ var apiQueryCreateQueryCmd = &cobra.Command{
 	},
 }
 
+const apiQueryCreateQueryCmdBodySchema = "{\n  \"properties\": {\n    \"client_id\": {\n      \"description\": \"Client Id: used to generate shortened explore URLs. If set by client, must be a unique 22 character alphanumeric string. Otherwise one will be generated.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"column_limit\": {\n      \"description\": \"Column Limit\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dynamic_fields\": {\n      \"description\": \"Dynamic Fields\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"fields\": {\n      \"description\": \"Fields\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"fill_fields\": {\n      \"description\": \"Fill Fields\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"filter_config\": {\n      \"additionalProperties\": {\n        \"format\": \"any\",\n        \"type\": \"any\"\n      },\n      \"description\": \"The filter_config represents the state of the filter UI on the explore page for a given query. When running a query via the Looker UI, this parameter takes precedence over \\\"filters\\\". When creating a query or modifying an existing query, \\\"filter_config\\\" should be set to null. Setting it to any other value could cause unexpected filtering behavior. The format should be considered opaque.\",\n      \"type\": \"object\",\n      \"x-looker-nullable\": true\n    },\n    \"filter_expression\": {\n      \"description\": \"Filter Expression\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"filters\": {\n      \"additionalProperties\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"Filters will contain data pertaining to complex filters that do not contain \\\"or\\\" conditions. When \\\"or\\\" conditions are present, filter data will be found on the `filter_expression` property.\",\n      \"type\": \"object\",\n      \"x-looker-nullable\": true\n    },\n    \"limit\": {\n      \"description\": \"Row limit. To download unlimited results, set the limit to -1 (negative one).\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"model\": {\n      \"description\": \"Model\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"pivots\": {\n      \"description\": \"Pivots\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"query_timezone\": {\n      \"description\": \"Query Timezone\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"row_total\": {\n      \"description\": \"Raw Total\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"sorts\": {\n      \"description\": \"Sorting for the query results. Use the format `[\\\"view.field\\\", ...]` to sort on fields in ascending order. Use the format `[\\\"view.field desc\\\", ...]` to sort on fields in descending order. Use `[\\\"__UNSORTED__\\\"]` (2 underscores before and after) to disable sorting entirely. Empty sorts `[]` will trigger a default sort.\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"subtotals\": {\n      \"description\": \"Fields on which to run subtotals\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"total\": {\n      \"description\": \"Total\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"view\": {\n      \"description\": \"Explore Name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"vis_config\": {\n      \"additionalProperties\": {\n        \"format\": \"any\",\n        \"type\": \"any\"\n      },\n      \"description\": \"Visualization configuration properties. These properties are typically opaque and differ based on the type of visualization used. There is no specified set of allowed keys. The values can be any type supported by JSON. A \\\"type\\\" key with a string value is often present, and is used by Looker to determine which visualization to present. Visualizations ignore unknown vis_config properties.\",\n      \"type\": \"object\",\n      \"x-looker-nullable\": true\n    },\n    \"visible_ui_sections\": {\n      \"description\": \"Visible UI Sections\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"required\": [\n    \"model\",\n    \"view\"\n  ],\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiQueryCmd.AddCommand(apiQueryCreateQueryCmd)
+	apiQueryCreateQueryCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiQueryCreateQueryCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -7478,8 +8810,17 @@ var apiQueryCreateQueryTaskCmd = &cobra.Command{
 	Use:   "create_query_task [BODY_JSON_FILE_OR_-]",
 	Short: "Run Query Async",
 	Long:  "### Create an async query task\n\nCreates a query task (job) to run a previously created query asynchronously. Returns a Query Task ID.\n\nUse [query_task(query_task_id)](#!/Query/query_task) to check the execution status of the query task.\nAfter the query task status reaches \"Complete\", use [query_task_results(query_task_id)](#!/Query/query_task_results) to fetch the results of the query.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiQueryCreateQueryTaskCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("apply_formatting") {
 			val, _ := cmd.Flags().GetBool("apply_formatting")
@@ -7529,8 +8870,11 @@ var apiQueryCreateQueryTaskCmd = &cobra.Command{
 	},
 }
 
+const apiQueryCreateQueryTaskCmdBodySchema = "{\n  \"properties\": {\n    \"dashboard_id\": {\n      \"description\": \"Id of dashboard associated with query.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"deferred\": {\n      \"description\": \"Create the task but defer execution\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"look_id\": {\n      \"description\": \"Id of look associated with query.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"query_id\": {\n      \"description\": \"Id of query to run\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"result_format\": {\n      \"description\": \"Desired async query result format. Valid values are: \\\"inline_json\\\", \\\"json\\\", \\\"json_detail\\\", \\\"json_fe\\\", \\\"json_bi\\\", \\\"csv\\\", \\\"html\\\", \\\"md\\\", \\\"txt\\\", \\\"xlsx\\\", \\\"gsxml\\\", \\\"sql\\\", \\\"odc\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-values\": [\n        \"inline_json\",\n        \"json\",\n        \"json_detail\",\n        \"json_fe\",\n        \"json_bi\",\n        \"csv\",\n        \"html\",\n        \"md\",\n        \"txt\",\n        \"xlsx\",\n        \"gsxml\",\n        \"sql\",\n        \"odc\"\n      ]\n    },\n    \"source\": {\n      \"description\": \"Source of query task\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"required\": [\n    \"query_id\",\n    \"result_format\"\n  ],\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiQueryCmd.AddCommand(apiQueryCreateQueryTaskCmd)
+	apiQueryCreateQueryTaskCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiQueryCreateQueryTaskCmd.Flags().Bool("apply_formatting", false, "Apply model-specified formatting to each result.")
 	apiQueryCreateQueryTaskCmd.Flags().Bool("apply_vis", false, "Apply visualization options to results.")
 	apiQueryCreateQueryTaskCmd.Flags().Bool("cache", false, "Get results from cache if available.")
@@ -7548,15 +8892,27 @@ var apiQueryCreateSqlQueryCmd = &cobra.Command{
 	Use:   "create_sql_query [BODY_JSON_FILE_OR_-]",
 	Short: "Create SQL Runner Query",
 	Long:  "### Create a SQL Runner Query\n\nEither the `connection_name` or `model_name` parameter MUST be provided.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiQueryCreateSqlQueryCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/sql_queries", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiQueryCreateSqlQueryCmdBodySchema = "{\n  \"properties\": {\n    \"connection_id\": {\n      \"description\": \"(DEPRECATED) Use `connection_name` instead\",\n      \"type\": \"string\",\n      \"x-looker-deprecated\": true,\n      \"x-looker-nullable\": true\n    },\n    \"connection_name\": {\n      \"description\": \"Name of the db connection on which to run this query\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"model_name\": {\n      \"description\": \"Name of LookML Model (this or `connection_id` required)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"sql\": {\n      \"description\": \"SQL query\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"vis_config\": {\n      \"additionalProperties\": {\n        \"format\": \"any\",\n        \"type\": \"any\"\n      },\n      \"description\": \"Visualization configuration properties. These properties are typically opaque and differ based on the type of visualization used. There is no specified set of allowed keys. The values can be any type supported by JSON. A \\\"type\\\" key with a string value is often present, and is used by Looker to determine which visualization to present. Visualizations ignore unknown vis_config properties.\",\n      \"type\": \"object\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiQueryCmd.AddCommand(apiQueryCreateSqlQueryCmd)
+	apiQueryCreateSqlQueryCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiQueryKillQueryCmd = &cobra.Command{
@@ -7688,8 +9044,17 @@ var apiQueryRunInlineQueryCmd = &cobra.Command{
 	Use:   "run_inline_query [RESULT_FORMAT] [BODY_JSON_FILE_OR_-]",
 	Short: "Run Inline Query",
 	Long:  "### Run the query that is specified inline in the posted body.\n\nThis allows running a query as defined in json in the posted body. This combines\nthe two actions of posting & running a query into one step.\n\nHere is an example body in json:\n```\n{\n  \"model\":\"thelook\",\n  \"view\":\"inventory_items\",\n  \"fields\":[\"category.name\",\"inventory_items.days_in_inventory_tier\",\"products.count\"],\n  \"filters\":{\"category.name\":\"socks\"},\n  \"sorts\":[\"products.count desc 0\"],\n  \"limit\":\"500\",\n  \"query_timezone\":\"America/Los_Angeles\"\n}\n```\n\nWhen using the Ruby SDK this would be passed as a Ruby hash like:\n```\n{\n :model=>\"thelook\",\n :view=>\"inventory_items\",\n :fields=>\n  [\"category.name\",\n   \"inventory_items.days_in_inventory_tier\",\n   \"products.count\"],\n :filters=>{:\"category.name\"=>\"socks\"},\n :sorts=>[\"products.count desc 0\"],\n :limit=>\"500\",\n :query_timezone=>\"America/Los_Angeles\",\n}\n```\n\nThis will return the result of running the query in the format specified by the 'result_format' parameter.\n\nSupported formats:\n\n| result_format | Description\n| :-----------: | :--- |\n| json | Plain json\n| json_bi | (*RECOMMENDED*) Row data plus metadata describing the fields, pivots, table calcs, and other aspects of the query. See JsonBi type for schema\n| json_detail | (*LEGACY*) Row data plus metadata describing the fields, pivots, table calcs, and other aspects of the query\n| csv | Comma separated values with a header\n| txt | Tab separated values with a header\n| html | Simple html\n| md | Simple markdown\n| xlsx | MS Excel spreadsheet\n| sql | Returns the generated SQL rather than running the query\n| png | A PNG image of the visualization of the query\n| jpg | A JPG image of the visualization of the query\n\n\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiQueryRunInlineQueryCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("apply_formatting") {
 			val, _ := cmd.Flags().GetBool("apply_formatting")
@@ -7743,8 +9108,11 @@ var apiQueryRunInlineQueryCmd = &cobra.Command{
 	},
 }
 
+const apiQueryRunInlineQueryCmdBodySchema = "{\n  \"properties\": {\n    \"client_id\": {\n      \"description\": \"Client Id: used to generate shortened explore URLs. If set by client, must be a unique 22 character alphanumeric string. Otherwise one will be generated.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"column_limit\": {\n      \"description\": \"Column Limit\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dynamic_fields\": {\n      \"description\": \"Dynamic Fields\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"fields\": {\n      \"description\": \"Fields\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"fill_fields\": {\n      \"description\": \"Fill Fields\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"filter_config\": {\n      \"additionalProperties\": {\n        \"format\": \"any\",\n        \"type\": \"any\"\n      },\n      \"description\": \"The filter_config represents the state of the filter UI on the explore page for a given query. When running a query via the Looker UI, this parameter takes precedence over \\\"filters\\\". When creating a query or modifying an existing query, \\\"filter_config\\\" should be set to null. Setting it to any other value could cause unexpected filtering behavior. The format should be considered opaque.\",\n      \"type\": \"object\",\n      \"x-looker-nullable\": true\n    },\n    \"filter_expression\": {\n      \"description\": \"Filter Expression\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"filters\": {\n      \"additionalProperties\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"Filters will contain data pertaining to complex filters that do not contain \\\"or\\\" conditions. When \\\"or\\\" conditions are present, filter data will be found on the `filter_expression` property.\",\n      \"type\": \"object\",\n      \"x-looker-nullable\": true\n    },\n    \"limit\": {\n      \"description\": \"Row limit. To download unlimited results, set the limit to -1 (negative one).\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"model\": {\n      \"description\": \"Model\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"pivots\": {\n      \"description\": \"Pivots\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"query_timezone\": {\n      \"description\": \"Query Timezone\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"row_total\": {\n      \"description\": \"Raw Total\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"sorts\": {\n      \"description\": \"Sorting for the query results. Use the format `[\\\"view.field\\\", ...]` to sort on fields in ascending order. Use the format `[\\\"view.field desc\\\", ...]` to sort on fields in descending order. Use `[\\\"__UNSORTED__\\\"]` (2 underscores before and after) to disable sorting entirely. Empty sorts `[]` will trigger a default sort.\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"subtotals\": {\n      \"description\": \"Fields on which to run subtotals\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"total\": {\n      \"description\": \"Total\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"view\": {\n      \"description\": \"Explore Name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"vis_config\": {\n      \"additionalProperties\": {\n        \"format\": \"any\",\n        \"type\": \"any\"\n      },\n      \"description\": \"Visualization configuration properties. These properties are typically opaque and differ based on the type of visualization used. There is no specified set of allowed keys. The values can be any type supported by JSON. A \\\"type\\\" key with a string value is often present, and is used by Looker to determine which visualization to present. Visualizations ignore unknown vis_config properties.\",\n      \"type\": \"object\",\n      \"x-looker-nullable\": true\n    },\n    \"visible_ui_sections\": {\n      \"description\": \"Visible UI Sections\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"required\": [\n    \"model\",\n    \"view\"\n  ],\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiQueryCmd.AddCommand(apiQueryRunInlineQueryCmd)
+	apiQueryRunInlineQueryCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiQueryRunInlineQueryCmd.Flags().Bool("apply_formatting", false, "Apply model-specified formatting to each result.")
 	apiQueryRunInlineQueryCmd.Flags().Bool("apply_vis", false, "Apply visualization options to results.")
 	apiQueryRunInlineQueryCmd.Flags().Bool("cache", false, "Get results from cache if available.")
@@ -7918,8 +9286,17 @@ var apiRenderTaskCreateDashboardRenderTaskCmd = &cobra.Command{
 	Use:   "create_dashboard_render_task [DASHBOARD_ID] [RESULT_FORMAT] [WIDTH] [HEIGHT] [BODY_JSON_FILE_OR_-]",
 	Short: "Create Dashboard Render Task",
 	Long:  "### Create a new task to render a dashboard to a document or image.\n\nReturns a render task object.\nTo check the status of a render task, pass the render_task.id to [Get Render Task](#!/RenderTask/get_render_task).\nOnce the render task is complete, you can download the resulting document or image using [Get Render Task Results](#!/RenderTask/get_render_task_results).\n\n",
-	Args:  cobra.ExactArgs(5),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(5)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiRenderTaskCreateDashboardRenderTaskCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -7945,8 +9322,11 @@ var apiRenderTaskCreateDashboardRenderTaskCmd = &cobra.Command{
 	},
 }
 
+const apiRenderTaskCreateDashboardRenderTaskCmdBodySchema = "{\n  \"properties\": {\n    \"dashboard_filters\": {\n      \"description\": \"Filter values to apply to the dashboard queries, in URL query format\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_style\": {\n      \"description\": \"Dashboard layout style: single_column or tiled\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tab_ids\": {\n      \"description\": \"IDs of tabs to render (ID on a UDD and a tab label on lookml dashboards)\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiRenderTaskCmd.AddCommand(apiRenderTaskCreateDashboardRenderTaskCmd)
+	apiRenderTaskCreateDashboardRenderTaskCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiRenderTaskCreateDashboardRenderTaskCmd.Flags().String("fields", "", "Requested fields.")
 	apiRenderTaskCreateDashboardRenderTaskCmd.Flags().Bool("long_tables", false, "Whether or not to expand table vis to full length")
 	apiRenderTaskCreateDashboardRenderTaskCmd.Flags().Bool("pdf_landscape", false, "Whether to render pdf in landscape paper orientation")
@@ -8198,45 +9578,81 @@ var apiRoleCreateModelSetCmd = &cobra.Command{
 	Use:   "create_model_set [BODY_JSON_FILE_OR_-]",
 	Short: "Create Model Set",
 	Long:  "### Create a model set with the specified information. Model sets are used by Roles.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiRoleCreateModelSetCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/model_sets", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiRoleCreateModelSetCmdBodySchema = "{\n  \"properties\": {\n    \"models\": {\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Name of ModelSet\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiRoleCmd.AddCommand(apiRoleCreateModelSetCmd)
+	apiRoleCreateModelSetCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiRoleCreatePermissionSetCmd = &cobra.Command{
 	Use:   "create_permission_set [BODY_JSON_FILE_OR_-]",
 	Short: "Create Permission Set",
 	Long:  "### Create a permission set with the specified information. Permission sets are used by Roles.\nProviding save_content permission alone will also provide you the abilities of save_looks and save_dashboards.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiRoleCreatePermissionSetCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/permission_sets", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiRoleCreatePermissionSetCmdBodySchema = "{\n  \"properties\": {\n    \"name\": {\n      \"description\": \"Name of PermissionSet\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"permissions\": {\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiRoleCmd.AddCommand(apiRoleCreatePermissionSetCmd)
+	apiRoleCreatePermissionSetCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiRoleCreateRoleCmd = &cobra.Command{
 	Use:   "create_role [BODY_JSON_FILE_OR_-]",
 	Short: "Create Role",
 	Long:  "### Create a role with the specified information.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiRoleCreateRoleCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/roles", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiRoleCreateRoleCmdBodySchema = "{\n  \"properties\": {\n    \"model_set_id\": {\n      \"description\": \"(Write-Only) Id of model set\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"name\": {\n      \"description\": \"Name of Role\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"permission_set_id\": {\n      \"description\": \"(Write-Only) Id of permission set\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiRoleCmd.AddCommand(apiRoleCreateRoleCmd)
+	apiRoleCreateRoleCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiRoleDeleteModelSetCmd = &cobra.Command{
@@ -8638,75 +10054,135 @@ var apiRoleSetRoleGroupsCmd = &cobra.Command{
 	Use:   "set_role_groups [ROLE_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Role Groups",
 	Long:  "### Set all groups for a role, removing all existing group associations from that role.\n\nCalls to this endpoint may be denied by [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/r/looker-core/overview).\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiRoleSetRoleGroupsCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PUT", "/roles/{role_id}/groups", []string{"role_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiRoleSetRoleGroupsCmdBodySchema = ""
+
 func init() {
 	apiRoleCmd.AddCommand(apiRoleSetRoleGroupsCmd)
+	apiRoleSetRoleGroupsCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiRoleSetRoleUsersCmd = &cobra.Command{
 	Use:   "set_role_users [ROLE_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Role Users",
 	Long:  "### Set all the users of the role with a specific id.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiRoleSetRoleUsersCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PUT", "/roles/{role_id}/users", []string{"role_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiRoleSetRoleUsersCmdBodySchema = ""
+
 func init() {
 	apiRoleCmd.AddCommand(apiRoleSetRoleUsersCmd)
+	apiRoleSetRoleUsersCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiRoleUpdateModelSetCmd = &cobra.Command{
 	Use:   "update_model_set [MODEL_SET_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Model Set",
 	Long:  "### Update information about the model set with a specific id.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiRoleUpdateModelSetCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/model_sets/{model_set_id}", []string{"model_set_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiRoleUpdateModelSetCmdBodySchema = "{\n  \"properties\": {\n    \"models\": {\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Name of ModelSet\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiRoleCmd.AddCommand(apiRoleUpdateModelSetCmd)
+	apiRoleUpdateModelSetCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiRoleUpdatePermissionSetCmd = &cobra.Command{
 	Use:   "update_permission_set [PERMISSION_SET_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Permission Set",
 	Long:  "### Update information about the permission set with a specific id.\nProviding save_content permission alone will also provide you the abilities of save_looks and save_dashboards.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiRoleUpdatePermissionSetCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/permission_sets/{permission_set_id}", []string{"permission_set_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiRoleUpdatePermissionSetCmdBodySchema = "{\n  \"properties\": {\n    \"name\": {\n      \"description\": \"Name of PermissionSet\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"permissions\": {\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiRoleCmd.AddCommand(apiRoleUpdatePermissionSetCmd)
+	apiRoleUpdatePermissionSetCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiRoleUpdateRoleCmd = &cobra.Command{
 	Use:   "update_role [ROLE_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Role",
 	Long:  "### Update information about the role with a specific id.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiRoleUpdateRoleCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/roles/{role_id}", []string{"role_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiRoleUpdateRoleCmdBodySchema = "{\n  \"properties\": {\n    \"model_set_id\": {\n      \"description\": \"(Write-Only) Id of model set\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    },\n    \"name\": {\n      \"description\": \"Name of Role\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"permission_set_id\": {\n      \"description\": \"(Write-Only) Id of permission set\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-write-only\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiRoleCmd.AddCommand(apiRoleUpdateRoleCmd)
+	apiRoleUpdateRoleCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 // ScheduledPlan category
@@ -8753,15 +10229,27 @@ var apiScheduledPlanCreateScheduledPlanCmd = &cobra.Command{
 	Use:   "create_scheduled_plan [BODY_JSON_FILE_OR_-]",
 	Short: "Create Scheduled Plan",
 	Long:  "### Create a Scheduled Plan\n\nCreate a scheduled plan to render a Look or Dashboard on a recurring schedule.\n\nTo create a scheduled plan, you MUST provide values for the following fields:\n`name`\nand\n`look_id`, `dashboard_id`, `lookml_dashboard_id`, or `query_id`\nand\n`cron_tab` or `datagroup`\nand\nat least one scheduled_plan_destination\n\nA scheduled plan MUST have at least one scheduled_plan_destination defined.\n\nWhen `look_id` is set, `require_no_results`, `require_results`, and `require_change` are all required.\n\nIf `create_scheduled_plan` fails with a 422 error, be sure to look at the error messages in the response which will explain exactly what fields are missing or values that are incompatible.\n\nThe queries that provide the data for the look or dashboard are run in the context of user account that owns the scheduled plan.\n\nWhen `run_as_recipient` is `false` or not specified, the queries that provide the data for the\nlook or dashboard are run in the context of user account that owns the scheduled plan.\n\nWhen `run_as_recipient` is `true` and all the email recipients are Looker user accounts, the\nqueries are run in the context of each recipient, so different recipients may see different\ndata from the same scheduled render of a look or dashboard. For more details, see [Run As Recipient](https://docs.cloud.google.com/looker/docs/r/admin/run-as-recipient).\n\nAdmins can create and modify scheduled plans on behalf of other users by specifying a user id.\nNon-admin users may not create or modify scheduled plans by or for other users.\n\n#### Email Permissions:\n\nFor details about permissions required to schedule delivery to email and the safeguards\nLooker offers to protect against sending to unauthorized email destinations, see [Email Domain Allow List for Scheduled Looks](https://docs.cloud.google.com/looker/docs/r/api/embed-permissions).\n\n\n#### Scheduled Plan Destination Formats\n\nScheduled plan destinations must specify the data format to produce and send to the destination.\n\nFormats:\n\n| format | Description\n| :-----------: | :--- |\n| json | A JSON object containing a `data` property which contains an array of JSON objects, one per row. No metadata.\n| json_detail | Row data plus metadata describing the fields, pivots, table calcs, and other aspects of the query\n| inline_json | Same as the JSON format, except that the `data` property is a string containing JSON-escaped row data. Additional properties describe the data operation. This format is primarily used to send data to web hooks so that the web hook doesn't have to re-encode the JSON row data in order to pass it on to its ultimate destination.\n| csv | Comma separated values with a header\n| txt | Tab separated values with a header\n| html | Simple html\n| xlsx | MS Excel spreadsheet\n| wysiwyg_pdf | Dashboard rendered in a tiled layout to produce a PDF document\n| assembled_pdf | Dashboard rendered in a single column layout to produce a PDF document\n| wysiwyg_png | Dashboard rendered in a tiled layout to produce a PNG image\n||\n\nValid formats vary by destination type and source object. `wysiwyg_pdf` is only valid for dashboards, for example.\n\n\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiScheduledPlanCreateScheduledPlanCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/scheduled_plans", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiScheduledPlanCreateScheduledPlanCmdBodySchema = "{\n  \"properties\": {\n    \"color_theme\": {\n      \"description\": \"Color scheme of the dashboard if applicable\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"crontab\": {\n      \"description\": \"Vixie-Style crontab specification when to run\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_url_base\": {\n      \"description\": \"Custom url domain for the scheduled entity\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_url_label\": {\n      \"description\": \"Custom url label for the scheduled entity\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_url_params\": {\n      \"description\": \"Custom url path and parameters for the scheduled entity\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_filters\": {\n      \"description\": \"(DEPRECATED) Alias for filters_string field\",\n      \"type\": \"string\",\n      \"x-looker-deprecated\": true,\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_id\": {\n      \"description\": \"Id of a dashboard\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"datagroup\": {\n      \"description\": \"Name of a datagroup; if specified will run when datagroup triggered (can't be used with cron string)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"embed\": {\n      \"description\": \"Whether this schedule is in an embed context or not\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"enabled\": {\n      \"description\": \"Whether the ScheduledPlan is enabled\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_string\": {\n      \"description\": \"Query string to run look or dashboard with\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"include_links\": {\n      \"description\": \"Whether links back to Looker should be included in this ScheduledPlan\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"inline_table_width\": {\n      \"description\": \"The pixel width at which we render the inline table visualizations\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"long_tables\": {\n      \"description\": \"Whether or not to expand table vis to full length\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"look_id\": {\n      \"description\": \"Id of a look\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"lookml_dashboard_id\": {\n      \"description\": \"Id of a LookML dashboard\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Name of this scheduled plan\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"pdf_landscape\": {\n      \"description\": \"Whether the PDF should be formatted for landscape orientation\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"pdf_page_breaks\": {\n      \"description\": \"Whether or not to add page breaks between tabs\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"pdf_paper_size\": {\n      \"description\": \"The size of paper the PDF should be formatted to fit. Valid values are: \\\"letter\\\", \\\"legal\\\", \\\"tabloid\\\", \\\"a0\\\", \\\"a1\\\", \\\"a2\\\", \\\"a3\\\", \\\"a4\\\", \\\"a5\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"query_id\": {\n      \"description\": \"Query id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"require_change\": {\n      \"description\": \"Delivery should occur if data have changed since the last run\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"require_no_results\": {\n      \"description\": \"Delivery should occur if the dashboard look does not return results\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"require_results\": {\n      \"description\": \"Delivery should occur if running the dashboard or look returns results\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"run_as_recipient\": {\n      \"description\": \"Whether schedule is run as recipient (only applicable for email recipients)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"run_once\": {\n      \"description\": \"Whether the plan in question should only be run once (usually for testing)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"scheduled_plan_destination\": {\n      \"description\": \"Scheduled plan destinations\",\n      \"items\": {\n        \"$ref\": \"#/definitions/ScheduledPlanDestination\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"send_all_results\": {\n      \"description\": \"Will run an unlimited query and send all results.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"show_custom_url\": {\n      \"description\": \"Whether to show custom link back instead of standard looker link\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"tab_ids\": {\n      \"description\": \"IDs of tabs to render (ID on a UDD and a tab label on lookml dashboards)\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"timezone\": {\n      \"description\": \"Timezone for interpreting the specified crontab (default is Looker instance timezone)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id\": {\n      \"description\": \"User Id which owns this scheduled plan\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiScheduledPlanCmd.AddCommand(apiScheduledPlanCreateScheduledPlanCmd)
+	apiScheduledPlanCreateScheduledPlanCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiScheduledPlanDeleteScheduledPlanCmd = &cobra.Command{
@@ -8803,30 +10291,54 @@ var apiScheduledPlanScheduledPlanRunOnceCmd = &cobra.Command{
 	Use:   "scheduled_plan_run_once [BODY_JSON_FILE_OR_-]",
 	Short: "Run Scheduled Plan Once",
 	Long:  "### Run a Scheduled Plan Immediately\n\nCreate a scheduled plan that runs only once, and immediately.\n\nThis can be useful for testing a Scheduled Plan before committing to a production schedule.\n\nAdmins can create scheduled plans on behalf of other users by specifying a user id.\n\nThis API is rate limited to prevent it from being used for relay spam or DoS attacks\n\n#### Email Permissions:\n\nFor details about permissions required to schedule delivery to email and the safeguards\nLooker offers to protect against sending to unauthorized email destinations, see [Email Domain Allow List for Scheduled Looks](https://docs.cloud.google.com/looker/docs/r/api/embed-permissions).\n\n\n#### Scheduled Plan Destination Formats\n\nScheduled plan destinations must specify the data format to produce and send to the destination.\n\nFormats:\n\n| format | Description\n| :-----------: | :--- |\n| json | A JSON object containing a `data` property which contains an array of JSON objects, one per row. No metadata.\n| json_detail | Row data plus metadata describing the fields, pivots, table calcs, and other aspects of the query\n| inline_json | Same as the JSON format, except that the `data` property is a string containing JSON-escaped row data. Additional properties describe the data operation. This format is primarily used to send data to web hooks so that the web hook doesn't have to re-encode the JSON row data in order to pass it on to its ultimate destination.\n| csv | Comma separated values with a header\n| txt | Tab separated values with a header\n| html | Simple html\n| xlsx | MS Excel spreadsheet\n| wysiwyg_pdf | Dashboard rendered in a tiled layout to produce a PDF document\n| assembled_pdf | Dashboard rendered in a single column layout to produce a PDF document\n| wysiwyg_png | Dashboard rendered in a tiled layout to produce a PNG image\n||\n\nValid formats vary by destination type and source object. `wysiwyg_pdf` is only valid for dashboards, for example.\n\n\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiScheduledPlanScheduledPlanRunOnceCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/scheduled_plans/run_once", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiScheduledPlanScheduledPlanRunOnceCmdBodySchema = "{\n  \"properties\": {\n    \"color_theme\": {\n      \"description\": \"Color scheme of the dashboard if applicable\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"crontab\": {\n      \"description\": \"Vixie-Style crontab specification when to run\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_url_base\": {\n      \"description\": \"Custom url domain for the scheduled entity\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_url_label\": {\n      \"description\": \"Custom url label for the scheduled entity\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_url_params\": {\n      \"description\": \"Custom url path and parameters for the scheduled entity\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_filters\": {\n      \"description\": \"(DEPRECATED) Alias for filters_string field\",\n      \"type\": \"string\",\n      \"x-looker-deprecated\": true,\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_id\": {\n      \"description\": \"Id of a dashboard\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"datagroup\": {\n      \"description\": \"Name of a datagroup; if specified will run when datagroup triggered (can't be used with cron string)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"embed\": {\n      \"description\": \"Whether this schedule is in an embed context or not\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"enabled\": {\n      \"description\": \"Whether the ScheduledPlan is enabled\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_string\": {\n      \"description\": \"Query string to run look or dashboard with\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"include_links\": {\n      \"description\": \"Whether links back to Looker should be included in this ScheduledPlan\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"inline_table_width\": {\n      \"description\": \"The pixel width at which we render the inline table visualizations\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"long_tables\": {\n      \"description\": \"Whether or not to expand table vis to full length\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"look_id\": {\n      \"description\": \"Id of a look\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"lookml_dashboard_id\": {\n      \"description\": \"Id of a LookML dashboard\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Name of this scheduled plan\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"pdf_landscape\": {\n      \"description\": \"Whether the PDF should be formatted for landscape orientation\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"pdf_page_breaks\": {\n      \"description\": \"Whether or not to add page breaks between tabs\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"pdf_paper_size\": {\n      \"description\": \"The size of paper the PDF should be formatted to fit. Valid values are: \\\"letter\\\", \\\"legal\\\", \\\"tabloid\\\", \\\"a0\\\", \\\"a1\\\", \\\"a2\\\", \\\"a3\\\", \\\"a4\\\", \\\"a5\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"query_id\": {\n      \"description\": \"Query id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"require_change\": {\n      \"description\": \"Delivery should occur if data have changed since the last run\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"require_no_results\": {\n      \"description\": \"Delivery should occur if the dashboard look does not return results\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"require_results\": {\n      \"description\": \"Delivery should occur if running the dashboard or look returns results\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"run_as_recipient\": {\n      \"description\": \"Whether schedule is run as recipient (only applicable for email recipients)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"run_once\": {\n      \"description\": \"Whether the plan in question should only be run once (usually for testing)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"scheduled_plan_destination\": {\n      \"description\": \"Scheduled plan destinations\",\n      \"items\": {\n        \"$ref\": \"#/definitions/ScheduledPlanDestination\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"send_all_results\": {\n      \"description\": \"Will run an unlimited query and send all results.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"show_custom_url\": {\n      \"description\": \"Whether to show custom link back instead of standard looker link\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"tab_ids\": {\n      \"description\": \"IDs of tabs to render (ID on a UDD and a tab label on lookml dashboards)\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"timezone\": {\n      \"description\": \"Timezone for interpreting the specified crontab (default is Looker instance timezone)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id\": {\n      \"description\": \"User Id which owns this scheduled plan\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiScheduledPlanCmd.AddCommand(apiScheduledPlanScheduledPlanRunOnceCmd)
+	apiScheduledPlanScheduledPlanRunOnceCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiScheduledPlanScheduledPlanRunOnceByIdCmd = &cobra.Command{
 	Use:   "scheduled_plan_run_once_by_id [SCHEDULED_PLAN_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Run Scheduled Plan Once by Id",
 	Long:  "### Run a Scheduled Plan By Id Immediately\nThis function creates a run-once schedule plan based on an existing scheduled plan,\napplies modifications (if any) to the new scheduled plan, and runs the new schedule plan immediately.\nThis can be useful for testing modifications to an existing scheduled plan before committing to a production schedule.\n\nThis function internally performs the following operations:\n\n1. Copies the properties of the existing scheduled plan into a new scheduled plan\n2. Copies any properties passed in the JSON body of this request into the new scheduled plan (replacing the original values)\n3. Creates the new scheduled plan\n4. Runs the new scheduled plan\n\nThe original scheduled plan is not modified by this operation.\nAdmins can create, modify, and run scheduled plans on behalf of other users by specifying a user id.\nNon-admins can only create, modify, and run their own scheduled plans.\n\n#### Email Permissions:\n\nFor details about permissions required to schedule delivery to email and the safeguards\nLooker offers to protect against sending to unauthorized email destinations, see [Email Domain Allow List for Scheduled Looks](https://docs.cloud.google.com/looker/docs/r/api/embed-permissions).\n\n\n#### Scheduled Plan Destination Formats\n\nScheduled plan destinations must specify the data format to produce and send to the destination.\n\nFormats:\n\n| format | Description\n| :-----------: | :--- |\n| json | A JSON object containing a `data` property which contains an array of JSON objects, one per row. No metadata.\n| json_detail | Row data plus metadata describing the fields, pivots, table calcs, and other aspects of the query\n| inline_json | Same as the JSON format, except that the `data` property is a string containing JSON-escaped row data. Additional properties describe the data operation. This format is primarily used to send data to web hooks so that the web hook doesn't have to re-encode the JSON row data in order to pass it on to its ultimate destination.\n| csv | Comma separated values with a header\n| txt | Tab separated values with a header\n| html | Simple html\n| xlsx | MS Excel spreadsheet\n| wysiwyg_pdf | Dashboard rendered in a tiled layout to produce a PDF document\n| assembled_pdf | Dashboard rendered in a single column layout to produce a PDF document\n| wysiwyg_png | Dashboard rendered in a tiled layout to produce a PNG image\n||\n\nValid formats vary by destination type and source object. `wysiwyg_pdf` is only valid for dashboards, for example.\n\n\n\nThis API is rate limited to prevent it from being used for relay spam or DoS attacks\n\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiScheduledPlanScheduledPlanRunOnceByIdCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/scheduled_plans/{scheduled_plan_id}/run_once", []string{"scheduled_plan_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiScheduledPlanScheduledPlanRunOnceByIdCmdBodySchema = "{\n  \"properties\": {\n    \"color_theme\": {\n      \"description\": \"Color scheme of the dashboard if applicable\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"crontab\": {\n      \"description\": \"Vixie-Style crontab specification when to run\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_url_base\": {\n      \"description\": \"Custom url domain for the scheduled entity\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_url_label\": {\n      \"description\": \"Custom url label for the scheduled entity\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_url_params\": {\n      \"description\": \"Custom url path and parameters for the scheduled entity\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_filters\": {\n      \"description\": \"(DEPRECATED) Alias for filters_string field\",\n      \"type\": \"string\",\n      \"x-looker-deprecated\": true,\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_id\": {\n      \"description\": \"Id of a dashboard\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"datagroup\": {\n      \"description\": \"Name of a datagroup; if specified will run when datagroup triggered (can't be used with cron string)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"embed\": {\n      \"description\": \"Whether this schedule is in an embed context or not\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"enabled\": {\n      \"description\": \"Whether the ScheduledPlan is enabled\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_string\": {\n      \"description\": \"Query string to run look or dashboard with\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"include_links\": {\n      \"description\": \"Whether links back to Looker should be included in this ScheduledPlan\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"inline_table_width\": {\n      \"description\": \"The pixel width at which we render the inline table visualizations\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"long_tables\": {\n      \"description\": \"Whether or not to expand table vis to full length\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"look_id\": {\n      \"description\": \"Id of a look\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"lookml_dashboard_id\": {\n      \"description\": \"Id of a LookML dashboard\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Name of this scheduled plan\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"pdf_landscape\": {\n      \"description\": \"Whether the PDF should be formatted for landscape orientation\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"pdf_page_breaks\": {\n      \"description\": \"Whether or not to add page breaks between tabs\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"pdf_paper_size\": {\n      \"description\": \"The size of paper the PDF should be formatted to fit. Valid values are: \\\"letter\\\", \\\"legal\\\", \\\"tabloid\\\", \\\"a0\\\", \\\"a1\\\", \\\"a2\\\", \\\"a3\\\", \\\"a4\\\", \\\"a5\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"query_id\": {\n      \"description\": \"Query id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"require_change\": {\n      \"description\": \"Delivery should occur if data have changed since the last run\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"require_no_results\": {\n      \"description\": \"Delivery should occur if the dashboard look does not return results\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"require_results\": {\n      \"description\": \"Delivery should occur if running the dashboard or look returns results\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"run_as_recipient\": {\n      \"description\": \"Whether schedule is run as recipient (only applicable for email recipients)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"run_once\": {\n      \"description\": \"Whether the plan in question should only be run once (usually for testing)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"scheduled_plan_destination\": {\n      \"description\": \"Scheduled plan destinations\",\n      \"items\": {\n        \"$ref\": \"#/definitions/ScheduledPlanDestination\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"send_all_results\": {\n      \"description\": \"Will run an unlimited query and send all results.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"show_custom_url\": {\n      \"description\": \"Whether to show custom link back instead of standard looker link\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"tab_ids\": {\n      \"description\": \"IDs of tabs to render (ID on a UDD and a tab label on lookml dashboards)\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"timezone\": {\n      \"description\": \"Timezone for interpreting the specified crontab (default is Looker instance timezone)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id\": {\n      \"description\": \"User Id which owns this scheduled plan\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiScheduledPlanCmd.AddCommand(apiScheduledPlanScheduledPlanRunOnceByIdCmd)
+	apiScheduledPlanScheduledPlanRunOnceByIdCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiScheduledPlanScheduledPlansForDashboardCmd = &cobra.Command{
@@ -9038,15 +10550,27 @@ var apiScheduledPlanUpdateScheduledPlanCmd = &cobra.Command{
 	Use:   "update_scheduled_plan [SCHEDULED_PLAN_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Scheduled Plan",
 	Long:  "### Update a Scheduled Plan\n\nAdmins can update other users' Scheduled Plans.\n\nNote: Any scheduled plan destinations specified in an update will **replace** all scheduled plan destinations\ncurrently defined for the scheduled plan.\n\nFor Example: If a scheduled plan has destinations A, B, and C, and you call update on this scheduled plan\nspecifying only B in the destinations, then destinations A and C will be deleted by the update.\n\nUpdating a scheduled plan to assign null or an empty array to the scheduled_plan_destinations property is an error, as a scheduled plan must always have at least one destination.\n\nIf you omit the scheduled_plan_destinations property from the object passed to update, then the destinations\ndefined on the original scheduled plan will remain unchanged.\n\n#### Email Permissions:\n\nFor details about permissions required to schedule delivery to email and the safeguards\nLooker offers to protect against sending to unauthorized email destinations, see [Email Domain Allow List for Scheduled Looks](https://docs.cloud.google.com/looker/docs/r/api/embed-permissions).\n\n\n#### Scheduled Plan Destination Formats\n\nScheduled plan destinations must specify the data format to produce and send to the destination.\n\nFormats:\n\n| format | Description\n| :-----------: | :--- |\n| json | A JSON object containing a `data` property which contains an array of JSON objects, one per row. No metadata.\n| json_detail | Row data plus metadata describing the fields, pivots, table calcs, and other aspects of the query\n| inline_json | Same as the JSON format, except that the `data` property is a string containing JSON-escaped row data. Additional properties describe the data operation. This format is primarily used to send data to web hooks so that the web hook doesn't have to re-encode the JSON row data in order to pass it on to its ultimate destination.\n| csv | Comma separated values with a header\n| txt | Tab separated values with a header\n| html | Simple html\n| xlsx | MS Excel spreadsheet\n| wysiwyg_pdf | Dashboard rendered in a tiled layout to produce a PDF document\n| assembled_pdf | Dashboard rendered in a single column layout to produce a PDF document\n| wysiwyg_png | Dashboard rendered in a tiled layout to produce a PNG image\n||\n\nValid formats vary by destination type and source object. `wysiwyg_pdf` is only valid for dashboards, for example.\n\n\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiScheduledPlanUpdateScheduledPlanCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/scheduled_plans/{scheduled_plan_id}", []string{"scheduled_plan_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiScheduledPlanUpdateScheduledPlanCmdBodySchema = "{\n  \"properties\": {\n    \"color_theme\": {\n      \"description\": \"Color scheme of the dashboard if applicable\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"crontab\": {\n      \"description\": \"Vixie-Style crontab specification when to run\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_url_base\": {\n      \"description\": \"Custom url domain for the scheduled entity\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_url_label\": {\n      \"description\": \"Custom url label for the scheduled entity\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"custom_url_params\": {\n      \"description\": \"Custom url path and parameters for the scheduled entity\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_filters\": {\n      \"description\": \"(DEPRECATED) Alias for filters_string field\",\n      \"type\": \"string\",\n      \"x-looker-deprecated\": true,\n      \"x-looker-nullable\": true\n    },\n    \"dashboard_id\": {\n      \"description\": \"Id of a dashboard\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"datagroup\": {\n      \"description\": \"Name of a datagroup; if specified will run when datagroup triggered (can't be used with cron string)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"embed\": {\n      \"description\": \"Whether this schedule is in an embed context or not\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"enabled\": {\n      \"description\": \"Whether the ScheduledPlan is enabled\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_string\": {\n      \"description\": \"Query string to run look or dashboard with\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"include_links\": {\n      \"description\": \"Whether links back to Looker should be included in this ScheduledPlan\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"inline_table_width\": {\n      \"description\": \"The pixel width at which we render the inline table visualizations\",\n      \"format\": \"int64\",\n      \"type\": \"integer\",\n      \"x-looker-nullable\": true\n    },\n    \"long_tables\": {\n      \"description\": \"Whether or not to expand table vis to full length\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"look_id\": {\n      \"description\": \"Id of a look\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"lookml_dashboard_id\": {\n      \"description\": \"Id of a LookML dashboard\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Name of this scheduled plan\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"pdf_landscape\": {\n      \"description\": \"Whether the PDF should be formatted for landscape orientation\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"pdf_page_breaks\": {\n      \"description\": \"Whether or not to add page breaks between tabs\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"pdf_paper_size\": {\n      \"description\": \"The size of paper the PDF should be formatted to fit. Valid values are: \\\"letter\\\", \\\"legal\\\", \\\"tabloid\\\", \\\"a0\\\", \\\"a1\\\", \\\"a2\\\", \\\"a3\\\", \\\"a4\\\", \\\"a5\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"query_id\": {\n      \"description\": \"Query id\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"require_change\": {\n      \"description\": \"Delivery should occur if data have changed since the last run\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"require_no_results\": {\n      \"description\": \"Delivery should occur if the dashboard look does not return results\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"require_results\": {\n      \"description\": \"Delivery should occur if running the dashboard or look returns results\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"run_as_recipient\": {\n      \"description\": \"Whether schedule is run as recipient (only applicable for email recipients)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"run_once\": {\n      \"description\": \"Whether the plan in question should only be run once (usually for testing)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"scheduled_plan_destination\": {\n      \"description\": \"Scheduled plan destinations\",\n      \"items\": {\n        \"$ref\": \"#/definitions/ScheduledPlanDestination\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"send_all_results\": {\n      \"description\": \"Will run an unlimited query and send all results.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"show_custom_url\": {\n      \"description\": \"Whether to show custom link back instead of standard looker link\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"tab_ids\": {\n      \"description\": \"IDs of tabs to render (ID on a UDD and a tab label on lookml dashboards)\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"timezone\": {\n      \"description\": \"Timezone for interpreting the specified crontab (default is Looker instance timezone)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id\": {\n      \"description\": \"User Id which owns this scheduled plan\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiScheduledPlanCmd.AddCommand(apiScheduledPlanUpdateScheduledPlanCmd)
+	apiScheduledPlanUpdateScheduledPlanCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 // SelfService category
@@ -9063,15 +10587,27 @@ var apiSelfServiceUpdateSelfServiceExploreCertificationCmd = &cobra.Command{
 	Use:   "update_self_service_explore_certification [MODEL_NAME] [BODY_JSON_FILE_OR_-]",
 	Short: "Update certification for a Self Service Explore",
 	Long:  "### Update certification for a Self Service Explore\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiSelfServiceUpdateSelfServiceExploreCertificationCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/self_service_models/{model_name}/certification", []string{"model_name"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiSelfServiceUpdateSelfServiceExploreCertificationCmdBodySchema = "{\n  \"properties\": {\n    \"certification_status\": {\n      \"description\": \"Certification status: \\\"certified\\\" or \\\"revoked\\\" Valid values are: \\\"certified\\\", \\\"revoked\\\".\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true,\n      \"x-looker-values\": [\n        \"certified\",\n        \"revoked\"\n      ]\n    },\n    \"notes\": {\n      \"description\": \"Certification notes\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiSelfServiceCmd.AddCommand(apiSelfServiceUpdateSelfServiceExploreCertificationCmd)
+	apiSelfServiceUpdateSelfServiceExploreCertificationCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 // Session category
@@ -9103,15 +10639,27 @@ var apiSessionUpdateSessionCmd = &cobra.Command{
 	Use:   "update_session [BODY_JSON_FILE_OR_-]",
 	Short: "Update Auth",
 	Long:  "### Update API Session\n\n#### API Session Workspace\n\nYou can use this endpoint to change the active workspace for the current API session.\n\nOnly one workspace can be active in a session. The active workspace can be changed\nany number of times in a session.\n\nThe default workspace for API sessions is the \"production\" workspace.\n\nAll Looker APIs that use projects or lookml models (such as running queries) will\nuse the version of project and model files defined by this workspace for the lifetime of the\ncurrent API session or until the session workspace is changed again.\n\nAn API session has the same lifetime as the access_token used to authenticate API requests. Each successful\nAPI login generates a new access_token and a new API session.\n\nIf your Looker API client application needs to work in a dev workspace across multiple\nAPI sessions, be sure to select the dev workspace after each login.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiSessionUpdateSessionCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/session", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiSessionUpdateSessionCmdBodySchema = "{\n  \"properties\": {\n    \"workspace_id\": {\n      \"description\": \"The id of active workspace for this session\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiSessionCmd.AddCommand(apiSessionUpdateSessionCmd)
+	apiSessionUpdateSessionCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 // SqlInterfaceQuery category
@@ -9128,15 +10676,27 @@ var apiSqlInterfaceQueryCreateSqlInterfaceQueryCmd = &cobra.Command{
 	Use:   "create_sql_interface_query [BODY_JSON_FILE_OR_-]",
 	Short: "Create SQL Interface Query",
 	Long:  "### Create a SQL interface query.\n\nThis allows you to create a new SQL interface query that you can later run. Looker queries are immutable once created\nand are not deleted. If you create a query that is exactly like an existing query then the existing query\nwill be returned and no new query will be created. Whether a new query is created or not, you can use\nthe 'id' in the returned query with the 'run' method.\n\nThe query parameters are passed as json in the body of the request.\n\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiSqlInterfaceQueryCreateSqlInterfaceQueryCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/sql_interface_queries", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiSqlInterfaceQueryCreateSqlInterfaceQueryCmdBodySchema = "{\n  \"properties\": {\n    \"jdbc_client\": {\n      \"description\": \"Whether the query should be run for use in a JDBC Client. This changes the formatting of some datetime based values.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"sql\": {\n      \"description\": \"Original SQL request\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"required\": [\n    \"sql\"\n  ],\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiSqlInterfaceQueryCmd.AddCommand(apiSqlInterfaceQueryCreateSqlInterfaceQueryCmd)
+	apiSqlInterfaceQueryCreateSqlInterfaceQueryCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiSqlInterfaceQueryRunSqlInterfaceQueryCmd = &cobra.Command{
@@ -9238,15 +10798,27 @@ var apiThemeCreateThemeCmd = &cobra.Command{
 	Use:   "create_theme [BODY_JSON_FILE_OR_-]",
 	Short: "Create Theme",
 	Long:  "### Create a theme\n\nCreates a new theme object, returning the theme details, including the created id.\n\nIf `settings` are not specified, the default theme settings will be copied into the new theme.\n\nThe theme `name` can only contain alphanumeric characters or underscores. Theme names should not contain any confidential information, such as customer names.\n\n**Update** an existing theme with [Update Theme](#!/Theme/update_theme)\n\n**Permanently delete** an existing theme with [Delete Theme](#!/Theme/delete_theme)\n\nFor more information, see [Creating and Applying Themes](https://docs.cloud.google.com/looker/docs/r/admin/themes).\n\n**Note**: Custom themes needs to be enabled by Looker. Unless custom themes are enabled, only the automatically generated default theme can be used. Please contact your Account Manager or https://console.cloud.google.com/support/cases/ to update your license for this feature.\n\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiThemeCreateThemeCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/themes", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiThemeCreateThemeCmdBodySchema = "{\n  \"properties\": {\n    \"begin_at\": {\n      \"description\": \"Timestamp for when this theme becomes active. Null=always\",\n      \"format\": \"date-time\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"end_at\": {\n      \"description\": \"Timestamp for when this theme expires. Null=never\",\n      \"format\": \"date-time\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Name of theme. Can only be alphanumeric and underscores.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"settings\": {\n      \"$ref\": \"#/definitions/ThemeSettings\",\n      \"description\": \"Hash of name/value pairs for theme settings. These names get validated.\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiThemeCmd.AddCommand(apiThemeCreateThemeCmd)
+	apiThemeCreateThemeCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiThemeDefaultThemeCmd = &cobra.Command{
@@ -9403,30 +10975,54 @@ var apiThemeUpdateThemeCmd = &cobra.Command{
 	Use:   "update_theme [THEME_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Theme",
 	Long:  "### Update the theme by id.\n\n**Note**: Custom themes needs to be enabled by Looker. Unless custom themes are enabled, only the automatically generated default theme can be used. Please contact your Account Manager or https://console.cloud.google.com/support/cases/ to update your license for this feature.\n\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiThemeUpdateThemeCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/themes/{theme_id}", []string{"theme_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiThemeUpdateThemeCmdBodySchema = "{\n  \"properties\": {\n    \"begin_at\": {\n      \"description\": \"Timestamp for when this theme becomes active. Null=always\",\n      \"format\": \"date-time\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"end_at\": {\n      \"description\": \"Timestamp for when this theme expires. Null=never\",\n      \"format\": \"date-time\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Name of theme. Can only be alphanumeric and underscores.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"settings\": {\n      \"$ref\": \"#/definitions/ThemeSettings\",\n      \"description\": \"Hash of name/value pairs for theme settings. These names get validated.\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiThemeCmd.AddCommand(apiThemeUpdateThemeCmd)
+	apiThemeUpdateThemeCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiThemeValidateThemeCmd = &cobra.Command{
 	Use:   "validate_theme [BODY_JSON_FILE_OR_-]",
 	Short: "Validate Theme",
 	Long:  "### Validate a theme with the specified information\n\nValidates all values set for the theme, returning any errors encountered, or 200 OK if valid\n\nSee [Create Theme](#!/Theme/create_theme) for constraints\n\n**Note**: Custom themes needs to be enabled by Looker. Unless custom themes are enabled, only the automatically generated default theme can be used. Please contact your Account Manager or https://console.cloud.google.com/support/cases/ to update your license for this feature.\n\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiThemeValidateThemeCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/themes/validate", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiThemeValidateThemeCmdBodySchema = "{\n  \"properties\": {\n    \"begin_at\": {\n      \"description\": \"Timestamp for when this theme becomes active. Null=always\",\n      \"format\": \"date-time\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"end_at\": {\n      \"description\": \"Timestamp for when this theme expires. Null=never\",\n      \"format\": \"date-time\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Name of theme. Can only be alphanumeric and underscores.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"settings\": {\n      \"$ref\": \"#/definitions/ThemeSettings\",\n      \"description\": \"Hash of name/value pairs for theme settings. These names get validated.\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiThemeCmd.AddCommand(apiThemeValidateThemeCmd)
+	apiThemeValidateThemeCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 // User category
@@ -9553,23 +11149,44 @@ var apiUserCreateEmbedUserCmd = &cobra.Command{
 	Use:   "create_embed_user [BODY_JSON_FILE_OR_-]",
 	Short: "Create an embed user from an external user ID",
 	Long:  "Create an embed user from an external user ID\n\n**NOTE**: Calls to this endpoint require [Embedding](https://docs.cloud.google.com/looker/docs/r/looker-core-feature-embed) to be enabled. Usage of this endpoint is not authorized for Looker Core Standard and Looker Core Enterprise.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiUserCreateEmbedUserCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/users/embed_user", []string{}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiUserCreateEmbedUserCmdBodySchema = "{\n  \"properties\": {\n    \"external_user_id\": {\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"required\": [\n    \"external_user_id\"\n  ],\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiUserCmd.AddCommand(apiUserCreateEmbedUserCmd)
+	apiUserCreateEmbedUserCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiUserCreateServiceAccountCmd = &cobra.Command{
 	Use:   "create_service_account [BODY_JSON_FILE_OR_-]",
 	Short: "Create Service Account",
 	Long:  "### Create a service account with the specified information. This action is restricted to Looker admins.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiUserCreateServiceAccountCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -9579,8 +11196,11 @@ var apiUserCreateServiceAccountCmd = &cobra.Command{
 	},
 }
 
+const apiUserCreateServiceAccountCmdBodySchema = "{\n  \"properties\": {\n    \"is_disabled\": {\n      \"description\": \"Indicates if the service account is disabled\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"service_account_name\": {\n      \"description\": \"Display name of the service account.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"alpha\"\n}"
+
 func init() {
 	apiUserCmd.AddCommand(apiUserCreateServiceAccountCmd)
+	apiUserCreateServiceAccountCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiUserCreateServiceAccountCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -9588,8 +11208,17 @@ var apiUserCreateUserCmd = &cobra.Command{
 	Use:   "create_user [BODY_JSON_FILE_OR_-]",
 	Short: "Create User",
 	Long:  "### Create a user with the specified information.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiUserCreateUserCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -9599,8 +11228,11 @@ var apiUserCreateUserCmd = &cobra.Command{
 	},
 }
 
+const apiUserCreateUserCmdBodySchema = "{\n  \"properties\": {\n    \"can_manage_api3_creds\": {\n      \"description\": \"Indicates if the user can manage API3 credentials. This is an experimental feature and may not yet be available on your instance.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"first_name\": {\n      \"description\": \"First name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"home_folder_id\": {\n      \"description\": \"ID string for user's home folder\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"is_disabled\": {\n      \"description\": \"Account has been disabled\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"last_name\": {\n      \"description\": \"Last name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"locale\": {\n      \"description\": \"User's preferred locale. User locale takes precedence over Looker's system-wide default locale. Locale determines language of display strings and date and numeric formatting in API responses. Locale string must be a 2 letter language code or a combination of language code and region code: 'en' or 'en-US', for example.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"models_dir_validated\": {\n      \"description\": \"User's dev workspace has been checked for presence of applicable production projects\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"ui_state\": {\n      \"additionalProperties\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"Per user dictionary of undocumented state information owned by the Looker UI.\",\n      \"type\": \"object\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiUserCmd.AddCommand(apiUserCreateUserCmd)
+	apiUserCreateUserCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiUserCreateUserCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -9628,8 +11260,17 @@ var apiUserCreateUserCredentialsEmailCmd = &cobra.Command{
 	Use:   "create_user_credentials_email [USER_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Create Email/Password Credential",
 	Long:  "### Email/password login information for the specified user.\n\nCalls to this endpoint may be denied by [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/r/looker-core/overview).",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiUserCreateUserCredentialsEmailCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -9639,8 +11280,11 @@ var apiUserCreateUserCredentialsEmailCmd = &cobra.Command{
 	},
 }
 
+const apiUserCreateUserCredentialsEmailCmdBodySchema = "{\n  \"properties\": {\n    \"email\": {\n      \"description\": \"EMail address used for user login\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"forced_password_reset_at_next_login\": {\n      \"description\": \"Force the user to change their password upon their next login\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiUserCmd.AddCommand(apiUserCreateUserCredentialsEmailCmd)
+	apiUserCreateUserCredentialsEmailCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiUserCreateUserCredentialsEmailCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -9673,8 +11317,17 @@ var apiUserCreateUserCredentialsTotpCmd = &cobra.Command{
 	Use:   "create_user_credentials_totp [USER_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Create Two-Factor Credential",
 	Long:  "### Two-factor login information for the specified user.\n\nCalls to this endpoint may be denied by [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/r/looker-core/overview).",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiUserCreateUserCredentialsTotpCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -9684,8 +11337,11 @@ var apiUserCreateUserCredentialsTotpCmd = &cobra.Command{
 	},
 }
 
+const apiUserCreateUserCredentialsTotpCmdBodySchema = "{\n  \"properties\": {},\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiUserCmd.AddCommand(apiUserCreateUserCredentialsTotpCmd)
+	apiUserCreateUserCredentialsTotpCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiUserCreateUserCredentialsTotpCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -10168,23 +11824,44 @@ var apiUserSetUserAttributeUserValueCmd = &cobra.Command{
 	Use:   "set_user_attribute_user_value [USER_ID] [USER_ATTRIBUTE_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Set User Attribute User Value",
 	Long:  "### Store a custom value for a user attribute in a user's account settings.\n\nPer-user user attribute values take precedence over group or default values.\n",
-	Args:  cobra.ExactArgs(3),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(3)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiUserSetUserAttributeUserValueCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "PATCH", "/users/{user_id}/attribute_values/{user_attribute_id}", []string{"user_id", "user_attribute_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiUserSetUserAttributeUserValueCmdBodySchema = "{\n  \"properties\": {\n    \"value\": {\n      \"description\": \"Value of attribute for user\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiUserCmd.AddCommand(apiUserSetUserAttributeUserValueCmd)
+	apiUserSetUserAttributeUserValueCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiUserSetUserRolesCmd = &cobra.Command{
 	Use:   "set_user_roles [USER_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Set User Roles",
 	Long:  "### Set roles of the user with a specific id.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiUserSetUserRolesCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -10194,8 +11871,11 @@ var apiUserSetUserRolesCmd = &cobra.Command{
 	},
 }
 
+const apiUserSetUserRolesCmdBodySchema = ""
+
 func init() {
 	apiUserCmd.AddCommand(apiUserSetUserRolesCmd)
+	apiUserSetUserRolesCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiUserSetUserRolesCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -10203,8 +11883,17 @@ var apiUserUpdateServiceAccountCmd = &cobra.Command{
 	Use:   "update_service_account [USER_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Service Account",
 	Long:  "### Update information for a specific service account. This action is restricted to Looker admins.\n\nThis endpoint is exclusively for updating service accounts. To update a regular user, please use the `PATCH /api/3.x/users/:user_id` endpoint instead.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiUserUpdateServiceAccountCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -10214,8 +11903,11 @@ var apiUserUpdateServiceAccountCmd = &cobra.Command{
 	},
 }
 
+const apiUserUpdateServiceAccountCmdBodySchema = "{\n  \"properties\": {\n    \"is_disabled\": {\n      \"description\": \"Indicates if the service account is disabled\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"service_account_name\": {\n      \"description\": \"Display name of the service account.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"alpha\"\n}"
+
 func init() {
 	apiUserCmd.AddCommand(apiUserUpdateServiceAccountCmd)
+	apiUserUpdateServiceAccountCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiUserUpdateServiceAccountCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -10223,8 +11915,17 @@ var apiUserUpdateUserCmd = &cobra.Command{
 	Use:   "update_user [USER_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update User",
 	Long:  "### Update information about the user with a specific id.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiUserUpdateUserCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -10234,8 +11935,11 @@ var apiUserUpdateUserCmd = &cobra.Command{
 	},
 }
 
+const apiUserUpdateUserCmdBodySchema = "{\n  \"properties\": {\n    \"can_manage_api3_creds\": {\n      \"description\": \"Indicates if the user can manage API3 credentials. This is an experimental feature and may not yet be available on your instance.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"first_name\": {\n      \"description\": \"First name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"home_folder_id\": {\n      \"description\": \"ID string for user's home folder\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"is_disabled\": {\n      \"description\": \"Account has been disabled\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"last_name\": {\n      \"description\": \"Last name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"locale\": {\n      \"description\": \"User's preferred locale. User locale takes precedence over Looker's system-wide default locale. Locale determines language of display strings and date and numeric formatting in API responses. Locale string must be a 2 letter language code or a combination of language code and region code: 'en' or 'en-US', for example.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"models_dir_validated\": {\n      \"description\": \"User's dev workspace has been checked for presence of applicable production projects\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"ui_state\": {\n      \"additionalProperties\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"Per user dictionary of undocumented state information owned by the Looker UI.\",\n      \"type\": \"object\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiUserCmd.AddCommand(apiUserUpdateUserCmd)
+	apiUserUpdateUserCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiUserUpdateUserCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -10243,8 +11947,17 @@ var apiUserUpdateUserCredentialsApi3Cmd = &cobra.Command{
 	Use:   "update_user_credentials_api3 [USER_ID] [CREDENTIALS_API3_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update API Credential",
 	Long:  "### API login information for the specified user. This is for the newer API keys that can be added for any user.",
-	Args:  cobra.ExactArgs(3),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(3)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiUserUpdateUserCredentialsApi3CmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -10254,8 +11967,11 @@ var apiUserUpdateUserCredentialsApi3Cmd = &cobra.Command{
 	},
 }
 
+const apiUserUpdateUserCredentialsApi3CmdBodySchema = "{\n  \"properties\": {\n    \"purpose\": {\n      \"description\": \"User defined purpose for this credential.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiUserCmd.AddCommand(apiUserUpdateUserCredentialsApi3Cmd)
+	apiUserUpdateUserCredentialsApi3Cmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiUserUpdateUserCredentialsApi3Cmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -10263,8 +11979,17 @@ var apiUserUpdateUserCredentialsEmailCmd = &cobra.Command{
 	Use:   "update_user_credentials_email [USER_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update Email/Password Credential",
 	Long:  "### Email/password login information for the specified user.\n\nCalls to this endpoint may be denied by [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/r/looker-core/overview).",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiUserUpdateUserCredentialsEmailCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -10274,8 +11999,11 @@ var apiUserUpdateUserCredentialsEmailCmd = &cobra.Command{
 	},
 }
 
+const apiUserUpdateUserCredentialsEmailCmdBodySchema = "{\n  \"properties\": {\n    \"email\": {\n      \"description\": \"EMail address used for user login\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"forced_password_reset_at_next_login\": {\n      \"description\": \"Force the user to change their password upon their next login\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiUserCmd.AddCommand(apiUserUpdateUserCredentialsEmailCmd)
+	apiUserUpdateUserCredentialsEmailCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiUserUpdateUserCredentialsEmailCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -10583,8 +12311,17 @@ var apiUserWipeoutUserEmailsCmd = &cobra.Command{
 	Use:   "wipeout_user_emails [USER_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Wipeout User Emails",
 	Long:  "### Change a disabled user's email addresses\n\nAllows the admin to change the email addresses for all the user's\nassociated credentials.  Will overwrite all associated email addresses with\nthe value supplied in the 'email' body param.\nThe user's 'is_disabled' status must be true.\nIf the user has a credential email, they will receive a verification email and the user will be disabled until they verify the email\n\nCalls to this endpoint may be denied by [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/r/looker-core/overview).\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiUserWipeoutUserEmailsCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -10594,8 +12331,11 @@ var apiUserWipeoutUserEmailsCmd = &cobra.Command{
 	},
 }
 
+const apiUserWipeoutUserEmailsCmdBodySchema = "{\n  \"properties\": {\n    \"email\": {\n      \"description\": \"Email Address\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"required\": [\n    \"email\"\n  ],\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiUserCmd.AddCommand(apiUserWipeoutUserEmailsCmd)
+	apiUserWipeoutUserEmailsCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiUserWipeoutUserEmailsCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -10658,8 +12398,17 @@ var apiUserAttributeCreateUserAttributeCmd = &cobra.Command{
 	Use:   "create_user_attribute [BODY_JSON_FILE_OR_-]",
 	Short: "Create User Attribute",
 	Long:  "### Create a new user attribute\n\nPermission information for a user attribute is conveyed through the `can` and `user_can_edit` fields.\nThe `user_can_edit` field indicates whether an attribute is user-editable _anywhere_ in the application.\nThe `can` field gives more granular access information, with the `set_value` child field indicating whether\nan attribute's value can be set by [Setting the User Attribute User Value](#!/User/set_user_attribute_user_value).\n\nNote: `name` and `label` fields must be unique across all user attributes in the Looker instance.\nAttempting to create a new user attribute with a name or label that duplicates an existing\nuser attribute will fail with a 422 error.\n",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiUserAttributeCreateUserAttributeCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -10669,8 +12418,11 @@ var apiUserAttributeCreateUserAttributeCmd = &cobra.Command{
 	},
 }
 
+const apiUserAttributeCreateUserAttributeCmdBodySchema = "{\n  \"properties\": {\n    \"default_value\": {\n      \"description\": \"Default value for when no value is set on the user\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"hidden_value_domain_whitelist\": {\n      \"description\": \"Destinations to which a hidden attribute may be sent. Once set, cannot be edited.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"label\": {\n      \"description\": \"Human-friendly label for user attribute\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Name of user attribute\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"needed_for_ci_run\": {\n      \"description\": \"Whether this user attribute is needed for a CI run\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"type\": {\n      \"description\": \"Type of user attribute (\\\"string\\\", \\\"number\\\", \\\"datetime\\\", \\\"yesno\\\", \\\"zipcode\\\", \\\"advanced_filter_string\\\", \\\"advanced_filter_number\\\")\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_can_edit\": {\n      \"description\": \"Users can change the value of this attribute for themselves\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"user_can_view\": {\n      \"description\": \"Non-admin users can see the values of their attributes and use them in filters\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"value_for_ci_run\": {\n      \"description\": \"The value to use for this user attribute during a CI run\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"value_is_hidden\": {\n      \"description\": \"If true, users will not be able to view values of this attribute\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"required\": [\n    \"name\",\n    \"label\",\n    \"type\"\n  ],\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiUserAttributeCmd.AddCommand(apiUserAttributeCreateUserAttributeCmd)
+	apiUserAttributeCreateUserAttributeCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiUserAttributeCreateUserAttributeCmd.Flags().String("fields", "", "Requested fields.")
 }
 
@@ -10693,23 +12445,44 @@ var apiUserAttributeSetUserAttributeGroupValuesCmd = &cobra.Command{
 	Use:   "set_user_attribute_group_values [USER_ATTRIBUTE_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Set User Attribute Group Values",
 	Long:  "### Define values for a user attribute across a set of groups, in priority order.\n\nThis function defines all values for a user attribute defined by user groups. This is a global setting, potentially affecting\nall users in the system. This function replaces any existing group value definitions for the indicated user attribute.\n\nThe value of a user attribute for a given user is determined by searching the following locations, in this order:\n\n1. the user's account settings\n2. the groups that the user is a member of\n3. the default value of the user attribute, if any\n\nThe user may be a member of multiple groups which define different values for that user attribute. The order of items in the group_values parameter\ndetermines which group takes priority for that user. Lowest array index wins.\n\nAn alternate method to indicate the selection precedence of group-values is to assign numbers to the 'rank' property of each\ngroup-value object in the array. Lowest 'rank' value wins. If you use this technique, you must assign a\nrank value to every group-value object in the array.\n\n  To set a user attribute value for a single user, see [Set User Attribute User Value](#!/User/set_user_attribute_user_value).\nTo set a user attribute value for all members of a group, see [Set User Attribute Group Value](#!/Group/update_user_attribute_group_value).\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiUserAttributeSetUserAttributeGroupValuesCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		return executeApiCallGeneric(cmd, "POST", "/user_attributes/{user_attribute_id}/group_values", []string{"user_attribute_id"}, []string{}, "body", queryParams, args)
 	},
 }
 
+const apiUserAttributeSetUserAttributeGroupValuesCmdBodySchema = ""
+
 func init() {
 	apiUserAttributeCmd.AddCommand(apiUserAttributeSetUserAttributeGroupValuesCmd)
+	apiUserAttributeSetUserAttributeGroupValuesCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiUserAttributeUpdateUserAttributeCmd = &cobra.Command{
 	Use:   "update_user_attribute [USER_ATTRIBUTE_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Update User Attribute",
 	Long:  "### Update a user attribute definition.\n",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiUserAttributeUpdateUserAttributeCmdBodySchema)
+			return nil
+		}
 		queryParams := make(map[string]string)
 		if cmd.Flags().Changed("fields") {
 			val, _ := cmd.Flags().GetString("fields")
@@ -10719,8 +12492,11 @@ var apiUserAttributeUpdateUserAttributeCmd = &cobra.Command{
 	},
 }
 
+const apiUserAttributeUpdateUserAttributeCmdBodySchema = "{\n  \"properties\": {\n    \"default_value\": {\n      \"description\": \"Default value for when no value is set on the user\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"hidden_value_domain_whitelist\": {\n      \"description\": \"Destinations to which a hidden attribute may be sent. Once set, cannot be edited.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"label\": {\n      \"description\": \"Human-friendly label for user attribute\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Name of user attribute\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"needed_for_ci_run\": {\n      \"description\": \"Whether this user attribute is needed for a CI run\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"type\": {\n      \"description\": \"Type of user attribute (\\\"string\\\", \\\"number\\\", \\\"datetime\\\", \\\"yesno\\\", \\\"zipcode\\\", \\\"advanced_filter_string\\\", \\\"advanced_filter_number\\\")\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_can_edit\": {\n      \"description\": \"Users can change the value of this attribute for themselves\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"user_can_view\": {\n      \"description\": \"Non-admin users can see the values of their attributes and use them in filters\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"value_for_ci_run\": {\n      \"description\": \"The value to use for this user attribute during a CI run\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"value_is_hidden\": {\n      \"description\": \"If true, users will not be able to view values of this attribute\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"required\": [\n    \"name\",\n    \"label\",\n    \"type\"\n  ],\n  \"x-looker-status\": \"stable\"\n}"
+
 func init() {
 	apiUserAttributeCmd.AddCommand(apiUserAttributeUpdateUserAttributeCmd)
+	apiUserAttributeUpdateUserAttributeCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiUserAttributeUpdateUserAttributeCmd.Flags().String("fields", "", "Requested fields.")
 }
 

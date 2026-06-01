@@ -15,9 +15,10 @@ import (
 )
 
 type SwaggerSpec struct {
-	BasePath string                           `json:"basePath"`
-	Tags     []Tag                            `json:"tags"`
-	Paths    map[string]map[string]*Operation `json:"paths"`
+	BasePath    string                           `json:"basePath"`
+	Tags        []Tag                            `json:"tags"`
+	Paths       map[string]map[string]*Operation `json:"paths"`
+	Definitions map[string]interface{}           `json:"definitions"`
 }
 
 type Tag struct {
@@ -136,17 +137,35 @@ func main() {
 				pathParams = append(pathParams, m[1])
 			}
 
+			var bodyParamPtr *Parameter
 			for _, p := range op.Parameters {
 				if p.In == "path" {
 					// Already captured in order by regex, but verify it exists
 					continue
 				} else if p.In == "body" {
 					bodyParam = p.Name
+					bodyParamPtr = p
 				} else if p.In == "query" {
 					if p.Required {
 						requiredQueryParams = append(requiredQueryParams, p.Name)
 					} else {
 						queryFlags[p.Name] = p
+					}
+				}
+			}
+
+			var bodySchemaJSON string
+			if bodyParamPtr != nil && bodyParamPtr.Schema != nil && bodyParamPtr.Schema.Ref != "" {
+				ref := bodyParamPtr.Schema.Ref
+				defName := strings.TrimPrefix(ref, "#/definitions/")
+				if def, ok := spec.Definitions[defName]; ok {
+					if defMap, ok := def.(map[string]interface{}); ok {
+						stripped := stripReadOnly(deepCopyMap(defMap))
+						defBytes, _ := json.MarshalIndent(stripped, "", "  ")
+						bodySchemaJSON = string(defBytes)
+					} else {
+						defBytes, _ := json.MarshalIndent(def, "", "  ")
+						bodySchemaJSON = string(defBytes)
 					}
 				}
 			}
@@ -161,6 +180,7 @@ func main() {
 				RequiredQueryParams: requiredQueryParams,
 				BodyParam:           bodyParam,
 				QueryFlags:          queryFlags,
+				BodySchemaJSON:      bodySchemaJSON,
 				Deprecated:          op.Deprecated,
 			}
 
@@ -251,8 +271,26 @@ func init() {
 			out.WriteString(fmt.Sprintf("\tUse:   %s,\n", strconv.Quote(useStr)))
 			out.WriteString(fmt.Sprintf("\tShort: %s,\n", strconv.Quote(op.Summary)))
 			out.WriteString(fmt.Sprintf("\tLong:  %s,\n", strconv.Quote(op.Description)))
-			out.WriteString(fmt.Sprintf("\tArgs:  cobra.ExactArgs(%d),\n", numArgs))
+			
+			if op.BodyParam != "" {
+				out.WriteString(fmt.Sprintf("\tArgs: func(cmd *cobra.Command, args []string) error {\n"))
+				out.WriteString(fmt.Sprintf("\t\tif val, _ := cmd.Flags().GetBool(\"describe-body\"); val {\n"))
+				out.WriteString(fmt.Sprintf("\t\t\treturn nil\n"))
+				out.WriteString(fmt.Sprintf("\t\t}\n"))
+				out.WriteString(fmt.Sprintf("\t\treturn cobra.ExactArgs(%d)(cmd, args)\n", numArgs))
+				out.WriteString(fmt.Sprintf("\t},\n"))
+			} else {
+				out.WriteString(fmt.Sprintf("\tArgs:  cobra.ExactArgs(%d),\n", numArgs))
+			}
+
 			out.WriteString("\tRunE: func(cmd *cobra.Command, args []string) error {\n")
+
+			if op.BodyParam != "" {
+				out.WriteString(fmt.Sprintf("\t\tif val, _ := cmd.Flags().GetBool(\"describe-body\"); val {\n"))
+				out.WriteString(fmt.Sprintf("\t\t\tfmt.Println(%sBodySchema)\n", opCmdName))
+				out.WriteString(fmt.Sprintf("\t\t\treturn nil\n"))
+				out.WriteString(fmt.Sprintf("\t\t}\n"))
+			}
 
 			// queryParams map definition
 			out.WriteString("\t\tqueryParams := make(map[string]string)\n")
@@ -308,8 +346,15 @@ func init() {
 			out.WriteString("\t},\n")
 			out.WriteString("}\n\n")
 
+			if op.BodyParam != "" {
+				out.WriteString(fmt.Sprintf("const %sBodySchema = %s\n\n", opCmdName, strconv.Quote(op.BodySchemaJSON)))
+			}
+
 			// init registration and flags
 			out.WriteString(fmt.Sprintf("func init() {\n\t%s.AddCommand(%s)\n", tagCmdName, opCmdName))
+			if op.BodyParam != "" {
+				out.WriteString(fmt.Sprintf("\t%s.Flags().Bool(\"describe-body\", false, \"Describe the JSON schema expected in the body\")\n", opCmdName))
+			}
 			for _, fName := range qFlags {
 				p := op.QueryFlags[fName]
 				desc := strconv.Quote(p.Description)
@@ -448,6 +493,7 @@ type OpMetadata struct {
 	RequiredQueryParams []string
 	BodyParam           string
 	QueryFlags          map[string]*Parameter
+	BodySchemaJSON      string
 	Deprecated          bool
 }
 
@@ -467,4 +513,65 @@ func cleanOpName(op string) string {
 		}
 	}
 	return strings.Join(parts, "")
+}
+
+func stripReadOnly(schema interface{}) interface{} {
+	m, ok := schema.(map[string]interface{})
+	if !ok {
+		return schema
+	}
+
+	// Check if this object itself is readOnly
+	if ro, ok := m["readOnly"].(bool); ok && ro {
+		return nil
+	}
+
+	// Process properties recursively
+	if props, ok := m["properties"].(map[string]interface{}); ok {
+		newProps := make(map[string]interface{})
+		for k, v := range props {
+			stripped := stripReadOnly(v)
+			if stripped != nil {
+				newProps[k] = stripped
+			}
+		}
+		m["properties"] = newProps
+	}
+
+	// Process nested schemas in arrays
+	if items, ok := m["items"].(map[string]interface{}); ok {
+		m["items"] = stripReadOnly(items)
+	}
+
+	return m
+}
+
+func deepCopyMap(m map[string]interface{}) map[string]interface{} {
+	cp := make(map[string]interface{})
+	for k, v := range m {
+		switch vm := v.(type) {
+		case map[string]interface{}:
+			cp[k] = deepCopyMap(vm)
+		case []interface{}:
+			cp[k] = deepCopySlice(vm)
+		default:
+			cp[k] = v
+		}
+	}
+	return cp
+}
+
+func deepCopySlice(s []interface{}) []interface{} {
+	cp := make([]interface{}, len(s))
+	for i, v := range s {
+		switch vm := v.(type) {
+		case map[string]interface{}:
+			cp[i] = deepCopyMap(vm)
+		case []interface{}:
+			cp[i] = deepCopySlice(vm)
+		default:
+			cp[i] = v
+		}
+	}
+	return cp
 }
