@@ -223,6 +223,7 @@ package cmd
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -494,7 +495,18 @@ func executeApiCallGeneric(cmd *cobra.Command, method, pathTemplate string, path
 		return fmt.Errorf("API returned error %s: %s", resp.Status, string(outBytes))
 	}
 
-	fmt.Println(string(outBytes))
+	// Attempt to pretty print if it is JSON
+	var raw interface{}
+	if err := json.Unmarshal(outBytes, &raw); err == nil {
+		prettyBytes, err := json.MarshalIndent(raw, "", "  ")
+		if err == nil {
+			fmt.Println(string(prettyBytes))
+			return nil
+		}
+	}
+
+	// Fallback for non-JSON (like CSV, SQL, Images)
+	_, _ = os.Stdout.Write(outBytes)
 	return nil
 }
 `)
