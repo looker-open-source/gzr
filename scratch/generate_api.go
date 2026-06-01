@@ -237,13 +237,13 @@ func init() {
 			tagDesc = tag + " commands"
 		}
 
-		out.WriteString(fmt.Sprintf("\n// %s category\n", tag))
-		out.WriteString(fmt.Sprintf("var %s = &cobra.Command{\n", tagCmdName))
-		out.WriteString(fmt.Sprintf("\tUse:   %s,\n", strconv.Quote(tagUse)))
-		out.WriteString(fmt.Sprintf("\tShort: %s,\n", strconv.Quote(tagDesc)))
+		fmt.Fprintf(&out, "\n// %s category\n", tag)
+		fmt.Fprintf(&out, "var %s = &cobra.Command{\n", tagCmdName)
+		fmt.Fprintf(&out, "\tUse:   %s,\n", strconv.Quote(tagUse))
+		fmt.Fprintf(&out, "\tShort: %s,\n", strconv.Quote(tagDesc))
 		out.WriteString("}\n\n")
 
-		out.WriteString(fmt.Sprintf("func init() {\n\tApiCmd.AddCommand(%s)\n}\n", tagCmdName))
+		fmt.Fprintf(&out, "func init() {\n\tApiCmd.AddCommand(%s)\n}\n", tagCmdName)
 
 		for _, op := range ops {
 			opCmdName := fmt.Sprintf("api%s%sCmd", cleanTagName(tag), cleanOpName(op.OperationID))
@@ -267,29 +267,29 @@ func init() {
 				numArgs++
 			}
 
-			out.WriteString(fmt.Sprintf("\nvar %s = &cobra.Command{\n", opCmdName))
-			out.WriteString(fmt.Sprintf("\tUse:   %s,\n", strconv.Quote(useStr)))
-			out.WriteString(fmt.Sprintf("\tShort: %s,\n", strconv.Quote(op.Summary)))
-			out.WriteString(fmt.Sprintf("\tLong:  %s,\n", strconv.Quote(op.Description)))
+			fmt.Fprintf(&out, "\nvar %s = &cobra.Command{\n", opCmdName)
+			fmt.Fprintf(&out, "\tUse:   %s,\n", strconv.Quote(useStr))
+			fmt.Fprintf(&out, "\tShort: %s,\n", strconv.Quote(op.Summary))
+			fmt.Fprintf(&out, "\tLong:  %s,\n", strconv.Quote(op.Description))
 			
 			if op.BodyParam != "" {
-				out.WriteString(fmt.Sprintf("\tArgs: func(cmd *cobra.Command, args []string) error {\n"))
-				out.WriteString(fmt.Sprintf("\t\tif val, _ := cmd.Flags().GetBool(\"describe-body\"); val {\n"))
-				out.WriteString(fmt.Sprintf("\t\t\treturn nil\n"))
-				out.WriteString(fmt.Sprintf("\t\t}\n"))
-				out.WriteString(fmt.Sprintf("\t\treturn cobra.ExactArgs(%d)(cmd, args)\n", numArgs))
-				out.WriteString(fmt.Sprintf("\t},\n"))
+				out.WriteString("\tArgs: func(cmd *cobra.Command, args []string) error {\n")
+				out.WriteString("\t\tif val, _ := cmd.Flags().GetBool(\"describe-body\"); val {\n")
+				out.WriteString("\t\t\treturn nil\n")
+				out.WriteString("\t\t}\n")
+				fmt.Fprintf(&out, "\t\treturn cobra.ExactArgs(%d)(cmd, args)\n", numArgs)
+				out.WriteString("\t},\n")
 			} else {
-				out.WriteString(fmt.Sprintf("\tArgs:  cobra.ExactArgs(%d),\n", numArgs))
+				fmt.Fprintf(&out, "\tArgs:  cobra.ExactArgs(%d),\n", numArgs)
 			}
 
 			out.WriteString("\tRunE: func(cmd *cobra.Command, args []string) error {\n")
 
 			if op.BodyParam != "" {
-				out.WriteString(fmt.Sprintf("\t\tif val, _ := cmd.Flags().GetBool(\"describe-body\"); val {\n"))
-				out.WriteString(fmt.Sprintf("\t\t\tfmt.Println(%sBodySchema)\n", opCmdName))
-				out.WriteString(fmt.Sprintf("\t\t\treturn nil\n"))
-				out.WriteString(fmt.Sprintf("\t\t}\n"))
+				out.WriteString("\t\tif val, _ := cmd.Flags().GetBool(\"describe-body\"); val {\n")
+				fmt.Fprintf(&out, "\t\t\tfmt.Println(%sBodySchema)\n", opCmdName)
+				out.WriteString("\t\t\treturn nil\n")
+				out.WriteString("\t\t}\n")
 			}
 
 			// queryParams map definition
@@ -305,14 +305,14 @@ func init() {
 			for _, fName := range qFlags {
 				p := op.QueryFlags[fName]
 				if p.Type == "boolean" {
-					out.WriteString(fmt.Sprintf("\t\tif cmd.Flags().Changed(\"%s\") {\n", fName))
-					out.WriteString(fmt.Sprintf("\t\t\tval, _ := cmd.Flags().GetBool(\"%s\")\n", fName))
-					out.WriteString(fmt.Sprintf("\t\t\tqueryParams[\"%s\"] = strconv.FormatBool(val)\n", fName))
+					fmt.Fprintf(&out, "\t\tif cmd.Flags().Changed(\"%s\") {\n", fName)
+					fmt.Fprintf(&out, "\t\t\tval, _ := cmd.Flags().GetBool(\"%s\")\n", fName)
+					fmt.Fprintf(&out, "\t\t\tqueryParams[\"%s\"] = strconv.FormatBool(val)\n", fName)
 					out.WriteString("\t\t}\n")
 				} else {
-					out.WriteString(fmt.Sprintf("\t\tif cmd.Flags().Changed(\"%s\") {\n", fName))
-					out.WriteString(fmt.Sprintf("\t\t\tval, _ := cmd.Flags().GetString(\"%s\")\n", fName))
-					out.WriteString(fmt.Sprintf("\t\t\tqueryParams[\"%s\"] = val\n", fName))
+					fmt.Fprintf(&out, "\t\tif cmd.Flags().Changed(\"%s\") {\n", fName)
+					fmt.Fprintf(&out, "\t\t\tval, _ := cmd.Flags().GetString(\"%s\")\n", fName)
+					fmt.Fprintf(&out, "\t\t\tqueryParams[\"%s\"] = val\n", fName)
 					out.WriteString("\t\t}\n")
 				}
 			}
@@ -341,27 +341,27 @@ func init() {
 				bodyParamStr = op.BodyParam
 			}
 
-			out.WriteString(fmt.Sprintf("\t\treturn executeApiCallGeneric(cmd, \"%s\", \"%s\", %s, %s, \"%s\", queryParams, args)\n",
-				op.Method, op.Path, pathParamsList, reqQueryParamsList, bodyParamStr))
+			fmt.Fprintf(&out, "\t\treturn executeApiCallGeneric(cmd, \"%s\", \"%s\", %s, %s, \"%s\", queryParams, args)\n",
+				op.Method, op.Path, pathParamsList, reqQueryParamsList, bodyParamStr)
 			out.WriteString("\t},\n")
 			out.WriteString("}\n\n")
 
 			if op.BodyParam != "" {
-				out.WriteString(fmt.Sprintf("const %sBodySchema = %s\n\n", opCmdName, strconv.Quote(op.BodySchemaJSON)))
+				fmt.Fprintf(&out, "const %sBodySchema = %s\n\n", opCmdName, strconv.Quote(op.BodySchemaJSON))
 			}
 
 			// init registration and flags
-			out.WriteString(fmt.Sprintf("func init() {\n\t%s.AddCommand(%s)\n", tagCmdName, opCmdName))
+			fmt.Fprintf(&out, "func init() {\n\t%s.AddCommand(%s)\n", tagCmdName, opCmdName)
 			if op.BodyParam != "" {
-				out.WriteString(fmt.Sprintf("\t%s.Flags().Bool(\"describe-body\", false, \"Describe the JSON schema expected in the body\")\n", opCmdName))
+				fmt.Fprintf(&out, "\t%s.Flags().Bool(\"describe-body\", false, \"Describe the JSON schema expected in the body\")\n", opCmdName)
 			}
 			for _, fName := range qFlags {
 				p := op.QueryFlags[fName]
 				desc := strconv.Quote(p.Description)
 				if p.Type == "boolean" {
-					out.WriteString(fmt.Sprintf("\t%s.Flags().Bool(\"%s\", false, %s)\n", opCmdName, fName, desc))
+					fmt.Fprintf(&out, "\t%s.Flags().Bool(\"%s\", false, %s)\n", opCmdName, fName, desc)
 				} else {
-					out.WriteString(fmt.Sprintf("\t%s.Flags().String(\"%s\", \"\", %s)\n", opCmdName, fName, desc))
+					fmt.Fprintf(&out, "\t%s.Flags().String(\"%s\", \"\", %s)\n", opCmdName, fName, desc)
 				}
 			}
 			out.WriteString("}\n")
