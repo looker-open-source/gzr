@@ -63,16 +63,33 @@ This will:
 #### Setting up the OAuth Client Application in Looker
 Before you can use the `--oauth` login, your Looker Administrator must register `gzr` as an **OAuth Client Application** in your Looker instance:
 
-1. Navigate to **Admin** -> **OAuth Client Apps** in the Looker console.
-2. Click **Register Application**.
-3. Configure the following settings:
-   * **Application Client ID**: `gzr` (This must match `gzr`'s default Client ID. If you register a different custom Client ID, you must pass it via the `--client-id` flag when logging in).
-   * **Application Name**: `Gazer CLI`
-   * **Redirect URIs**: Add `http://localhost:8080/callback` (This is the temporary port spawned locally by `gzr` to retrieve the authorization code).
-   * **Enabled**: Must be set to **Enabled / Active** (toggle to `true`).
-4. Click **Save**.
+1. Navigate to the **API Explorer** in Looker.
+2. Click **Auth** then **Register OAuth App**.
+3. Choose **Runit**.
+4. Configure the following settings:
+   * **client_guid**: `gzr` (This must match `gzr`'s default Client ID. If you register a different custom Client ID, you must pass it via the `--client-id` flag when logging in).
+   * **Display Name**: `Gazer CLI`
+   * **Description**: `Gazer CLI`
+   * **Redirect URI**: Add `http://localhost:8080/callback` (This is the temporary port spawned locally by `gzr` to retrieve the authorization code).
+   * **Enabled**: Must be set to true.
+5. Check the box "I understand that this API endpoint will change data."
+6. Click **Run**.
 
 Once registered, the `gzr session login --oauth` browser login will work seamlessly.
+
+Alternately you can run the following if you have a `.netrc` with your
+credentials already, or you can run this with one of the authentication methods
+below:
+```bash
+echo << 'EOF' | ./gzr api auth register_oauth_client_app gzr - --host HOST [--port 443]
+{
+  "description": "Gazer",
+  "display_name": "Gazer",
+  "enabled": true,
+  "redirect_uri": "http://localhost:8080/callback"
+}
+EOF
+```
 
 ### 2. Headless Token Authentication (Recommended for Scripts)
 Once logged in, you can run automated scripts headlessly by referencing the stored token or passing one directly:
