@@ -420,7 +420,7 @@ var spaceCatCmd = &cobra.Command{
 
 		bytes, _ := json.MarshalIndent(folder, "", "  ")
 		if spaceCatDir != "" {
-			fn := fmt.Sprintf("%s/Space_%s_%s.json", spaceCatDir, fID, strings.ReplaceAll(folder.Name, "/", "_"))
+			fn := fmt.Sprintf("%s/Space_%s_%s.json", spaceCatDir, fID, sanitizeFilename(folder.Name))
 			_ = os.WriteFile(fn, bytes, 0644)
 			fmt.Printf("Wrote %s\n", fn)
 		} else {
@@ -502,14 +502,14 @@ var spaceExportCmd = &cobra.Command{
 		if spaceExportTar != "" || spaceExportTgz != "" || spaceExportZip != "" {
 			var buf bytes.Buffer
 			var archiver interface{}
+			var gzw *gzip.Writer
 
 			if spaceExportZip != "" {
 				archiver = zip.NewWriter(&buf)
 			} else {
 				var w io.Writer = &buf
 				if spaceExportTgz != "" {
-					gzw := gzip.NewWriter(&buf)
-					defer func() { _ = gzw.Close() }()
+					gzw = gzip.NewWriter(&buf)
 					w = gzw
 				}
 				archiver = tar.NewWriter(w)
@@ -527,6 +527,9 @@ var spaceExportCmd = &cobra.Command{
 				fmt.Printf("Wrote zip %s\n", fn)
 			} else if tw, ok := archiver.(*tar.Writer); ok {
 				_ = tw.Close()
+				if gzw != nil {
+					_ = gzw.Close()
+				}
 				fn := spaceExportTar
 				if spaceExportTgz != "" { fn = spaceExportTgz }
 				_ = os.WriteFile(fn, buf.Bytes(), 0644)
@@ -548,7 +551,7 @@ func exportFolderDir(c *client.ClientWrapper, fID, baseDir string) error {
 		return fmt.Errorf("failed to get folder %s: %w", fID, err)
 	}
 	name := folder.Name
-	cleanName := strings.ReplaceAll(name, "/", "_")
+	cleanName := sanitizeFilename(name)
 	dirName := filepath.Join(baseDir, fmt.Sprintf("Space_%s_%s", fID, cleanName))
 	_ = os.MkdirAll(dirName, 0755)
 
@@ -568,7 +571,7 @@ func exportFolderDir(c *client.ClientWrapper, fID, baseDir string) error {
 					lb, _ := json.MarshalIndent(look, "", "  ")
 					lt := ""
 					if look.Title != nil { lt = *look.Title }
-					_ = os.WriteFile(filepath.Join(dirName, fmt.Sprintf("Look_%s_%s.json", *l.Id, strings.ReplaceAll(lt, "/", "_"))), lb, 0644)
+					_ = os.WriteFile(filepath.Join(dirName, fmt.Sprintf("Look_%s_%s.json", *l.Id, sanitizeFilename(lt))), lb, 0644)
 				}
 			}
 		}
@@ -581,7 +584,7 @@ func exportFolderDir(c *client.ClientWrapper, fID, baseDir string) error {
 					db, _ := json.MarshalIndent(dash, "", "  ")
 					dt := ""
 					if dash.Title != nil { dt = *dash.Title }
-					_ = os.WriteFile(filepath.Join(dirName, fmt.Sprintf("Dashboard_%s_%s.json", *d.Id, strings.ReplaceAll(dt, "/", "_"))), db, 0644)
+					_ = os.WriteFile(filepath.Join(dirName, fmt.Sprintf("Dashboard_%s_%s.json", *d.Id, sanitizeFilename(dt))), db, 0644)
 				}
 			}
 		}
@@ -602,7 +605,7 @@ func exportFolderArchive(c *client.ClientWrapper, fID string, archiver interface
 		return err
 	}
 	name := folder.Name
-	cleanName := strings.ReplaceAll(name, "/", "_")
+	cleanName := sanitizeFilename(name)
 	dirName := fmt.Sprintf("Space_%s_%s/", fID, cleanName)
 	if pathPrefix != "" { dirName = pathPrefix + dirName }
 
@@ -624,7 +627,7 @@ func exportFolderArchive(c *client.ClientWrapper, fID string, archiver interface
 					lb, _ := json.MarshalIndent(look, "", "  ")
 					lt := ""
 					if look.Title != nil { lt = *look.Title }
-					lfn := dirName + fmt.Sprintf("Look_%s_%s.json", *l.Id, strings.ReplaceAll(lt, "/", "_"))
+					lfn := dirName + fmt.Sprintf("Look_%s_%s.json", *l.Id, sanitizeFilename(lt))
 					writeArchiveFile(archiver, lfn, lb)
 				}
 			}
@@ -638,7 +641,7 @@ func exportFolderArchive(c *client.ClientWrapper, fID string, archiver interface
 					db, _ := json.MarshalIndent(dash, "", "  ")
 					dt := ""
 					if dash.Title != nil { dt = *dash.Title }
-					dfn := dirName + fmt.Sprintf("Dashboard_%s_%s.json", *d.Id, strings.ReplaceAll(dt, "/", "_"))
+					dfn := dirName + fmt.Sprintf("Dashboard_%s_%s.json", *d.Id, sanitizeFilename(dt))
 					writeArchiveFile(archiver, dfn, db)
 				}
 			}
@@ -699,4 +702,21 @@ func init() {
 	spaceExportCmd.Flags().StringVar(&spaceExportTgz, "tgz", "", "Targz file to store folder tree")
 	spaceExportCmd.Flags().StringVar(&spaceExportZip, "zip", "", "Zip file to store folder tree")
 	spaceExportCmd.Flags().BoolVar(&spaceExportTrim, "trim", false, "Trim output to minimal set of fields")
+}
+
+func sanitizeFilename(name string) string {
+	invalidChars := []string{"\\", "/", ":", "*", "?", "\"", "<", ">", "|"}
+	clean := name
+	for _, char := range invalidChars {
+		clean = strings.ReplaceAll(clean, char, "_")
+	}
+	var sb strings.Builder
+	for _, r := range clean {
+		if r >= 32 {
+			sb.WriteRune(r)
+		} else {
+			sb.WriteRune('_')
+		}
+	}
+	return sb.String()
 }

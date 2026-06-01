@@ -20,6 +20,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
@@ -149,7 +150,15 @@ var userCatCmd = &cobra.Command{
 			if v, ok := dataMap["id"].(float64); ok {
 				id = int64(v)
 			}
-			fn := fmt.Sprintf("%s/User_%d_%s_%s.json", userCatDir, id, dataMap["first_name"], dataMap["last_name"])
+			firstName := ""
+			if v, ok := dataMap["first_name"].(string); ok {
+				firstName = sanitizeFilename(v)
+			}
+			lastName := ""
+			if v, ok := dataMap["last_name"].(string); ok {
+				lastName = sanitizeFilename(v)
+			}
+			fn := fmt.Sprintf("%s/User_%d_%s_%s.json", userCatDir, id, firstName, lastName)
 			err = os.WriteFile(fn, outBytes, 0644)
 			if err != nil {
 				return fmt.Errorf("failed to write file %s: %w", fn, err)
@@ -225,8 +234,12 @@ var userLsCmd = &cobra.Command{
 		}
 
 		fields := userLsFields
-		if userLsLastLogin && !strings.Contains(fields, "credentials_email") {
-			fields += ",credentials_email"
+		if userLsLastLogin {
+			for _, cred := range []string{"credentials_email", "credentials_google", "credentials_ldap", "credentials_looker_openid", "credentials_oidc", "credentials_saml", "credentials_embed"} {
+				if !strings.Contains(fields, cred) {
+					fields += "," + cred
+				}
+			}
 		}
 
 		var allUsers []v4.User
@@ -262,11 +275,7 @@ var userLsCmd = &cobra.Command{
 		for _, u := range allUsers {
 			row := extractFields(u, userLsFields)
 			if userLsLastLogin {
-				lastLogin := ""
-				if u.CredentialsEmail != nil && u.CredentialsEmail.LoggedInAt != nil {
-					lastLogin = *u.CredentialsEmail.LoggedInAt
-				}
-				row = append(row, lastLogin)
+				row = append(row, getLastLogin(u))
 			}
 			table.Append(row)
 		}
@@ -297,4 +306,52 @@ func init() {
 	userLsCmd.Flags().BoolVar(&userLsLastLogin, "last-login", false, "Include the time of the most recent login")
 	userLsCmd.Flags().BoolVar(&userLsPlain, "plain", false, "print without any extra formatting")
 	userLsCmd.Flags().BoolVar(&userLsCSV, "csv", false, "output in csv format")
+}
+
+func getLastLogin(u v4.User) string {
+	var latest time.Time
+	var latestStr string
+
+	checkTime := func(tStr *string) {
+		if tStr == nil || *tStr == "" {
+			return
+		}
+		t, err := time.Parse(time.RFC3339, *tStr)
+		if err != nil {
+			t, err = time.Parse("2006-01-02T15:04:05.000Z07:00", *tStr)
+			if err != nil {
+				return
+			}
+		}
+		if t.After(latest) {
+			latest = t
+			latestStr = *tStr
+		}
+	}
+
+	if u.CredentialsEmail != nil {
+		checkTime(u.CredentialsEmail.LoggedInAt)
+	}
+	if u.CredentialsGoogle != nil {
+		checkTime(u.CredentialsGoogle.LoggedInAt)
+	}
+	if u.CredentialsLdap != nil {
+		checkTime(u.CredentialsLdap.LoggedInAt)
+	}
+	if u.CredentialsLookerOpenid != nil {
+		checkTime(u.CredentialsLookerOpenid.LoggedInAt)
+	}
+	if u.CredentialsOidc != nil {
+		checkTime(u.CredentialsOidc.LoggedInAt)
+	}
+	if u.CredentialsSaml != nil {
+		checkTime(u.CredentialsSaml.LoggedInAt)
+	}
+	if u.CredentialsEmbed != nil {
+		for _, cred := range *u.CredentialsEmbed {
+			checkTime(cred.LoggedInAt)
+		}
+	}
+
+	return latestStr
 }

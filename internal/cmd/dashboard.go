@@ -379,12 +379,24 @@ var dashboardImportCmd = &cobra.Command{
 		}
 
 		var existingDash *v4.Dashboard
+		var slugConflict bool
+		var conflictingFolder string
+
 		if slug != "" {
-			dashes, _ := c.SDK.SearchDashboards(v4.RequestSearchDashboards{Slug: &slug, FolderId: &folderID}, nil)
+			dashes, _ := c.SDK.SearchDashboards(v4.RequestSearchDashboards{Slug: &slug}, nil)
 			if len(dashes) > 0 {
-				existingDash = &dashes[0]
+				match := dashes[0]
+				if match.FolderId != nil && *match.FolderId == folderID {
+					existingDash = &match
+				} else {
+					slugConflict = true
+					if match.FolderId != nil {
+						conflictingFolder = *match.FolderId
+					}
+				}
 			}
 		}
+
 		if existingDash == nil && title != "" {
 			dashes, _ := c.SDK.SearchDashboards(v4.RequestSearchDashboards{Title: &title, FolderId: &folderID}, nil)
 			if len(dashes) > 0 {
@@ -397,6 +409,13 @@ var dashboardImportCmd = &cobra.Command{
 		_ = json.Unmarshal(db, &wd)
 		wd.FolderId = &folderID
 		wd.UserId = &myID
+
+		if slugConflict {
+			if !dashboardImportPlain {
+				fmt.Printf("Warning: Slug '%s' is already in use in folder %s. Generating a new slug for this import.\n", slug, conflictingFolder)
+			}
+			wd.Slug = nil // Force Looker to generate a new slug or keep existing
+		}
 
 		var resultDash *v4.Dashboard
 

@@ -37,7 +37,7 @@ func TestTokenStorage(t *testing.T) {
 	exp := time.Now().Add(1 * time.Hour)
 
 	// 1. Store token
-	err = StoreToken(host, "", token, exp)
+	err = StoreToken(host, "", token, "", "", exp)
 	if err != nil {
 		t.Fatalf("StoreToken failed: %v", err)
 	}
@@ -70,7 +70,7 @@ func TestTokenStorage(t *testing.T) {
 	// 5. Store su token
 	suUser := "1237"
 	suToken := "su_token_456"
-	err = StoreToken(host, suUser, suToken, exp)
+	err = StoreToken(host, suUser, suToken, "", "", exp)
 	if err != nil {
 		t.Fatalf("StoreToken su failed: %v", err)
 	}
@@ -100,7 +100,7 @@ func TestTokenStorage_Expired(t *testing.T) {
 	// Expired 10 minutes ago
 	exp := time.Now().Add(-10 * time.Minute)
 
-	err = StoreToken(host, "", token, exp)
+	err = StoreToken(host, "", token, "", "", exp)
 	if err != nil {
 		t.Fatalf("StoreToken failed: %v", err)
 	}

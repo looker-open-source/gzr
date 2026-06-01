@@ -24,12 +24,14 @@ import (
 
 const (
 	tokenFileName = ".gzr_auth"
-	timeFormat    = "2006-01-02 15:04:05 -0700"
+	TimeFormat    = "2006-01-02 15:04:05 -0700"
 )
 
 type TokenEntry struct {
-	Token      string `json:"token"`
-	Expiration string `json:"expiration"`
+	Token        string `json:"token"`
+	Expiration   string `json:"expiration"`
+	RefreshToken string `json:"refresh_token,omitempty"`
+	ClientID     string `json:"client_id,omitempty"`
 }
 
 type HostTokens map[string]TokenEntry
@@ -97,15 +99,15 @@ func WriteTokenData(data TokenData) error {
 	return nil
 }
 
-func GetToken(host, suUser string) (string, error) {
+func GetTokenEntry(host, suUser string) (TokenEntry, error) {
 	data, err := ReadTokenData()
 	if err != nil {
-		return "", err
+		return TokenEntry{}, err
 	}
 
 	hostTokens, ok := data[host]
 	if !ok {
-		return "", fmt.Errorf("no tokens found for host %s", host)
+		return TokenEntry{}, fmt.Errorf("no tokens found for host %s", host)
 	}
 
 	key := "default"
@@ -115,10 +117,19 @@ func GetToken(host, suUser string) (string, error) {
 
 	entry, ok := hostTokens[key]
 	if !ok {
-		return "", fmt.Errorf("no token found for host %s, user %s", host, key)
+		return TokenEntry{}, fmt.Errorf("no token found for host %s, user %s", host, key)
 	}
 
-	exp, err := time.Parse(timeFormat, entry.Expiration)
+	return entry, nil
+}
+
+func GetToken(host, suUser string) (string, error) {
+	entry, err := GetTokenEntry(host, suUser)
+	if err != nil {
+		return "", err
+	}
+
+	exp, err := time.Parse(TimeFormat, entry.Expiration)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse expiration time %s: %w", entry.Expiration, err)
 	}
@@ -130,12 +141,9 @@ func GetToken(host, suUser string) (string, error) {
 	return entry.Token, nil
 }
 
-func StoreToken(host, suUser, token string, expiration time.Time) error {
+func StoreToken(host, suUser, token, refreshToken, clientID string, expiration time.Time) error {
 	data, err := ReadTokenData()
 	if err != nil {
-		// If error is permission error, fail. If it's just decode error or similar, maybe overwrite?
-		// ReadTokenData returns empty map if file doesn't exist.
-		// If it failed for other reasons, we should probably propagate.
 		return err
 	}
 	if data == nil {
@@ -154,8 +162,10 @@ func StoreToken(host, suUser, token string, expiration time.Time) error {
 	}
 
 	hostTokens[key] = TokenEntry{
-		Token:      token,
-		Expiration: expiration.Format(timeFormat),
+		Token:        token,
+		Expiration:   expiration.Format(TimeFormat),
+		RefreshToken: refreshToken,
+		ClientID:     clientID,
 	}
 
 	return WriteTokenData(data)

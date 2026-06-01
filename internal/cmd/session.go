@@ -79,7 +79,7 @@ var sessionLoginCmd = &cobra.Command{
 			return nil
 		}
 
-		err = client.StoreToken(cfgHost, cfgSuUser, tok, exp)
+		err = client.StoreToken(cfgHost, cfgSuUser, tok, "", "", exp)
 		if err != nil {
 			return fmt.Errorf("failed to store token: %w", err)
 		}

@@ -22,6 +22,7 @@ import (
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
+	"golang.org/x/oauth2"
 )
 
 type ClientWrapper struct {
@@ -57,29 +58,49 @@ func NewClient(ctx context.Context, host, port, clientID, clientSecret, token, s
 	if token != "" {
 		activeToken = token
 	} else if tokenFile {
-		tok, err := GetToken(host, suUser)
-		if err == nil && tok != "" {
-			activeToken = tok
-		} else if suUser != "" {
-			tok, err := GetToken(host, "")
-			if err == nil && tok != "" {
+		entry, err := GetTokenEntry(host, suUser)
+		if err != nil && suUser != "" {
+			entry, err = GetTokenEntry(host, "")
+		}
+		if err != nil {
+			return nil, fmt.Errorf("auth required: no valid token found in file for host %s (%v)", host, err)
+		}
+
+		exp, err := time.Parse(TimeFormat, entry.Expiration)
+		expired := false
+		if err != nil {
+			expired = true
+		} else if time.Now().After(exp.Add(-5 * time.Minute)) {
+			expired = true
+		}
+
+		if expired && entry.RefreshToken != "" {
+			cID := entry.ClientID
+			if cID == "" {
+				cID = "gzr"
+			}
+			tok, refTok, newExp, err := RefreshOAuthToken(ctx, host, port, cID, entry.RefreshToken, ssl)
+			if err == nil {
+				_ = StoreToken(host, suUser, tok, refTok, cID, newExp)
 				activeToken = tok
 			} else {
-				return nil, fmt.Errorf("auth required: no valid token found in file for host %s", host)
+				return nil, fmt.Errorf("token expired and refresh failed: %w", err)
 			}
+		} else if expired {
+			return nil, fmt.Errorf("token expired and cannot be refreshed (no refresh token found)")
 		} else {
-			return nil, fmt.Errorf("auth required: no valid token found in file for host %s (%v)", host, err)
+			activeToken = entry.Token
 		}
 	} else if oauth {
 		if clientID == "" {
-			clientID = "oauth2go"
+			clientID = "gzr"
 		}
-		tok, exp, err := PerformOAuthLogin(ctx, host, port, clientID, ssl)
+		tok, refTok, exp, err := PerformOAuthLogin(ctx, host, port, clientID, ssl)
 		if err != nil {
 			return nil, fmt.Errorf("oauth login failed: %w", err)
 		}
 		activeToken = tok
-		_ = StoreToken(host, suUser, tok, exp)
+		_ = StoreToken(host, suUser, tok, refTok, clientID, exp)
 	} else {
 		if clientID == "" || clientSecret == "" {
 			cID, cSec, err := GetNetrcCredentials(host)
@@ -111,6 +132,22 @@ func NewClient(ctx context.Context, host, port, clientID, clientSecret, token, s
 	}
 
 	session := rtl.NewAuthSession(settings)
+
+	if activeToken != "" {
+		rawToken := activeToken
+		if strings.HasPrefix(rawToken, "Bearer ") {
+			rawToken = strings.TrimPrefix(rawToken, "Bearer ")
+		} else if strings.HasPrefix(rawToken, "token ") {
+			rawToken = strings.TrimPrefix(rawToken, "token ")
+		}
+
+		if oauth2Trans, ok := session.Client.Transport.(*oauth2.Transport); ok {
+			oauth2Trans.Source = oauth2.StaticTokenSource(&oauth2.Token{
+				AccessToken: rawToken,
+			})
+		}
+	}
+
 	sdk := v4.NewLookerSDK(session)
 
 	wrapper := &ClientWrapper{
@@ -134,7 +171,7 @@ func NewClient(ctx context.Context, host, port, clientID, clientSecret, token, s
 			suTok := "Bearer " + *suTokResp.AccessToken
 			session.Config.Headers["Authorization"] = suTok
 			exp := time.Now().Add(time.Duration(*suTokResp.ExpiresIn) * time.Second)
-			_ = StoreToken(host, suUser, *suTokResp.AccessToken, exp)
+			_ = StoreToken(host, suUser, *suTokResp.AccessToken, "", "", exp)
 		}
 	}
 

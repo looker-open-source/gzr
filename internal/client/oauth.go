@@ -57,10 +57,10 @@ func generatePKCE() (verifier, challenge string, err error) {
 }
 
 // PerformOAuthLogin initiates PKCE flow, opens browser, waits for callback, and exchanges code for token.
-func PerformOAuthLogin(ctx context.Context, host, port, clientID string, ssl bool) (string, time.Time, error) {
+func PerformOAuthLogin(ctx context.Context, host, port, clientID string, ssl bool) (string, string, time.Time, error) {
 	verifier, challenge, err := generatePKCE()
 	if err != nil {
-		return "", time.Time{}, fmt.Errorf("failed to generate PKCE: %w", err)
+		return "", "", time.Time{}, fmt.Errorf("failed to generate PKCE: %w", err)
 	}
 
 	scheme := "https"
@@ -70,17 +70,11 @@ func PerformOAuthLogin(ctx context.Context, host, port, clientID string, ssl boo
 
 	// UI host for /auth
 	uiHost := host
-	// If port is not standard API port 19999, maybe UI is also on that port? Usually UI is 443.
-	// But if it's a dev instance on a weird port, we might need UI port.
-	// Assuming standard setup where UI is on 443 (default https) unless host already includes port.
-	// For GCP instances, API and UI are both 443.
-	// If user passed --port 19999, UI is still likely 443.
-	// Let's construct UI URL.
 	uiURL := fmt.Sprintf("%s://%s/auth", scheme, uiHost)
 
 	authURL, err := url.Parse(uiURL)
 	if err != nil {
-		return "", time.Time{}, fmt.Errorf("invalid auth URL: %w", err)
+		return "", "", time.Time{}, fmt.Errorf("invalid auth URL: %w", err)
 	}
 
 	q := authURL.Query()
@@ -129,9 +123,9 @@ func PerformOAuthLogin(ctx context.Context, host, port, clientID string, ssl boo
 
 	select {
 	case <-ctx.Done():
-		return "", time.Time{}, ctx.Err()
+		return "", "", time.Time{}, ctx.Err()
 	case err := <-errChan:
-		return "", time.Time{}, err
+		return "", "", time.Time{}, err
 	case code := <-codeChan:
 		// Exchange code for token
 		apiHost := host
@@ -151,27 +145,80 @@ func PerformOAuthLogin(ctx context.Context, host, port, clientID string, ssl boo
 
 		req, err := http.NewRequestWithContext(ctx, http.MethodPost, tokenURL, bytes.NewReader(bodyBytes))
 		if err != nil {
-			return "", time.Time{}, fmt.Errorf("create token request failed: %w", err)
+			return "", "", time.Time{}, fmt.Errorf("create token request failed: %w", err)
 		}
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			return "", time.Time{}, fmt.Errorf("token request failed: %w", err)
+			return "", "", time.Time{}, fmt.Errorf("token request failed: %w", err)
 		}
 		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode != http.StatusOK {
 			bodyStr, _ := io.ReadAll(resp.Body)
-			return "", time.Time{}, fmt.Errorf("token request returned status %d: %s", resp.StatusCode, string(bodyStr))
+			return "", "", time.Time{}, fmt.Errorf("token request returned status %d: %s", resp.StatusCode, string(bodyStr))
 		}
 
 		var tokResp tokenResponse
 		if err := json.NewDecoder(resp.Body).Decode(&tokResp); err != nil {
-			return "", time.Time{}, fmt.Errorf("failed to decode token response: %w", err)
+			return "", "", time.Time{}, fmt.Errorf("failed to decode token response: %w", err)
 		}
 
 		expiration := time.Now().Add(time.Duration(tokResp.ExpiresIn) * time.Second)
-		return tokResp.AccessToken, expiration, nil
+		return tokResp.AccessToken, tokResp.RefreshToken, expiration, nil
 	}
+}
+
+// RefreshOAuthToken performs explicit OAuth2 refresh token grant to get a new short-lived access token.
+func RefreshOAuthToken(ctx context.Context, host, port, clientID, refreshToken string, ssl bool) (string, string, time.Time, error) {
+	scheme := "https"
+	if !ssl {
+		scheme = "http"
+	}
+
+	apiHost := host
+	if port != "" {
+		apiHost = host + ":" + port
+	}
+	tokenURL := fmt.Sprintf("%s://%s/api/token", scheme, apiHost)
+
+	body := map[string]string{
+		"grant_type":    "refresh_token",
+		"client_id":     clientID,
+		"refresh_token": refreshToken,
+	}
+	bodyBytes, _ := json.Marshal(body)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, tokenURL, bytes.NewReader(bodyBytes))
+	if err != nil {
+		return "", "", time.Time{}, fmt.Errorf("create refresh token request failed: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", "", time.Time{}, fmt.Errorf("refresh token request failed: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyStr, _ := io.ReadAll(resp.Body)
+		return "", "", time.Time{}, fmt.Errorf("refresh token request returned status %d: %s", resp.StatusCode, string(bodyStr))
+	}
+
+	var tokResp tokenResponse
+	if err := json.NewDecoder(resp.Body).Decode(&tokResp); err != nil {
+		return "", "", time.Time{}, fmt.Errorf("failed to decode token response: %w", err)
+	}
+
+	expiration := time.Now().Add(time.Duration(tokResp.ExpiresIn) * time.Second)
+
+	// Fallback to old refresh token if server did not issue a new one
+	newRefreshToken := tokResp.RefreshToken
+	if newRefreshToken == "" {
+		newRefreshToken = refreshToken
+	}
+
+	return tokResp.AccessToken, newRefreshToken, expiration, nil
 }
