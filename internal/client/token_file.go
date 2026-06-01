@@ -88,6 +88,7 @@ func WriteTokenData(data TokenData) error {
 	if err != nil {
 		return fmt.Errorf("failed to open token file for writing: %w", err)
 	}
+	_ = os.Chmod(path, 0600)
 	defer func() { _ = file.Close() }()
 
 	encoder := json.NewEncoder(file)

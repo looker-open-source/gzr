@@ -104,6 +104,9 @@ var projectFileCatCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("failed to create request: %w", err)
 		}
+		for k, v := range c.Session.Config.Headers {
+			req.Header.Set(k, v)
+		}
 
 		resp, err := c.Session.Client.Do(req)
 		if err != nil {

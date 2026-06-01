@@ -157,7 +157,7 @@ func NewClient(ctx context.Context, host, port, clientID, clientSecret, token, s
 		SuUser:  suUser,
 	}
 
-	if suUser != "" && (settings.ClientId != "" || (tokenFile && settings.Headers["Authorization"] != "")) {
+	if suUser != "" && (settings.ClientId != "" || settings.Headers["Authorization"] != "") {
 		tok, err := GetToken(host, suUser)
 		if err != nil || tok == "" || settings.Headers["Authorization"] != "Bearer "+tok {
 			suTokResp, err := sdk.LoginUser(suUser, nil)

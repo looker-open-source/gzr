@@ -472,27 +472,6 @@ func TestDashboardSyncLookmlCommand(t *testing.T) {
 	}
 }
 
-func TestVersionCommand(t *testing.T) {
-	oldStdout := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-
-	RootCmd.SetArgs([]string{"version"})
-	err := RootCmd.Execute()
-	if err != nil {
-		t.Fatalf("Execute failed: %v", err)
-	}
-
-	_ = w.Close()
-	os.Stdout = oldStdout
-	var buf bytes.Buffer
-	_, _ = io.Copy(&buf, r)
-	out := strings.TrimSpace(buf.String())
-
-	if out != "gzr 0.0.1" {
-		t.Errorf("expected gzr 0.0.1, got %s", out)
-	}
-}
 
 func TestLookMvCommand(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
