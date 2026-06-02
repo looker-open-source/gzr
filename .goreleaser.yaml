@@ -8,3 +8,13 @@ builds:
     goarch:
       - amd64
       - arm64
+
+# Disable GoReleaser's changelog since release-please handles it beautifully
+changelog:
+  disable: true
+
+release:
+  # Tell GoReleaser not to overwrite the release-please notes.
+  # By default it is 'keep-existing', but being explicit is safer.
+  # You can also use 'append' if you want GoReleaser to add checksums at the bottom.
+  mode: keep-existing
