@@ -1,0 +1,33 @@
+name: Release Go Project
+
+on:
+  push:
+    tags:
+      - '*' # Triggers workflow on any new tag
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+
+    # 🔒 Granular Permissions Block
+    permissions:
+      contents: write # Required to create a GitHub Release and upload artifacts
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Important: GoReleaser needs full history to generate changelogs
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          version: latest
+          args: release --clean
+        env:
+          # This token is automatically provided by GitHub Actions
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
