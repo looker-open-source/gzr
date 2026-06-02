@@ -16,7 +16,11 @@ package client
 
 import (
 	"context"
+	"crypto/tls"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -77,7 +81,7 @@ func NewClient(ctx context.Context, host, port, clientID, clientSecret, token, s
 		if expired && entry.RefreshToken != "" {
 			cID := entry.ClientID
 			if cID == "" {
-				cID = "gzr"
+				cID = determineOAuthClientID(ctx, host, port, ssl, verifySSL)
 			}
 			tok, refTok, newExp, err := RefreshOAuthToken(ctx, host, port, cID, entry.RefreshToken, ssl)
 			if err == nil {
@@ -93,7 +97,7 @@ func NewClient(ctx context.Context, host, port, clientID, clientSecret, token, s
 		}
 	} else if oauth {
 		if clientID == "" {
-			clientID = "gzr"
+			clientID = determineOAuthClientID(ctx, host, port, ssl, verifySSL)
 		}
 		tok, refTok, exp, err := PerformOAuthLogin(ctx, host, port, clientID, ssl)
 		if err != nil {
@@ -195,4 +199,80 @@ func (c *ClientWrapper) ExplicitLogin(clientID, clientSecret string) (string, ti
 func (c *ClientWrapper) Logout() error {
 	_, err := c.SDK.Logout(nil)
 	return err
+}
+
+type swaggerInfo struct {
+	Info struct {
+		ReleaseVersion string `json:"x-looker-release-version"`
+	} `json:"info"`
+}
+
+func determineOAuthClientID(ctx context.Context, host, port string, ssl, verifySSL bool) string {
+	version, err := fetchLookerVersion(ctx, host, port, ssl, verifySSL)
+	if err != nil {
+		// Default fallback on failure
+		return "com.looker.cli"
+	}
+	if compareVersionLessThanOrEqual26_8(version) {
+		return "gzr"
+	}
+	return "com.looker.cli"
+}
+
+func fetchLookerVersion(ctx context.Context, host, port string, ssl, verifySSL bool) (string, error) {
+	scheme := "https"
+	if !ssl {
+		scheme = "http"
+	}
+	u := fmt.Sprintf("%s://%s:%s/api/4.0/swagger.json", scheme, host, port)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", u, nil)
+	if err != nil {
+		return "", err
+	}
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: !verifySSL},
+	}
+	client := &http.Client{
+		Transport: tr,
+		Timeout:   10 * time.Second,
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("failed to fetch swagger.json, status: %s", resp.Status)
+	}
+
+	var info swaggerInfo
+	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
+		return "", err
+	}
+
+	return info.Info.ReleaseVersion, nil
+}
+
+func compareVersionLessThanOrEqual26_8(versionStr string) bool {
+	// E.g. "26.8.9" or "25.20.1"
+	parts := strings.Split(versionStr, ".")
+	if len(parts) < 2 {
+		return false
+	}
+	major, err1 := strconv.Atoi(parts[0])
+	minor, err2 := strconv.Atoi(parts[1])
+	if err1 != nil || err2 != nil {
+		return false
+	}
+	if major < 26 {
+		return true
+	}
+	if major == 26 && minor <= 8 {
+		return true
+	}
+	return false
 }

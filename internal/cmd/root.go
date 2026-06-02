@@ -17,6 +17,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -42,9 +43,9 @@ var (
 )
 
 var RootCmd = &cobra.Command{
-	Use:   "gzr",
-	Short: "Gazer - A Looker Content Utility",
-	Long:  `Gazer can be used to navigate and manage Spaces, Looks, and Dashboards via a simple command line tool.`,
+	Use:   "looker",
+	Short: "Looker CLI - A Looker Content Utility",
+	Long:  `Looker CLI can be used to navigate and manage Spaces, Looks, and Dashboards via a simple command line tool.`,
 }
 
 func Execute() {
@@ -77,16 +78,42 @@ func initClient(ctx context.Context, oauth bool) (*client.ClientWrapper, error) 
 	if MockSDK != nil {
 		return &client.ClientWrapper{SDK: MockSDK, Host: cfgHost, SuUser: cfgSuUser}, nil
 	}
+
+	host := cfgHost
+	if !RootCmd.PersistentFlags().Lookup("host").Changed {
+		if envURL := os.Getenv("LOOKERSDK_BASE_URL"); envURL != "" {
+			if u, err := url.Parse(envURL); err == nil && u.Hostname() != "" {
+				host = u.Hostname()
+			}
+		}
+	}
+
+	port := cfgPort
+	if !RootCmd.PersistentFlags().Lookup("port").Changed {
+		if envURL := os.Getenv("LOOKERSDK_BASE_URL"); envURL != "" {
+			if u, err := url.Parse(envURL); err == nil && u.Port() != "" {
+				port = u.Port()
+			}
+		}
+	}
+
+	verifySSL := cfgVerifySSL
+	if !RootCmd.PersistentFlags().Lookup("verify-ssl").Changed {
+		if envVerify := os.Getenv("LOOKERSDK_VERIFY_SSL"); envVerify == "false" {
+			verifySSL = false
+		}
+	}
+
 	return client.NewClient(
 		ctx,
-		cfgHost,
-		cfgPort,
+		host,
+		port,
 		cfgClientID,
 		cfgClientSecret,
 		cfgToken,
 		cfgSuUser,
 		cfgSSL,
-		cfgVerifySSL,
+		verifySSL,
 		oauth,
 		cfgTokenFile,
 	)

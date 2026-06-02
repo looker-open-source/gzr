@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -875,4 +876,97 @@ func TestSpaceTopCommand(t *testing.T) {
 	if strings.Contains(out, "Personal Space") {
 		t.Errorf("unexpected Personal Space in top-level folders, got:\n%s", out)
 	}
+}
+
+func TestInitClient_EnvVars(t *testing.T) {
+	// Clean up existing environment variables at end of test
+	origBase := os.Getenv("LOOKERSDK_BASE_URL")
+	origVerify := os.Getenv("LOOKERSDK_VERIFY_SSL")
+	defer func() {
+		_ = os.Setenv("LOOKERSDK_BASE_URL", origBase)
+		_ = os.Setenv("LOOKERSDK_VERIFY_SSL", origVerify)
+	}()
+
+	// Reset flags to their default values
+	_ = RootCmd.PersistentFlags().Set("host", "localhost")
+	_ = RootCmd.PersistentFlags().Set("port", "19999")
+	_ = RootCmd.PersistentFlags().Set("verify-ssl", "true")
+	
+	// Reset flag "changed" statuses to false by creating a fresh Command instance or modifying manually
+	// Cobra doesn't let us easily reset "Changed" without clearing flags, but we can check the behavior
+	// by parsing a clean argument list or just executing in isolation.
+	// Let's make sure they are considered UNCHANGED. We can do this by resetting the Command state.
+	RootCmd.PersistentFlags().Lookup("host").Changed = false
+	RootCmd.PersistentFlags().Lookup("port").Changed = false
+	RootCmd.PersistentFlags().Lookup("verify-ssl").Changed = false
+
+	t.Run("Environment variables fallbacks when flags are omitted", func(t *testing.T) {
+		_ = os.Setenv("LOOKERSDK_BASE_URL", "https://env-host-name.com:8888")
+		_ = os.Setenv("LOOKERSDK_VERIFY_SSL", "false")
+
+		// Initialize client wrapper (uses mock since MockSDK is nil, it tries to create a real one,
+		// but wait: if MockSDK is nil, client.NewClient will try to read from token file or login,
+		// which might error if there is no active login.
+		// Let's temporarily set MockSDK to bypass actual login, but wait:
+		// if MockSDK != nil, initClient bypasses NewClient completely and returns:
+		// &client.ClientWrapper{SDK: MockSDK, Host: cfgHost, SuUser: cfgSuUser}
+		// In that case, it doesn't use the parsed env values!
+		// So to test NewClient's parsing logic, we must allow client.NewClient to run.
+		// To allow client.NewClient to run without actual API calls or file reads, we can mock the token environment.
+		// Let's point HOME to a temp dir so it sees no token file, and bypass login since we aren't using oauth.
+		// If oauth=false and no client ID is set, client.NewClient will check netrc or env.
+		// Let's make sure we set clientID and clientSecret in env so it compiles settings successfully.
+		_ = os.Setenv("LOOKERSDK_CLIENT_ID", "dummy")
+		_ = os.Setenv("LOOKERSDK_CLIENT_SECRET", "dummy")
+		defer func() {
+			_ = os.Unsetenv("LOOKERSDK_CLIENT_ID")
+			_ = os.Unsetenv("LOOKERSDK_CLIENT_SECRET")
+		}()
+
+		wrapper, err := initClient(context.Background(), false)
+		if err != nil {
+			t.Fatalf("initClient failed: %v", err)
+		}
+
+		if wrapper.Host != "env-host-name.com" {
+			t.Errorf("expected host 'env-host-name.com' from env, got '%s'", wrapper.Host)
+		}
+		if wrapper.Session.Config.BaseUrl != "https://env-host-name.com:8888" {
+			t.Errorf("expected base URL 'https://env-host-name.com:8888', got '%s'", wrapper.Session.Config.BaseUrl)
+		}
+		if wrapper.Session.Config.VerifySsl {
+			t.Errorf("expected verifySSL to be false from env, got true")
+		}
+	})
+
+	t.Run("Explicit flags take precedence over environment variables", func(t *testing.T) {
+		_ = os.Setenv("LOOKERSDK_BASE_URL", "https://env-host-name.com:8888")
+		_ = os.Setenv("LOOKERSDK_VERIFY_SSL", "false")
+		_ = os.Setenv("LOOKERSDK_CLIENT_ID", "dummy")
+		_ = os.Setenv("LOOKERSDK_CLIENT_SECRET", "dummy")
+		defer func() {
+			_ = os.Unsetenv("LOOKERSDK_CLIENT_ID")
+			_ = os.Unsetenv("LOOKERSDK_CLIENT_SECRET")
+		}()
+
+		// Explicitly set flags
+		_ = RootCmd.PersistentFlags().Set("host", "flag-host.com")
+		_ = RootCmd.PersistentFlags().Set("port", "1111")
+		_ = RootCmd.PersistentFlags().Set("verify-ssl", "true")
+
+		wrapper, err := initClient(context.Background(), false)
+		if err != nil {
+			t.Fatalf("initClient failed: %v", err)
+		}
+
+		if wrapper.Host != "flag-host.com" {
+			t.Errorf("expected host 'flag-host.com' from flag, got '%s'", wrapper.Host)
+		}
+		if wrapper.Session.Config.BaseUrl != "https://flag-host.com:1111" {
+			t.Errorf("expected base URL 'https://flag-host.com:1111', got '%s'", wrapper.Session.Config.BaseUrl)
+		}
+		if !wrapper.Session.Config.VerifySsl {
+			t.Errorf("expected verifySSL to be true from flag, got false")
+		}
+	})
 }

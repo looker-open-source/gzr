@@ -65,7 +65,7 @@ jobs:
         run: go mod download
 
       - name: Build the executable
-        run: go build -o gzr ./cmd/gzr
+        run: go build -o looker ./cmd/looker
 
       - name: Run unit tests
         run: go run gotest.tools/gotestsum@latest --junitfile report.xml -- ./...
@@ -98,7 +98,7 @@ jobs:
 
       - name: Login persistently
         run: |
-          ./gzr --host localhost --port 20000 --verify-ssl=false session login
+          ./looker session login
 
       - name: Create Connection
         run: |
@@ -125,16 +125,16 @@ jobs:
             "password": "${{ secrets.FAA_MYSQL_PASSWORD }}"
           }
           HERE
-          ./gzr --host localhost --port 20000 --verify-ssl=false connection import Connection_faa_mysql.json --token-file
+          ./looker connection import Connection_faa_mysql.json --token-file
 
       - name: Test Connection
         run: |
-          ./gzr --host localhost --port 20000 --verify-ssl=false connection test faa --token-file
+          ./looker connection test faa --token-file
 
       - name: Change the session to dev mode
         run: |
-          ./gzr --host localhost --port 20000 --verify-ssl=false session get --token-file
-          ./gzr --host localhost --port 20000 --verify-ssl=false session update dev --token-file
+          ./looker session get --token-file
+          ./looker session update dev --token-file
 
       - name: Import the project
         run: |
@@ -144,11 +144,11 @@ jobs:
             "uses_git": true
           }
           HERE
-          ./gzr --host localhost --port 20000 --verify-ssl=false project import Project_faa.json --token-file
+          ./looker project import Project_faa.json --token-file
 
       - name: Create a deploy key and set it on the github repo for the project
         run: |
-          DEPLOY_KEY=$(./gzr --host localhost --port 20000 --verify-ssl=false project deploy_key faa --token-file)
+          DEPLOY_KEY=$(./looker project deploy_key faa --token-file)
           echo $DEPLOY_KEY
           SET_KEY_RESPONSE=$(
           curl -L \
@@ -170,23 +170,23 @@ jobs:
             "git_service_name": "github"
           }
           HERE
-          ./gzr --host localhost --port 20000 --verify-ssl=false project update faa github_repo.json --token-file
+          ./looker project update faa github_repo.json --token-file
 
       - name: Check the project config
         run: |
-          ./gzr --host localhost --port 20000 --verify-ssl=false project cat faa --trim --token-file
+          ./looker project cat faa --trim --token-file
 
       - name: Check available branches for faa project
         run: |
-          ./gzr --host localhost --port 20000 --verify-ssl=false project branch faa --all --token-file
+          ./looker project branch faa --all --token-file
 
       - name: Checkout a shared branch
         run: |
-          ./gzr --host localhost --port 20000 --verify-ssl=false project checkout faa main --token-file
+          ./looker project checkout faa main --token-file
 
       - name: Deploy to production
         run: |
-          ./gzr --host localhost --port 20000 --verify-ssl=false project deploy faa --token-file
+          ./looker project deploy faa --token-file
 
       - name: Configure lookml model
         run: |
@@ -200,7 +200,7 @@ jobs:
             ]
           }
           HERE
-          ./gzr --host localhost --port 20000 --verify-ssl=false model import Model_faa.json --token-file
+          ./looker model import Model_faa.json --token-file
 
       - name: run a query against the model
         run: |
@@ -219,14 +219,14 @@ jobs:
             "limit": "500"
           }
           HERE
-          ./gzr --host localhost --port 20000 --verify-ssl=false query runquery "$(cat query.json)"
+          ./looker query runquery "$(cat query.json)"
 
       - name: Load a dashboard
         run: |
-          me=$(./gzr --host localhost --port 20000 --verify-ssl=false user me --csv --plain)
+          me=$(./looker user me --csv --plain)
           echo $me
           dest_folder=$(cut -d, -f5 <<< $me | sed 's/"//g')
-          ./gzr --host localhost --port 20000 --verify-ssl=false dashboard import examples/Dashboard_17_FAA_KPIs.json $dest_folder
+          ./looker dashboard import examples/Dashboard_17_FAA_KPIs.json $dest_folder
 
       - name: Remove the deploy key from the github repo
         if: ${{ always() }}

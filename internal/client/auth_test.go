@@ -110,3 +110,26 @@ func TestTokenStorage_Expired(t *testing.T) {
 		t.Errorf("expected error for expired token")
 	}
 }
+
+func TestCompareVersionLessThanOrEqual26_8(t *testing.T) {
+	tests := []struct {
+		version  string
+		expected bool
+	}{
+		{"25.20.0", true},
+		{"26.8.0", true},
+		{"26.8.9", true},
+		{"26.9.0", false},
+		{"26.20.1", false},
+		{"27.1.0", false},
+		{"invalid", false},
+		{"", false},
+	}
+
+	for _, tt := range tests {
+		res := compareVersionLessThanOrEqual26_8(tt.version)
+		if res != tt.expected {
+			t.Errorf("for version %q, expected %v, got %v", tt.version, tt.expected, res)
+		}
+	}
+}

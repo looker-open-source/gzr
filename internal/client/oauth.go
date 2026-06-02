@@ -31,8 +31,8 @@ import (
 )
 
 const (
-	redirectPort = "8080"
-	redirectURI  = "http://localhost:" + redirectPort + "/callback"
+	redirectPort = "7777"
+	redirectURI  = "http://127.0.0.1:" + redirectPort
 )
 
 type tokenResponse struct {
@@ -91,11 +91,11 @@ func PerformOAuthLogin(ctx context.Context, host, port, clientID string, ssl boo
 
 	mux := http.NewServeMux()
 	srv := &http.Server{
-		Addr:    ":" + redirectPort,
+		Addr:    "127.0.0.1:" + redirectPort,
 		Handler: mux,
 	}
 
-	mux.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		code := r.URL.Query().Get("code")
 		if code == "" {
 			errDesc := r.URL.Query().Get("error_description")

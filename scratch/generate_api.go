@@ -238,7 +238,7 @@ import (
 var ApiCmd = &cobra.Command{
 	Use:   "api",
 	Short: "Make raw Looker API calls based on Swagger spec",
-	Long:  "Make raw Looker API calls based on Swagger spec. Use 'gzr api help' to list categories.",
+	Long:  "Make raw Looker API calls based on Swagger spec. Use 'looker api help' to list categories.",
 }
 
 func init() {

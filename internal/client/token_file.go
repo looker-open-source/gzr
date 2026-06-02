@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	tokenFileName = ".gzr_auth"
+	tokenFileName = ".looker_auth"
 	TimeFormat    = "2006-01-02 15:04:05 -0700"
 )
 
