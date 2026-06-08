@@ -1932,7 +1932,7 @@ var apiBoardCreateBoardCmd = &cobra.Command{
 	},
 }
 
-const apiBoardCreateBoardCmdBodySchema = "{\n  \"properties\": {\n    \"deleted_at\": {\n      \"description\": \"Date of board deletion\",\n      \"format\": \"date-time\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"description\": {\n      \"description\": \"Description of the board\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"section_order\": {\n      \"description\": \"ids of the board sections in the order they should be displayed\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Title of the board\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+const apiBoardCreateBoardCmdBodySchema = "{\n  \"properties\": {\n    \"deleted_at\": {\n      \"description\": \"Date of board deletion\",\n      \"format\": \"date-time\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"description\": {\n      \"description\": \"Description of the board\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"section_order\": {\n      \"description\": \"ids of the board sections in the order they should be displayed\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Title of the board\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id\": {\n      \"description\": \"User id of board creator\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
 
 func init() {
 	apiBoardCmd.AddCommand(apiBoardCreateBoardCmd)
@@ -2158,7 +2158,7 @@ var apiBoardUpdateBoardCmd = &cobra.Command{
 	},
 }
 
-const apiBoardUpdateBoardCmdBodySchema = "{\n  \"properties\": {\n    \"deleted_at\": {\n      \"description\": \"Date of board deletion\",\n      \"format\": \"date-time\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"description\": {\n      \"description\": \"Description of the board\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"section_order\": {\n      \"description\": \"ids of the board sections in the order they should be displayed\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Title of the board\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+const apiBoardUpdateBoardCmdBodySchema = "{\n  \"properties\": {\n    \"deleted_at\": {\n      \"description\": \"Date of board deletion\",\n      \"format\": \"date-time\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"description\": {\n      \"description\": \"Description of the board\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"section_order\": {\n      \"description\": \"ids of the board sections in the order they should be displayed\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Title of the board\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id\": {\n      \"description\": \"User id of board creator\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
 
 func init() {
 	apiBoardCmd.AddCommand(apiBoardUpdateBoardCmd)
@@ -4223,7 +4223,7 @@ var apiConversationalAnalyticsCreateAgentCmd = &cobra.Command{
 	},
 }
 
-const apiConversationalAnalyticsCreateAgentCmdBodySchema = "{\n  \"properties\": {\n    \"category\": {\n      \"description\": \"The category of the agent (e.g., dashboard, conversation)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"code_interpreter\": {\n      \"description\": \"Enables Code Interpreter for this Agent\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"context\": {\n      \"$ref\": \"#/definitions/Context\",\n      \"description\": \"Agent context\",\n      \"x-looker-nullable\": true\n    },\n    \"deleted\": {\n      \"description\": \"Is Agent soft deleted\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"description\": {\n      \"description\": \"Agent description\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"name\": {\n      \"description\": \"Agent name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"sources\": {\n      \"description\": \"Agent sources\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Source\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"beta\"\n}"
+const apiConversationalAnalyticsCreateAgentCmdBodySchema = "{\n  \"properties\": {\n    \"category\": {\n      \"description\": \"The category of the agent (e.g., dashboard, conversation)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"code_interpreter\": {\n      \"description\": \"Enables Code Interpreter for this Agent\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"context\": {\n      \"$ref\": \"#/definitions/Context\",\n      \"description\": \"Agent context\",\n      \"x-looker-nullable\": true\n    },\n    \"created_by_user_id\": {\n      \"description\": \"User that created the Agent\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"deleted\": {\n      \"description\": \"Is Agent soft deleted\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"description\": {\n      \"description\": \"Agent description\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"golden_query_ids\": {\n      \"description\": \"IDs of golden queries linked to the agent\",\n      \"items\": {\n        \"format\": \"int64\",\n        \"type\": \"integer\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Agent name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"sources\": {\n      \"description\": \"Agent sources\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Source\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": false\n    },\n    \"workflow_params\": {\n      \"$ref\": \"#/definitions/WorkflowParams\",\n      \"description\": \"Workflow parameters\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"beta\"\n}"
 
 func init() {
 	apiConversationalAnalyticsCmd.AddCommand(apiConversationalAnalyticsCreateAgentCmd)
@@ -4295,6 +4295,33 @@ func init() {
 	apiConversationalAnalyticsCreateConversationMessageCmd.Flags().String("fields", "", "Requested fields")
 }
 
+var apiConversationalAnalyticsCreateGoldenQueryCmd = &cobra.Command{
+	Use:   "create_golden_query [BODY_JSON_FILE_OR_-]",
+	Short: "Create Golden Query",
+	Long:  "### Create Golden Query\n\nCreates a golden query.\n",
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConversationalAnalyticsCreateGoldenQueryCmdBodySchema)
+			return nil
+		}
+		queryParams := make(map[string]string)
+		return executeApiCallGeneric(cmd, "POST", "/golden_queries", []string{}, []string{}, "body", queryParams, args)
+	},
+}
+
+const apiConversationalAnalyticsCreateGoldenQueryCmdBodySchema = "{\n  \"properties\": {\n    \"answer\": {\n      \"description\": \"The Explore URL representing the answer to the question\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"is_active\": {\n      \"description\": \"Whether this golden question should be utilized by the agent\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"questions\": {\n      \"description\": \"Variations of the golden question text\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"beta\"\n}"
+
+func init() {
+	apiConversationalAnalyticsCmd.AddCommand(apiConversationalAnalyticsCreateGoldenQueryCmd)
+	apiConversationalAnalyticsCreateGoldenQueryCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
+}
+
 var apiConversationalAnalyticsDeleteAgentCmd = &cobra.Command{
 	Use:   "delete_agent [ID]",
 	Short: "Delete Agent",
@@ -4353,6 +4380,21 @@ var apiConversationalAnalyticsDeleteConversationMessageCmd = &cobra.Command{
 func init() {
 	apiConversationalAnalyticsCmd.AddCommand(apiConversationalAnalyticsDeleteConversationMessageCmd)
 	apiConversationalAnalyticsDeleteConversationMessageCmd.Flags().String("fields", "", "Requested fields")
+}
+
+var apiConversationalAnalyticsDeleteGoldenQueryCmd = &cobra.Command{
+	Use:   "delete_golden_query [GOLDEN_QUERY_ID]",
+	Short: "Delete Golden Query",
+	Long:  "### Delete Golden Query\n\nDeletes a golden query by ID.\n",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		queryParams := make(map[string]string)
+		return executeApiCallGeneric(cmd, "DELETE", "/golden_queries/{golden_query_id}", []string{"golden_query_id"}, []string{}, "", queryParams, args)
+	},
+}
+
+func init() {
+	apiConversationalAnalyticsCmd.AddCommand(apiConversationalAnalyticsDeleteGoldenQueryCmd)
 }
 
 var apiConversationalAnalyticsGetAgentCmd = &cobra.Command{
@@ -4466,6 +4508,10 @@ var apiConversationalAnalyticsSearchAgentsCmd = &cobra.Command{
 			val, _ := cmd.Flags().GetString("offset")
 			queryParams["offset"] = val
 		}
+		if cmd.Flags().Changed("primary_agent_id") {
+			val, _ := cmd.Flags().GetString("primary_agent_id")
+			queryParams["primary_agent_id"] = val
+		}
 		if cmd.Flags().Changed("sorts") {
 			val, _ := cmd.Flags().GetString("sorts")
 			queryParams["sorts"] = val
@@ -4487,6 +4533,7 @@ func init() {
 	apiConversationalAnalyticsSearchAgentsCmd.Flags().String("name", "", "Match agent name.")
 	apiConversationalAnalyticsSearchAgentsCmd.Flags().Bool("not_owned_by", false, "Filter out the agents owned by the user passed at the :created_by_user_id params")
 	apiConversationalAnalyticsSearchAgentsCmd.Flags().String("offset", "", "Number of results to skip before returning. (used with limit)")
+	apiConversationalAnalyticsSearchAgentsCmd.Flags().String("primary_agent_id", "", "Match workflow agents with a particular primary agent (parent). Pass \"null\" to find agents with no primary agent.")
 	apiConversationalAnalyticsSearchAgentsCmd.Flags().String("sorts", "", "One or more fields to sort by. Sortable fields: [:id, :name, :description, :created_by_user_id, :created_at, :content_metadata_id, :category]")
 }
 
@@ -4579,7 +4626,7 @@ var apiConversationalAnalyticsUpdateAgentCmd = &cobra.Command{
 	},
 }
 
-const apiConversationalAnalyticsUpdateAgentCmdBodySchema = "{\n  \"properties\": {\n    \"category\": {\n      \"description\": \"The category of the agent (e.g., dashboard, conversation)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"code_interpreter\": {\n      \"description\": \"Enables Code Interpreter for this Agent\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"context\": {\n      \"$ref\": \"#/definitions/Context\",\n      \"description\": \"Agent context\",\n      \"x-looker-nullable\": true\n    },\n    \"deleted\": {\n      \"description\": \"Is Agent soft deleted\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"description\": {\n      \"description\": \"Agent description\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"name\": {\n      \"description\": \"Agent name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"sources\": {\n      \"description\": \"Agent sources\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Source\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"beta\"\n}"
+const apiConversationalAnalyticsUpdateAgentCmdBodySchema = "{\n  \"properties\": {\n    \"category\": {\n      \"description\": \"The category of the agent (e.g., dashboard, conversation)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"code_interpreter\": {\n      \"description\": \"Enables Code Interpreter for this Agent\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"context\": {\n      \"$ref\": \"#/definitions/Context\",\n      \"description\": \"Agent context\",\n      \"x-looker-nullable\": true\n    },\n    \"created_by_user_id\": {\n      \"description\": \"User that created the Agent\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"deleted\": {\n      \"description\": \"Is Agent soft deleted\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"description\": {\n      \"description\": \"Agent description\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"golden_query_ids\": {\n      \"description\": \"IDs of golden queries linked to the agent\",\n      \"items\": {\n        \"format\": \"int64\",\n        \"type\": \"integer\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": true\n    },\n    \"name\": {\n      \"description\": \"Agent name\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"sources\": {\n      \"description\": \"Agent sources\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Source\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": false\n    },\n    \"workflow_params\": {\n      \"$ref\": \"#/definitions/WorkflowParams\",\n      \"description\": \"Workflow parameters\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"beta\"\n}"
 
 func init() {
 	apiConversationalAnalyticsCmd.AddCommand(apiConversationalAnalyticsUpdateAgentCmd)
@@ -4649,6 +4696,33 @@ func init() {
 	apiConversationalAnalyticsCmd.AddCommand(apiConversationalAnalyticsUpdateConversationMessageCmd)
 	apiConversationalAnalyticsUpdateConversationMessageCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiConversationalAnalyticsUpdateConversationMessageCmd.Flags().String("fields", "", "Requested fields")
+}
+
+var apiConversationalAnalyticsUpdateGoldenQueryCmd = &cobra.Command{
+	Use:   "update_golden_query [GOLDEN_QUERY_ID] [BODY_JSON_FILE_OR_-]",
+	Short: "Update Golden Query",
+	Long:  "### Update Golden Query\n\nUpdates a golden query.\n",
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(2)(cmd, args)
+	},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiConversationalAnalyticsUpdateGoldenQueryCmdBodySchema)
+			return nil
+		}
+		queryParams := make(map[string]string)
+		return executeApiCallGeneric(cmd, "PATCH", "/golden_queries/{golden_query_id}", []string{"golden_query_id"}, []string{}, "body", queryParams, args)
+	},
+}
+
+const apiConversationalAnalyticsUpdateGoldenQueryCmdBodySchema = "{\n  \"properties\": {\n    \"answer\": {\n      \"description\": \"The Explore URL representing the answer to the question\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": false\n    },\n    \"is_active\": {\n      \"description\": \"Whether this golden question should be utilized by the agent\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"questions\": {\n      \"description\": \"Variations of the golden question text\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"type\": \"array\",\n      \"x-looker-nullable\": false\n    }\n  },\n  \"x-looker-status\": \"beta\"\n}"
+
+func init() {
+	apiConversationalAnalyticsCmd.AddCommand(apiConversationalAnalyticsUpdateGoldenQueryCmd)
+	apiConversationalAnalyticsUpdateGoldenQueryCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 // Dashboard category
@@ -4721,7 +4795,7 @@ var apiDashboardCreateDashboardCmd = &cobra.Command{
 	},
 }
 
-const apiDashboardCreateDashboardCmdBodySchema = "{\n  \"properties\": {\n    \"alert_sync_with_dashboard_filter_enabled\": {\n      \"description\": \"Enables alerts to keep in sync with dashboard filter changes\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"appearance\": {\n      \"$ref\": \"#/definitions/DashboardAppearance\",\n      \"description\": \"Dashboard visual settings only applicable to dashboards-next (beta)\",\n      \"x-looker-nullable\": true\n    },\n    \"background_color\": {\n      \"description\": \"Background color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"crossfilter_enabled\": {\n      \"description\": \"Enables crossfiltering in dashboards - only available in dashboards-next (beta)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"deleted\": {\n      \"description\": \"Whether or not a dashboard is 'soft' deleted.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"description\": {\n      \"description\": \"Description\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"download_settings\": {\n      \"$ref\": \"#/definitions/DashboardDownloadSettings\",\n      \"description\": \"Default download settings for the tiles on the dashboard.\",\n      \"x-looker-nullable\": true\n    },\n    \"enable_viz_full_screen\": {\n      \"description\": \"Allow visualizations to be viewed in full screen mode\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_bar_collapsed\": {\n      \"description\": \"Sets the default state of the filters bar to collapsed or open\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_location_top\": {\n      \"description\": \"Sets the default state of the filters location to top(true) or right(false)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"folder_id\": {\n      \"description\": \"Id of folder\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"hidden\": {\n      \"description\": \"Is Hidden\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"load_configuration\": {\n      \"description\": \"configuration option that governs how dashboard loading will happen.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"lookml_link_id\": {\n      \"description\": \"Links this dashboard to a particular LookML dashboard such that calling a **sync** operation on that LookML dashboard will update this dashboard to match.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"preferred_viewer\": {\n      \"description\": \"The preferred route for viewing this dashboard (ie: dashboards or dashboards-next)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"query_timezone\": {\n      \"description\": \"Timezone in which the Dashboard will run by default.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"refresh_interval\": {\n      \"description\": \"Refresh Interval, as a time duration phrase like \\\"2 hours 30 minutes\\\". A number with no time units will be interpreted as whole seconds.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"show_filters_bar\": {\n      \"description\": \"Show filters bar.  **Security Note:** This property only affects the *cosmetic* appearance of the dashboard, not a user's ability to access data. Hiding the filters bar does **NOT** prevent users from changing filters by other means. For information on how to set up secure data access control policies, see [Control User Access to Data](https://docs.cloud.google.com/looker/docs/r/api/control-access)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"show_title\": {\n      \"description\": \"Show title\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"slug\": {\n      \"description\": \"Content Metadata Slug\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"text_tile_text_color\": {\n      \"description\": \"Color of text on text tiles\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tile_background_color\": {\n      \"description\": \"Tile background color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tile_text_color\": {\n      \"description\": \"Tile text color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Dashboard Title\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title_color\": {\n      \"description\": \"Title color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id\": {\n      \"description\": \"Id of User\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+const apiDashboardCreateDashboardCmdBodySchema = "{\n  \"properties\": {\n    \"alert_sync_with_dashboard_filter_enabled\": {\n      \"description\": \"Enables alerts to keep in sync with dashboard filter changes\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"appearance\": {\n      \"$ref\": \"#/definitions/DashboardAppearance\",\n      \"description\": \"Dashboard visual settings only applicable to dashboards-next (beta)\",\n      \"x-looker-nullable\": true\n    },\n    \"background_color\": {\n      \"description\": \"Background color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"chat_enabled\": {\n      \"description\": \"Whether chat is enabled for this dashboard\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"crossfilter_enabled\": {\n      \"description\": \"Enables crossfiltering in dashboards - only available in dashboards-next (beta)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"deleted\": {\n      \"description\": \"Whether or not a dashboard is 'soft' deleted.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"description\": {\n      \"description\": \"Description\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"download_settings\": {\n      \"$ref\": \"#/definitions/DashboardDownloadSettings\",\n      \"description\": \"Default download settings for the tiles on the dashboard.\",\n      \"x-looker-nullable\": true\n    },\n    \"enable_viz_full_screen\": {\n      \"description\": \"Allow visualizations to be viewed in full screen mode\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_bar_collapsed\": {\n      \"description\": \"Sets the default state of the filters bar to collapsed or open\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_location_top\": {\n      \"description\": \"Sets the default state of the filters location to top(true) or right(false)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"folder_id\": {\n      \"description\": \"Id of folder\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"hidden\": {\n      \"description\": \"Is Hidden\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"load_configuration\": {\n      \"description\": \"configuration option that governs how dashboard loading will happen.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"lookml_link_id\": {\n      \"description\": \"Links this dashboard to a particular LookML dashboard such that calling a **sync** operation on that LookML dashboard will update this dashboard to match.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"preferred_viewer\": {\n      \"description\": \"The preferred route for viewing this dashboard (ie: dashboards or dashboards-next)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"preserve_desktop_layout\": {\n      \"description\": \"Whether to preserve the desktop layout on mobile viewports. i.e. don't force a single column layout on mobile.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"query_timezone\": {\n      \"description\": \"Timezone in which the Dashboard will run by default.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"refresh_interval\": {\n      \"description\": \"Refresh Interval, as a time duration phrase like \\\"2 hours 30 minutes\\\". A number with no time units will be interpreted as whole seconds.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"show_filters_bar\": {\n      \"description\": \"Show filters bar.  **Security Note:** This property only affects the *cosmetic* appearance of the dashboard, not a user's ability to access data. Hiding the filters bar does **NOT** prevent users from changing filters by other means. For information on how to set up secure data access control policies, see [Control User Access to Data](https://docs.cloud.google.com/looker/docs/r/api/control-access)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"show_title\": {\n      \"description\": \"Show title\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"slug\": {\n      \"description\": \"Content Metadata Slug\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"text_tile_text_color\": {\n      \"description\": \"Color of text on text tiles\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tile_background_color\": {\n      \"description\": \"Tile background color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tile_text_color\": {\n      \"description\": \"Tile text color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Dashboard Title\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title_color\": {\n      \"description\": \"Title color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id\": {\n      \"description\": \"Id of User\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
 
 func init() {
 	apiDashboardCmd.AddCommand(apiDashboardCreateDashboardCmd)
@@ -4795,6 +4869,33 @@ func init() {
 	apiDashboardCmd.AddCommand(apiDashboardCreateDashboardFilterCmd)
 	apiDashboardCreateDashboardFilterCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 	apiDashboardCreateDashboardFilterCmd.Flags().String("fields", "", "Requested fields")
+}
+
+var apiDashboardCreateDashboardFilterStateCmd = &cobra.Command{
+	Use:   "create_dashboard_filter_state [BODY_JSON_FILE_OR_-]",
+	Short: "Create Dashboard Filter State",
+	Long:  "### Create Dashboard Filter State\nSaves the filter state and returns a GUID.\n",
+	Args: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			return nil
+		}
+		return cobra.ExactArgs(1)(cmd, args)
+	},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if val, _ := cmd.Flags().GetBool("describe-body"); val {
+			fmt.Println(apiDashboardCreateDashboardFilterStateCmdBodySchema)
+			return nil
+		}
+		queryParams := make(map[string]string)
+		return executeApiCallGeneric(cmd, "POST", "/dashboard_filter_state", []string{}, []string{}, "body", queryParams, args)
+	},
+}
+
+const apiDashboardCreateDashboardFilterStateCmdBodySchema = ""
+
+func init() {
+	apiDashboardCmd.AddCommand(apiDashboardCreateDashboardFilterStateCmd)
+	apiDashboardCreateDashboardFilterStateCmd.Flags().Bool("describe-body", false, "Describe the JSON schema expected in the body")
 }
 
 var apiDashboardCreateDashboardFromLookmlCmd = &cobra.Command{
@@ -4991,6 +5092,21 @@ func init() {
 	apiDashboardDashboardFilterCmd.Flags().String("fields", "", "Requested fields.")
 }
 
+var apiDashboardDashboardFilterStateCmd = &cobra.Command{
+	Use:   "dashboard_filter_state [GUID]",
+	Short: "Get Dashboard Filter State",
+	Long:  "### Get Dashboard Filter State\nReturns the stored filter state for a given GUID.\n",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		queryParams := make(map[string]string)
+		return executeApiCallGeneric(cmd, "GET", "/dashboard_filter_state/{guid}", []string{"guid"}, []string{}, "", queryParams, args)
+	},
+}
+
+func init() {
+	apiDashboardCmd.AddCommand(apiDashboardDashboardFilterStateCmd)
+}
+
 var apiDashboardDashboardLayoutCmd = &cobra.Command{
 	Use:   "dashboard_layout [DASHBOARD_LAYOUT_ID]",
 	Short: "Get DashboardLayout",
@@ -5177,7 +5293,7 @@ var apiDashboardImportLookmlDashboardCmd = &cobra.Command{
 	},
 }
 
-const apiDashboardImportLookmlDashboardCmdBodySchema = "{\n  \"properties\": {\n    \"alert_sync_with_dashboard_filter_enabled\": {\n      \"description\": \"Enables alerts to keep in sync with dashboard filter changes\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"appearance\": {\n      \"$ref\": \"#/definitions/DashboardAppearance\",\n      \"description\": \"Dashboard visual settings only applicable to dashboards-next (beta)\",\n      \"x-looker-nullable\": true\n    },\n    \"background_color\": {\n      \"description\": \"Background color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"crossfilter_enabled\": {\n      \"description\": \"Enables crossfiltering in dashboards - only available in dashboards-next (beta)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"deleted\": {\n      \"description\": \"Whether or not a dashboard is 'soft' deleted.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"description\": {\n      \"description\": \"Description\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"download_settings\": {\n      \"$ref\": \"#/definitions/DashboardDownloadSettings\",\n      \"description\": \"Default download settings for the tiles on the dashboard.\",\n      \"x-looker-nullable\": true\n    },\n    \"enable_viz_full_screen\": {\n      \"description\": \"Allow visualizations to be viewed in full screen mode\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_bar_collapsed\": {\n      \"description\": \"Sets the default state of the filters bar to collapsed or open\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_location_top\": {\n      \"description\": \"Sets the default state of the filters location to top(true) or right(false)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"folder_id\": {\n      \"description\": \"Id of folder\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"hidden\": {\n      \"description\": \"Is Hidden\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"load_configuration\": {\n      \"description\": \"configuration option that governs how dashboard loading will happen.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"lookml_link_id\": {\n      \"description\": \"Links this dashboard to a particular LookML dashboard such that calling a **sync** operation on that LookML dashboard will update this dashboard to match.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"preferred_viewer\": {\n      \"description\": \"The preferred route for viewing this dashboard (ie: dashboards or dashboards-next)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"query_timezone\": {\n      \"description\": \"Timezone in which the Dashboard will run by default.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"refresh_interval\": {\n      \"description\": \"Refresh Interval, as a time duration phrase like \\\"2 hours 30 minutes\\\". A number with no time units will be interpreted as whole seconds.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"show_filters_bar\": {\n      \"description\": \"Show filters bar.  **Security Note:** This property only affects the *cosmetic* appearance of the dashboard, not a user's ability to access data. Hiding the filters bar does **NOT** prevent users from changing filters by other means. For information on how to set up secure data access control policies, see [Control User Access to Data](https://docs.cloud.google.com/looker/docs/r/api/control-access)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"show_title\": {\n      \"description\": \"Show title\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"slug\": {\n      \"description\": \"Content Metadata Slug\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"text_tile_text_color\": {\n      \"description\": \"Color of text on text tiles\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tile_background_color\": {\n      \"description\": \"Tile background color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tile_text_color\": {\n      \"description\": \"Tile text color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Dashboard Title\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title_color\": {\n      \"description\": \"Title color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id\": {\n      \"description\": \"Id of User\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+const apiDashboardImportLookmlDashboardCmdBodySchema = "{\n  \"properties\": {\n    \"alert_sync_with_dashboard_filter_enabled\": {\n      \"description\": \"Enables alerts to keep in sync with dashboard filter changes\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"appearance\": {\n      \"$ref\": \"#/definitions/DashboardAppearance\",\n      \"description\": \"Dashboard visual settings only applicable to dashboards-next (beta)\",\n      \"x-looker-nullable\": true\n    },\n    \"background_color\": {\n      \"description\": \"Background color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"chat_enabled\": {\n      \"description\": \"Whether chat is enabled for this dashboard\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"crossfilter_enabled\": {\n      \"description\": \"Enables crossfiltering in dashboards - only available in dashboards-next (beta)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"deleted\": {\n      \"description\": \"Whether or not a dashboard is 'soft' deleted.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"description\": {\n      \"description\": \"Description\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"download_settings\": {\n      \"$ref\": \"#/definitions/DashboardDownloadSettings\",\n      \"description\": \"Default download settings for the tiles on the dashboard.\",\n      \"x-looker-nullable\": true\n    },\n    \"enable_viz_full_screen\": {\n      \"description\": \"Allow visualizations to be viewed in full screen mode\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_bar_collapsed\": {\n      \"description\": \"Sets the default state of the filters bar to collapsed or open\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_location_top\": {\n      \"description\": \"Sets the default state of the filters location to top(true) or right(false)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"folder_id\": {\n      \"description\": \"Id of folder\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"hidden\": {\n      \"description\": \"Is Hidden\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"load_configuration\": {\n      \"description\": \"configuration option that governs how dashboard loading will happen.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"lookml_link_id\": {\n      \"description\": \"Links this dashboard to a particular LookML dashboard such that calling a **sync** operation on that LookML dashboard will update this dashboard to match.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"preferred_viewer\": {\n      \"description\": \"The preferred route for viewing this dashboard (ie: dashboards or dashboards-next)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"preserve_desktop_layout\": {\n      \"description\": \"Whether to preserve the desktop layout on mobile viewports. i.e. don't force a single column layout on mobile.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"query_timezone\": {\n      \"description\": \"Timezone in which the Dashboard will run by default.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"refresh_interval\": {\n      \"description\": \"Refresh Interval, as a time duration phrase like \\\"2 hours 30 minutes\\\". A number with no time units will be interpreted as whole seconds.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"show_filters_bar\": {\n      \"description\": \"Show filters bar.  **Security Note:** This property only affects the *cosmetic* appearance of the dashboard, not a user's ability to access data. Hiding the filters bar does **NOT** prevent users from changing filters by other means. For information on how to set up secure data access control policies, see [Control User Access to Data](https://docs.cloud.google.com/looker/docs/r/api/control-access)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"show_title\": {\n      \"description\": \"Show title\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"slug\": {\n      \"description\": \"Content Metadata Slug\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"text_tile_text_color\": {\n      \"description\": \"Color of text on text tiles\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tile_background_color\": {\n      \"description\": \"Tile background color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tile_text_color\": {\n      \"description\": \"Tile text color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Dashboard Title\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title_color\": {\n      \"description\": \"Title color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id\": {\n      \"description\": \"Id of User\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
 
 func init() {
 	apiDashboardCmd.AddCommand(apiDashboardImportLookmlDashboardCmd)
@@ -5460,7 +5576,7 @@ var apiDashboardUpdateDashboardCmd = &cobra.Command{
 	},
 }
 
-const apiDashboardUpdateDashboardCmdBodySchema = "{\n  \"properties\": {\n    \"alert_sync_with_dashboard_filter_enabled\": {\n      \"description\": \"Enables alerts to keep in sync with dashboard filter changes\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"appearance\": {\n      \"$ref\": \"#/definitions/DashboardAppearance\",\n      \"description\": \"Dashboard visual settings only applicable to dashboards-next (beta)\",\n      \"x-looker-nullable\": true\n    },\n    \"background_color\": {\n      \"description\": \"Background color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"crossfilter_enabled\": {\n      \"description\": \"Enables crossfiltering in dashboards - only available in dashboards-next (beta)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"deleted\": {\n      \"description\": \"Whether or not a dashboard is 'soft' deleted.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"description\": {\n      \"description\": \"Description\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"download_settings\": {\n      \"$ref\": \"#/definitions/DashboardDownloadSettings\",\n      \"description\": \"Default download settings for the tiles on the dashboard.\",\n      \"x-looker-nullable\": true\n    },\n    \"enable_viz_full_screen\": {\n      \"description\": \"Allow visualizations to be viewed in full screen mode\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_bar_collapsed\": {\n      \"description\": \"Sets the default state of the filters bar to collapsed or open\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_location_top\": {\n      \"description\": \"Sets the default state of the filters location to top(true) or right(false)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"folder_id\": {\n      \"description\": \"Id of folder\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"hidden\": {\n      \"description\": \"Is Hidden\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"load_configuration\": {\n      \"description\": \"configuration option that governs how dashboard loading will happen.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"lookml_link_id\": {\n      \"description\": \"Links this dashboard to a particular LookML dashboard such that calling a **sync** operation on that LookML dashboard will update this dashboard to match.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"preferred_viewer\": {\n      \"description\": \"The preferred route for viewing this dashboard (ie: dashboards or dashboards-next)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"query_timezone\": {\n      \"description\": \"Timezone in which the Dashboard will run by default.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"refresh_interval\": {\n      \"description\": \"Refresh Interval, as a time duration phrase like \\\"2 hours 30 minutes\\\". A number with no time units will be interpreted as whole seconds.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"show_filters_bar\": {\n      \"description\": \"Show filters bar.  **Security Note:** This property only affects the *cosmetic* appearance of the dashboard, not a user's ability to access data. Hiding the filters bar does **NOT** prevent users from changing filters by other means. For information on how to set up secure data access control policies, see [Control User Access to Data](https://docs.cloud.google.com/looker/docs/r/api/control-access)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"show_title\": {\n      \"description\": \"Show title\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"slug\": {\n      \"description\": \"Content Metadata Slug\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"text_tile_text_color\": {\n      \"description\": \"Color of text on text tiles\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tile_background_color\": {\n      \"description\": \"Tile background color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tile_text_color\": {\n      \"description\": \"Tile text color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Dashboard Title\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title_color\": {\n      \"description\": \"Title color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id\": {\n      \"description\": \"Id of User\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
+const apiDashboardUpdateDashboardCmdBodySchema = "{\n  \"properties\": {\n    \"alert_sync_with_dashboard_filter_enabled\": {\n      \"description\": \"Enables alerts to keep in sync with dashboard filter changes\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"appearance\": {\n      \"$ref\": \"#/definitions/DashboardAppearance\",\n      \"description\": \"Dashboard visual settings only applicable to dashboards-next (beta)\",\n      \"x-looker-nullable\": true\n    },\n    \"background_color\": {\n      \"description\": \"Background color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"chat_enabled\": {\n      \"description\": \"Whether chat is enabled for this dashboard\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"crossfilter_enabled\": {\n      \"description\": \"Enables crossfiltering in dashboards - only available in dashboards-next (beta)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"deleted\": {\n      \"description\": \"Whether or not a dashboard is 'soft' deleted.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"description\": {\n      \"description\": \"Description\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"download_settings\": {\n      \"$ref\": \"#/definitions/DashboardDownloadSettings\",\n      \"description\": \"Default download settings for the tiles on the dashboard.\",\n      \"x-looker-nullable\": true\n    },\n    \"enable_viz_full_screen\": {\n      \"description\": \"Allow visualizations to be viewed in full screen mode\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_bar_collapsed\": {\n      \"description\": \"Sets the default state of the filters bar to collapsed or open\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"filters_location_top\": {\n      \"description\": \"Sets the default state of the filters location to top(true) or right(false)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"folder_id\": {\n      \"description\": \"Id of folder\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"hidden\": {\n      \"description\": \"Is Hidden\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"load_configuration\": {\n      \"description\": \"configuration option that governs how dashboard loading will happen.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"lookml_link_id\": {\n      \"description\": \"Links this dashboard to a particular LookML dashboard such that calling a **sync** operation on that LookML dashboard will update this dashboard to match.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"preferred_viewer\": {\n      \"description\": \"The preferred route for viewing this dashboard (ie: dashboards or dashboards-next)\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"preserve_desktop_layout\": {\n      \"description\": \"Whether to preserve the desktop layout on mobile viewports. i.e. don't force a single column layout on mobile.\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": false\n    },\n    \"query_timezone\": {\n      \"description\": \"Timezone in which the Dashboard will run by default.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"refresh_interval\": {\n      \"description\": \"Refresh Interval, as a time duration phrase like \\\"2 hours 30 minutes\\\". A number with no time units will be interpreted as whole seconds.\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"show_filters_bar\": {\n      \"description\": \"Show filters bar.  **Security Note:** This property only affects the *cosmetic* appearance of the dashboard, not a user's ability to access data. Hiding the filters bar does **NOT** prevent users from changing filters by other means. For information on how to set up secure data access control policies, see [Control User Access to Data](https://docs.cloud.google.com/looker/docs/r/api/control-access)\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"show_title\": {\n      \"description\": \"Show title\",\n      \"type\": \"boolean\",\n      \"x-looker-nullable\": true\n    },\n    \"slug\": {\n      \"description\": \"Content Metadata Slug\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"text_tile_text_color\": {\n      \"description\": \"Color of text on text tiles\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tile_background_color\": {\n      \"description\": \"Tile background color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"tile_text_color\": {\n      \"description\": \"Tile text color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title\": {\n      \"description\": \"Dashboard Title\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"title_color\": {\n      \"description\": \"Title color\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    },\n    \"user_id\": {\n      \"description\": \"Id of User\",\n      \"type\": \"string\",\n      \"x-looker-nullable\": true\n    }\n  },\n  \"x-looker-status\": \"stable\"\n}"
 
 func init() {
 	apiDashboardCmd.AddCommand(apiDashboardUpdateDashboardCmd)
@@ -8081,6 +8197,46 @@ func init() {
 	apiProjectAllProjectsCmd.Flags().String("fields", "", "Requested fields")
 }
 
+var apiProjectAsyncDeployRefToProductionCmd = &cobra.Command{
+	Use:   "async_deploy_ref_to_production [PROJECT_ID]",
+	Short: "Asynchronously Deploy Remote Branch or Ref to Production",
+	Long:  "### Asynchronously Deploy a Remote Branch or Ref to Production\n\nGit must have been configured and deploy permission required.\nThis endpoint kicks off the deploy process and returns immediately.\n\nCan only specify either a branch or a ref.\n\n",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		queryParams := make(map[string]string)
+		if cmd.Flags().Changed("branch") {
+			val, _ := cmd.Flags().GetString("branch")
+			queryParams["branch"] = val
+		}
+		if cmd.Flags().Changed("ref") {
+			val, _ := cmd.Flags().GetString("ref")
+			queryParams["ref"] = val
+		}
+		return executeApiCallGeneric(cmd, "POST", "/projects/{project_id}/async_deploy_ref_to_production", []string{"project_id"}, []string{}, "", queryParams, args)
+	},
+}
+
+func init() {
+	apiProjectCmd.AddCommand(apiProjectAsyncDeployRefToProductionCmd)
+	apiProjectAsyncDeployRefToProductionCmd.Flags().String("branch", "", "Branch to deploy to production")
+	apiProjectAsyncDeployRefToProductionCmd.Flags().String("ref", "", "Ref to deploy to production")
+}
+
+var apiProjectAsyncDeployStatusCmd = &cobra.Command{
+	Use:   "async_deploy_status [PROJECT_ID] [DEPLOYMENT_ID]",
+	Short: "Check Async Deploy Status",
+	Long:  "### Check Status of Asynchronous Deploy\nGet the status of an asynchronous deploy operation.\n",
+	Args:  cobra.ExactArgs(2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		queryParams := make(map[string]string)
+		return executeApiCallGeneric(cmd, "GET", "/projects/{project_id}/deploy_status/{deployment_id}", []string{"project_id", "deployment_id"}, []string{}, "", queryParams, args)
+	},
+}
+
+func init() {
+	apiProjectCmd.AddCommand(apiProjectAsyncDeployStatusCmd)
+}
+
 var apiProjectCreateCiRunCmd = &cobra.Command{
 	Use:   "create_ci_run [PROJECT_ID] [BODY_JSON_FILE_OR_-]",
 	Short: "Create a Continuous Integration run",
@@ -10598,6 +10754,26 @@ func init() {
 	ApiCmd.AddCommand(apiSelfServiceCmd)
 }
 
+var apiSelfServiceGetSelfServiceModelAllowedConnectionsCmd = &cobra.Command{
+	Use:   "get_self_service_model_allowed_connections",
+	Short: "Get self service allowed connections",
+	Long:  "### Get Allowed Connections under advanced connection governance\n\nThis endpoint returns the list of allowed connection names for self-service models\nwhen advanced connection governance is enabled.\n",
+	Args:  cobra.ExactArgs(0),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		queryParams := make(map[string]string)
+		if cmd.Flags().Changed("google_sheets") {
+			val, _ := cmd.Flags().GetBool("google_sheets")
+			queryParams["google_sheets"] = strconv.FormatBool(val)
+		}
+		return executeApiCallGeneric(cmd, "GET", "/self_service_models/allowed_connections", []string{}, []string{}, "", queryParams, args)
+	},
+}
+
+func init() {
+	apiSelfServiceCmd.AddCommand(apiSelfServiceGetSelfServiceModelAllowedConnectionsCmd)
+	apiSelfServiceGetSelfServiceModelAllowedConnectionsCmd.Flags().Bool("google_sheets", false, "Include connections allowed for Google Sheets.")
+}
+
 var apiSelfServiceUpdateSelfServiceExploreCertificationCmd = &cobra.Command{
 	Use:   "update_self_service_explore_certification [MODEL_NAME] [BODY_JSON_FILE_OR_-]",
 	Short: "Update certification for a Self Service Explore",
@@ -10914,6 +11090,10 @@ var apiThemeSearchThemesCmd = &cobra.Command{
 			val, _ := cmd.Flags().GetString("sorts")
 			queryParams["sorts"] = val
 		}
+		if cmd.Flags().Changed("theme_type") {
+			val, _ := cmd.Flags().GetString("theme_type")
+			queryParams["theme_type"] = val
+		}
 		return executeApiCallGeneric(cmd, "GET", "/themes/search", []string{}, []string{}, "", queryParams, args)
 	},
 }
@@ -10929,6 +11109,7 @@ func init() {
 	apiThemeSearchThemesCmd.Flags().String("name", "", "Match theme name.")
 	apiThemeSearchThemesCmd.Flags().String("offset", "", "Number of results to skip before returning any (used with `limit`).")
 	apiThemeSearchThemesCmd.Flags().String("sorts", "", "Fields to sort by.")
+	apiThemeSearchThemesCmd.Flags().String("theme_type", "", "Match theme type ('internal', 'embed', or 'all').")
 }
 
 var apiThemeSetDefaultThemeCmd = &cobra.Command{
