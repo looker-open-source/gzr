@@ -25,6 +25,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/pkg/browser"
@@ -115,6 +116,17 @@ func PerformOAuthLogin(ctx context.Context, host, port, clientID string, ssl boo
 		}
 	}()
 	defer func() { _ = srv.Shutdown(context.Background()) }()
+
+	if isSSHSession() {
+		fmt.Println("=======================================================================")
+		fmt.Println("WARNING: SSH session detected!")
+		fmt.Println("OAuth redirect requires forwarding port 7777 back to your local machine.")
+		fmt.Println("Ensure you connected using port forwarding, for example:")
+		fmt.Println("  ssh -L 7777:127.0.0.1:7777 user@remote-host")
+		fmt.Println("If you did not, please cancel (Ctrl+C) and reconnect, or use a different")
+		fmt.Println("authentication method (e.g. .netrc API keys or --token).")
+		fmt.Println("=======================================================================")
+	}
 
 	fmt.Printf("Opening browser to URL: %s\n", authURL.String())
 	if err := browser.OpenURL(authURL.String()); err != nil {
@@ -222,3 +234,8 @@ func RefreshOAuthToken(ctx context.Context, host, port, clientID, refreshToken s
 
 	return tokResp.AccessToken, newRefreshToken, expiration, nil
 }
+
+func isSSHSession() bool {
+	return os.Getenv("SSH_CLIENT") != "" || os.Getenv("SSH_TTY") != "" || os.Getenv("SSH_CONNECTION") != ""
+}
+
