@@ -65,7 +65,7 @@ jobs:
         run: go mod download
 
       - name: Build the executable
-        run: go build -o looker ./cmd/looker
+        run: go build -o looker-cli ./cmd/looker-cli
 
       - name: Run unit tests
         run: go run gotest.tools/gotestsum@latest --junitfile report.xml -- ./...
@@ -98,7 +98,7 @@ jobs:
 
       - name: Login persistently
         run: |
-          ./looker session login
+          ./looker-cli session login
 
       - name: Create Connection
         run: |
@@ -125,16 +125,16 @@ jobs:
             "password": "${{ secrets.FAA_MYSQL_PASSWORD }}"
           }
           HERE
-          ./looker connection import Connection_faa_mysql.json --token-file
+          ./looker-cli connection import Connection_faa_mysql.json --token-file
 
       - name: Test Connection
         run: |
-          ./looker connection test faa --token-file
+          ./looker-cli connection test faa --token-file
 
       - name: Change the session to dev mode
         run: |
-          ./looker session get --token-file
-          ./looker session update dev --token-file
+          ./looker-cli session get --token-file
+          ./looker-cli session update dev --token-file
 
       - name: Import the project
         run: |
@@ -144,11 +144,11 @@ jobs:
             "uses_git": true
           }
           HERE
-          ./looker project import Project_faa.json --token-file
+          ./looker-cli project import Project_faa.json --token-file
 
       - name: Create a deploy key and set it on the github repo for the project
         run: |
-          DEPLOY_KEY=$(./looker project deploy_key faa --token-file)
+          DEPLOY_KEY=$(./looker-cli project deploy_key faa --token-file)
           echo $DEPLOY_KEY
           SET_KEY_RESPONSE=$(
           curl -L \
@@ -170,23 +170,23 @@ jobs:
             "git_service_name": "github"
           }
           HERE
-          ./looker project update faa github_repo.json --token-file
+          ./looker-cli project update faa github_repo.json --token-file
 
       - name: Check the project config
         run: |
-          ./looker project cat faa --trim --token-file
+          ./looker-cli project cat faa --trim --token-file
 
       - name: Check available branches for faa project
         run: |
-          ./looker project branch faa --all --token-file
+          ./looker-cli project branch faa --all --token-file
 
       - name: Checkout a shared branch
         run: |
-          ./looker project checkout faa main --token-file
+          ./looker-cli project checkout faa main --token-file
 
       - name: Deploy to production
         run: |
-          ./looker project deploy faa --token-file
+          ./looker-cli project deploy faa --token-file
 
       - name: Configure lookml model
         run: |
@@ -200,7 +200,7 @@ jobs:
             ]
           }
           HERE
-          ./looker model import Model_faa.json --token-file
+          ./looker-cli model import Model_faa.json --token-file
 
       - name: run a query against the model
         run: |
@@ -219,14 +219,14 @@ jobs:
             "limit": "500"
           }
           HERE
-          ./looker query runquery "$(cat query.json)"
+          ./looker-cli query runquery "$(cat query.json)"
 
       - name: Load a dashboard
         run: |
-          me=$(./looker user me --csv --plain)
+          me=$(./looker-cli user me --csv --plain)
           echo $me
           dest_folder=$(cut -d, -f5 <<< $me | sed 's/"//g')
-          ./looker dashboard import examples/Dashboard_17_FAA_KPIs.json $dest_folder
+          ./looker-cli dashboard import examples/Dashboard_17_FAA_KPIs.json $dest_folder
 
       - name: Remove the deploy key from the github repo
         if: ${{ always() }}

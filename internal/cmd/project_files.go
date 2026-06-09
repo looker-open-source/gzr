@@ -24,7 +24,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"gzr.looker.com/gzr/internal/util"
+	"github.com/looker-open-source/gzr/internal/util"
 )
 
 var (

@@ -1,4 +1,4 @@
-/looker
+/looker-cli
 *.json
 *~
 *.swp

@@ -22,7 +22,7 @@ import (
 
 	"github.com/spf13/cobra"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
-	"gzr.looker.com/gzr/internal/client"
+	"github.com/looker-open-source/gzr/internal/client"
 )
 
 var (
@@ -43,7 +43,7 @@ var (
 )
 
 var RootCmd = &cobra.Command{
-	Use:   "looker",
+	Use:   "looker-cli",
 	Short: "Looker CLI - A Looker Content Utility",
 	Long:  `Looker CLI can be used to navigate and manage Spaces, Looks, and Dashboards via a simple command line tool.`,
 }

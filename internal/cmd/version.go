@@ -24,9 +24,9 @@ const Version = "0.4.0"
 
 var VersionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Print the version number of looker",
+	Short: "Print the version number of looker-cli",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("looker %s\n", Version)
+		fmt.Printf("looker-cli %s\n", Version)
 	},
 }
 

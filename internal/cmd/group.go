@@ -20,7 +20,7 @@ import (
 
 	"github.com/spf13/cobra"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
-	"gzr.looker.com/gzr/internal/util"
+	"github.com/looker-open-source/gzr/internal/util"
 )
 
 var (

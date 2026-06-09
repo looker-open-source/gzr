@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"gzr.looker.com/gzr/internal/client"
+	"github.com/looker-open-source/gzr/internal/client"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 

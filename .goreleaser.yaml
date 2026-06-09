@@ -8,6 +8,8 @@ builds:
     goarch:
       - amd64
       - arm64
+    main: ./cmd/looker-cli
+    binary: looker-cli
 
 # Disable GoReleaser's changelog since release-please handles it beautifully
 changelog:
