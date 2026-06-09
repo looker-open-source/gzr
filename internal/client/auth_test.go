@@ -22,7 +22,7 @@ import (
 )
 
 func TestTokenStorage(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "gzr_test_*")
+	tmpDir, err := os.MkdirTemp("", "looker_cli_test_*")
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
@@ -85,7 +85,7 @@ func TestTokenStorage(t *testing.T) {
 }
 
 func TestTokenStorage_Expired(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "gzr_test_*")
+	tmpDir, err := os.MkdirTemp("", "looker_cli_test_*")
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}

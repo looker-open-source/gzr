@@ -1,8 +1,8 @@
-# Looker CLI (looker) Go Implementation
+# Looker CLI (looker-cli) Go Implementation
 
-Looker CLI (`looker`) is a robust, fast command-line interface (CLI) tool designed to navigate, manage, and automate Looker resources (Folders/Spaces, Looks, Dashboards, Users, and more) via the Looker API 4.0.
+Looker CLI (`looker-cli`) is a robust, fast command-line interface (CLI) tool designed to navigate, manage, and automate Looker resources (Folders/Spaces, Looks, Dashboards, Users, and more) via the Looker API 4.0.
 
-This is a Go-based reimplementation of the original Ruby `looker` tool, utilizing the official Looker Go SDK for high performance and type safety.
+This is a Go-based reimplementation of the original Ruby `gzr` tool, utilizing the official Looker Go SDK for high performance and type safety.
 
 ---
 
@@ -31,7 +31,7 @@ This is a Go-based reimplementation of the original Ruby `looker` tool, utilizin
 
 ## Installation
 
-To compile `looker` from source:
+To compile `looker-cli` from source:
 
 ```bash
 # Build the binary in the current workspace
@@ -45,7 +45,7 @@ go build -o looker-cli ./cmd/looker-cli
 
 ## Authentication Guide
 
-`looker` supports several secure and flexible ways to connect to your Looker instance.
+`looker-cli` supports several secure and flexible ways to connect to your Looker instance.
 
 ### 1. Interactive OAuth PKCE (Recommended for Users)
 Log in interactively using a browser-based OAuth PKCE flow. You do not need to supply or save your API keys.
@@ -61,27 +61,31 @@ This will:
 4. Exchange the authentication code for an access token and store it in `~/.looker_auth`.
 
 #### Setting up the OAuth Client Application in Looker
-Before you can use the `--oauth` login, your Looker Administrator must register `looker` as an **OAuth Client Application** in your Looker instance:
+In version 26.10 and later, the **OAuth Client Application** `com.looker.cli` is
+already registered. You may need to enable it under Admin-\>Platform-\>BI
+Connectors. Under **Developer Tools** slide the toggle next to `Looker CLI`.
+
+In version 26.8 and earlier, before you can use the `--oauth` login, your Looker Administrator must register `looker-cli` as an **OAuth Client Application** in your Looker instance:
 
 1. Navigate to the **API Explorer** in Looker.
 2. Click **Auth** then **Register OAuth App**.
 3. Choose **Runit**.
 4. Configure the following settings:
-    * **client_guid**: `com.looker.cli` (This must match `looker`'s default Client ID. If you register a different custom Client ID, you must pass it via the `--client-id` flag when logging in).
+    * **client_guid**: `looker-cli` (This must match `looker-cli`'s default Client ID. If you register a different custom Client ID, you must pass it via the `--client-id` flag when logging in).
     * **Display Name**: `Looker CLI`
     * **Description**: `Looker CLI`
-    * **Redirect URI**: Add `http://127.0.0.1:7777` (This is the temporary port spawned locally by `looker` to retrieve the authorization code).
+    * **Redirect URI**: Add `http://127.0.0.1:7777` (This is the temporary port spawned locally by `looker-cli` to retrieve the authorization code).
     * **Enabled**: Must be set to true.
 5. Check the box "I understand that this API endpoint will change data."
 6. Click **Run**.
 
-Once registered, the `looker session login --oauth` browser login will work seamlessly.
+Once registered, the `looker-cli session login --oauth` browser login will work seamlessly.
 
 Alternately you can run the following if you have a `.netrc` with your
 credentials already, or you can run this with one of the authentication methods
 below:
 ```bash
-echo << 'EOF' | ./looker-cli api auth register_oauth_client_app com.looker.cli - --host HOST [--port 443]
+echo << 'EOF' | ./looker-cli api auth register_oauth_client_app looker-cli - --host HOST [--port 443]
 {
   "description": "Looker CLI",
   "display_name": "Looker CLI",
@@ -110,7 +114,7 @@ machine your-looker-domain.com
 login YOUR_API_CLIENT_ID
 password YOUR_API_CLIENT_SECRET
 ```
-`looker` will automatically retrieve these credentials when connecting to `your-looker-domain.com`.
+`looker-cli` will automatically retrieve these credentials when connecting to `your-looker-domain.com`.
 
 ### 4. Environment Variables
 ```bash
@@ -523,7 +527,7 @@ Commands pertaining to LookML Projects.
     ./looker-cli project deploy_key "my_project" --token-file
     ```
 
-#### Managing Project Files (`looker project file`)
+#### Managing Project Files (`looker-cli project file`)
 Manage the files inside your Looker project using undocumented Looker API endpoints.
 
 *   **`ls <project_id>`**: List all files in a project:
@@ -547,7 +551,7 @@ Manage the files inside your Looker project using undocumented Looker API endpoi
     ./looker-cli project file rm "my_project" "views/new_view.view.lkml" --token-file
     ```
 
-#### Managing Project Directories (`looker project directory`)
+#### Managing Project Directories (`looker-cli project directory`)
 Manage physical directories within your Looker LookML projects.
 
 *   **`ls <project_id>`**: List all subdirectories inside a project:
@@ -639,7 +643,7 @@ Commands pertaining to API connections and workspace sessions.
     ```bash
     # Standard login using API keys (prompts/uses config)
     ./looker-cli session login --host your-domain.com
-    
+
     # OAuth PKCE login
     ./looker-cli session login --oauth --host your-domain.com --port 443
     ```

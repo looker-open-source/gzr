@@ -214,7 +214,7 @@ func determineOAuthClientID(ctx context.Context, host, port string, ssl, verifyS
 		return "com.looker.cli"
 	}
 	if compareVersionLessThanOrEqual26_8(version) {
-		return "gzr"
+		return "looker-cli"
 	}
 	return "com.looker.cli"
 }
