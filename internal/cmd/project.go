@@ -122,7 +122,7 @@ var projectImportCmd = &cobra.Command{
 		if err != nil { return err }
 		file := args[0]
 
-		b, err := os.ReadFile(file)
+		b, err := util.ReadFileOrStdin(file)
 		if err != nil { return err }
 
 		var wp v4.WriteProject
@@ -146,7 +146,7 @@ var projectUpdateCmd = &cobra.Command{
 		pID := args[0]
 		file := args[1]
 
-		b, err := os.ReadFile(file)
+		b, err := util.ReadFileOrStdin(file)
 		if err != nil { return err }
 
 		var wp v4.WriteProject

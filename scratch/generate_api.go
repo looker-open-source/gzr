@@ -432,6 +432,7 @@ func executeApiCallGeneric(cmd *cobra.Command, method, pathTemplate string, path
 
 	// 3. Parse body parameter
 	var bodyReader io.Reader
+	var bodyBytes []byte
 	if bodyParam != "" {
 		if argIdx >= len(args) {
 			return fmt.Errorf("missing required body parameter (JSON file path or '-' for stdin)")
@@ -439,7 +440,6 @@ func executeApiCallGeneric(cmd *cobra.Command, method, pathTemplate string, path
 		bodyFile := args[argIdx]
 		argIdx++
 
-		var bodyBytes []byte
 		if bodyFile == "-" {
 			bodyBytes, err = io.ReadAll(os.Stdin)
 		} else {
@@ -479,6 +479,16 @@ func executeApiCallGeneric(cmd *cobra.Command, method, pathTemplate string, path
 		req.Header.Set("Content-Type", "application/json")
 	}
 
+	if cfgDebug {
+		fmt.Printf("--> %s %s\n", method, u.String())
+		for k, v := range req.Header {
+			fmt.Printf("Header %s: %s\n", k, v)
+		}
+		if bodyParam != "" {
+			fmt.Printf("Request Body: %s\n", string(bodyBytes))
+		}
+	}
+
 	// 6. Execute request
 	resp, err := c.Session.Client.Do(req)
 	if err != nil {
@@ -490,6 +500,11 @@ func executeApiCallGeneric(cmd *cobra.Command, method, pathTemplate string, path
 	outBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	if cfgDebug {
+		fmt.Printf("<-- %s\n", resp.Status)
+		fmt.Printf("Response Body: %s\n", string(outBytes))
 	}
 
 	if resp.StatusCode >= 400 {

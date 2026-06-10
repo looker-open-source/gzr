@@ -257,7 +257,7 @@ var attributeImportCmd = &cobra.Command{
 		if err != nil { return err }
 		file := args[0]
 
-		b, err := os.ReadFile(file)
+		b, err := util.ReadFileOrStdin(file)
 		if err != nil { return err }
 
 		var m map[string]interface{}

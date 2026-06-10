@@ -323,7 +323,7 @@ var alertImportCmd = &cobra.Command{
 		elemID := ""
 		if len(args) > 1 { elemID = args[1] }
 
-		b, err := os.ReadFile(file)
+		b, err := util.ReadFileOrStdin(file)
 		if err != nil { return err }
 
 		var m map[string]interface{}

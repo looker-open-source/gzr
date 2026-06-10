@@ -235,7 +235,7 @@ var planImportCmd = &cobra.Command{
 		objType := strings.ToLower(args[1])
 		objID := args[2]
 
-		b, err := os.ReadFile(file)
+		b, err := util.ReadFileOrStdin(file)
 		if err != nil {
 			return err
 		}

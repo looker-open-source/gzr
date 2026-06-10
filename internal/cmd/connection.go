@@ -179,7 +179,7 @@ var connectionImportCmd = &cobra.Command{
 			return err
 		}
 		file := args[0]
-		b, err := os.ReadFile(file)
+		b, err := util.ReadFileOrStdin(file)
 		if err != nil {
 			return fmt.Errorf("failed to read file %s: %w", file, err)
 		}

@@ -373,6 +373,44 @@ func TestConnectionImportCommand(t *testing.T) {
 	}
 }
 
+func TestConnectionImportCommand_Stdin(t *testing.T) {
+	MockSDK = v4.NewLookerSDK(&mockDoer{t: t})
+	defer func() { MockSDK = nil }()
+
+	rStdin, wStdin, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("failed to create pipe: %v", err)
+	}
+	oldStdin := os.Stdin
+	os.Stdin = rStdin
+	defer func() { os.Stdin = oldStdin }()
+
+	go func() {
+		defer func() { _ = wStdin.Close() }()
+		_, _ = wStdin.WriteString(`{"name":"my_new_conn","dialect_name":"postgres"}`)
+	}()
+
+	oldStdout := os.Stdout
+	rStdout, wStdout, _ := os.Pipe()
+	os.Stdout = wStdout
+
+	RootCmd.SetArgs([]string{"connection", "import", "-", "--plain"})
+	err = RootCmd.Execute()
+	if err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	_ = wStdout.Close()
+	os.Stdout = oldStdout
+	var buf bytes.Buffer
+	_, _ = io.Copy(&buf, rStdout)
+	out := strings.TrimSpace(buf.String())
+
+	if out != "my_new_conn" {
+		t.Errorf("expected my_new_conn, got %s", out)
+	}
+}
+
 func TestConnectionTestCommand(t *testing.T) {
 	MockSDK = v4.NewLookerSDK(&mockDoer{t: t})
 	defer func() { MockSDK = nil }()

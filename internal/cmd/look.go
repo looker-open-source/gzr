@@ -23,6 +23,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/looker-open-source/gzr/internal/client"
+	"github.com/looker-open-source/gzr/internal/util"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
@@ -214,7 +215,7 @@ var lookImportCmd = &cobra.Command{
 		file := args[0]
 		folderID := args[1]
 
-		b, err := os.ReadFile(file)
+		b, err := util.ReadFileOrStdin(file)
 		if err != nil {
 			return fmt.Errorf("failed to read file %s: %w", file, err)
 		}
