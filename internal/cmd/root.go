@@ -70,6 +70,8 @@ func init() {
 	RootCmd.PersistentFlags().StringVar(&cfgHTTPProxy, "http-proxy", "", "HTTP Proxy for connecting to Looker host")
 	RootCmd.PersistentFlags().BoolVar(&cfgForce, "force", false, "Overwrite objects on server")
 	RootCmd.PersistentFlags().IntVar(&cfgWidth, "width", 0, "Width of rendering for tables")
+
+	client.UserAgent = fmt.Sprintf("looker-cli %s", Version)
 }
 
 var MockSDK *v4.LookerSDK

@@ -160,6 +160,7 @@ func PerformOAuthLogin(ctx context.Context, host, port, clientID string, ssl boo
 			return "", "", time.Time{}, fmt.Errorf("create token request failed: %w", err)
 		}
 		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("User-Agent", UserAgent)
 
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
@@ -207,6 +208,7 @@ func RefreshOAuthToken(ctx context.Context, host, port, clientID, refreshToken s
 		return "", "", time.Time{}, fmt.Errorf("create refresh token request failed: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", UserAgent)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

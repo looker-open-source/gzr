@@ -474,6 +474,7 @@ func executeApiCallGeneric(cmd *cobra.Command, method, pathTemplate string, path
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
+	req.Header.Set("User-Agent", fmt.Sprintf("looker-cli %s", Version))
 	if bodyReader != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}

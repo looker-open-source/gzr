@@ -36,6 +36,8 @@ type ClientWrapper struct {
 	SuUser  string
 }
 
+var UserAgent = "looker-cli/unknown"
+
 // NewClient initializes LookerSDK based on provided flags and auth mechanisms.
 func NewClient(ctx context.Context, host, port, clientID, clientSecret, token, suUser string, ssl, verifySSL, oauth, tokenFile bool) (*ClientWrapper, error) {
 	scheme := "https"
@@ -53,9 +55,10 @@ func NewClient(ctx context.Context, host, port, clientID, clientSecret, token, s
 		BaseUrl:   baseURL,
 		VerifySsl: verifySSL,
 		Timeout:   120,
-		AgentTag:  "Gazer 0.3.0",
+		AgentTag:  UserAgent,
 		Headers:   make(map[string]string),
 	}
+	settings.Headers["User-Agent"] = UserAgent
 
 	var activeToken string
 
@@ -230,6 +233,7 @@ func fetchLookerVersion(ctx context.Context, host, port string, ssl, verifySSL b
 	if err != nil {
 		return "", err
 	}
+	req.Header.Set("User-Agent", UserAgent)
 
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: !verifySSL},
