@@ -143,8 +143,18 @@ var attributeRmCmd = &cobra.Command{
 	},
 }
 
+var attributeSetCmd = &cobra.Command{
+	Use:   "set",
+	Short: "Set attribute values",
+}
+
 var attributeSetGroupCmd = &cobra.Command{
-	Use:   "set_group_value [GROUP] [ATTR] [VALUE]",
+	Use:   "group",
+	Short: "Set attribute values for groups",
+}
+
+var attributeSetGroupValueCmd = &cobra.Command{
+	Use:   "value [GROUP] [ATTR] [VALUE]",
 	Short: "Set a user attribute value for a group",
 	Args:  cobra.ExactArgs(3),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -164,8 +174,18 @@ var attributeSetGroupCmd = &cobra.Command{
 	},
 }
 
+var attributeGetCmd = &cobra.Command{
+	Use:   "get",
+	Short: "Get attribute values",
+}
+
 var attributeGetGroupCmd = &cobra.Command{
-	Use:   "get_group_value [GROUP] [ATTR]",
+	Use:   "group",
+	Short: "Get attribute values for groups",
+}
+
+var attributeGetGroupValueCmd = &cobra.Command{
+	Use:   "value [GROUP] [ATTR]",
 	Short: "Retrieve a user attribute value for a group",
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -312,10 +332,16 @@ func init() {
 	AttributeCmd.AddCommand(attributeLsCmd)
 	AttributeCmd.AddCommand(attributeCatCmd)
 	AttributeCmd.AddCommand(attributeRmCmd)
-	AttributeCmd.AddCommand(attributeSetGroupCmd)
-	AttributeCmd.AddCommand(attributeGetGroupCmd)
 	AttributeCmd.AddCommand(attributeCreateCmd)
 	AttributeCmd.AddCommand(attributeImportCmd)
+
+	AttributeCmd.AddCommand(attributeSetCmd)
+	attributeSetCmd.AddCommand(attributeSetGroupCmd)
+	attributeSetGroupCmd.AddCommand(attributeSetGroupValueCmd)
+
+	AttributeCmd.AddCommand(attributeGetCmd)
+	attributeGetCmd.AddCommand(attributeGetGroupCmd)
+	attributeGetGroupCmd.AddCommand(attributeGetGroupValueCmd)
 
 	attributeLsCmd.Flags().StringVar(&attributeLsFields, "fields", "id,name,label,type,default_value", "Fields to display")
 	attributeLsCmd.Flags().BoolVar(&attributeLsPlain, "plain", false, "print without formatting")

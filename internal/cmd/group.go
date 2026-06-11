@@ -85,8 +85,13 @@ var groupLsCmd = &cobra.Command{
 	},
 }
 
+var groupMemberCmd = &cobra.Command{
+	Use:   "member",
+	Short: "Manage group members",
+}
+
 var groupMemberGroupsCmd = &cobra.Command{
-	Use:   "member_groups [GROUP_ID]",
+	Use:   "groups [GROUP_ID]",
 	Short: "list the groups that have been added as members of the given group id",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -116,7 +121,7 @@ var groupMemberGroupsCmd = &cobra.Command{
 }
 
 var groupMemberUsersCmd = &cobra.Command{
-	Use:   "member_users [GROUP_ID]",
+	Use:   "users [GROUP_ID]",
 	Short: "list the users that have been added as members of the given group id",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -166,8 +171,10 @@ var groupMemberUsersCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(GroupCmd)
 	GroupCmd.AddCommand(groupLsCmd)
-	GroupCmd.AddCommand(groupMemberGroupsCmd)
-	GroupCmd.AddCommand(groupMemberUsersCmd)
+
+	GroupCmd.AddCommand(groupMemberCmd)
+	groupMemberCmd.AddCommand(groupMemberGroupsCmd)
+	groupMemberCmd.AddCommand(groupMemberUsersCmd)
 
 	groupLsCmd.Flags().StringVar(&groupLsFields, "fields", "id,name,user_count,contains_current_user,externally_managed,external_group_id", "Fields to display")
 	groupLsCmd.Flags().BoolVar(&groupLsPlain, "plain", false, "print without any extra formatting")

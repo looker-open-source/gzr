@@ -162,7 +162,7 @@ var projectUpdateCmd = &cobra.Command{
 }
 
 var projectDeployKeyCmd = &cobra.Command{
-	Use:   "deploy_key [PROJECT_ID]",
+	Use:   "key [PROJECT_ID]",
 	Short: "Generate a git deploy public key",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -250,10 +250,11 @@ func init() {
 	ProjectCmd.AddCommand(projectCatCmd)
 	ProjectCmd.AddCommand(projectImportCmd)
 	ProjectCmd.AddCommand(projectUpdateCmd)
-	ProjectCmd.AddCommand(projectDeployKeyCmd)
 	ProjectCmd.AddCommand(projectBranchCmd)
 	ProjectCmd.AddCommand(projectDeployCmd)
 	ProjectCmd.AddCommand(projectCheckoutCmd)
+
+	projectDeployCmd.AddCommand(projectDeployKeyCmd)
 
 	projectLsCmd.Flags().StringVar(&projectLsFields, "fields", "id,name,git_production_branch_name", "Fields to display")
 	projectLsCmd.Flags().BoolVar(&projectLsPlain, "plain", false, "print without formatting")

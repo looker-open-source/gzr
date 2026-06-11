@@ -538,7 +538,7 @@ func TestDashboardImportLookmlCommand(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	RootCmd.SetArgs([]string{"dashboard", "import_lookml", "lookml_dash_1", "801", "--plain"})
+	RootCmd.SetArgs([]string{"dashboard", "import", "lookml", "lookml_dash_1", "801", "--plain"})
 	err := RootCmd.Execute()
 	if err != nil {
 		t.Fatalf("Execute failed: %v", err)
@@ -563,7 +563,7 @@ func TestDashboardSyncLookmlCommand(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	RootCmd.SetArgs([]string{"dashboard", "sync_lookml", "lookml_dash_1"})
+	RootCmd.SetArgs([]string{"dashboard", "sync", "lookml", "lookml_dash_1"})
 	err := RootCmd.Execute()
 	if err != nil {
 		t.Fatalf("Execute failed: %v", err)

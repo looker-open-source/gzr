@@ -680,7 +680,7 @@ var dashboardMvCmd = &cobra.Command{
 }
 
 var dashboardImportLookmlCmd = &cobra.Command{
-	Use:   "import_lookml [DASHBOARD_ID] [TARGET_FOLDER_ID]",
+	Use:   "lookml [DASHBOARD_ID] [TARGET_FOLDER_ID]",
 	Short: "Create a UDD from a lookml dashboard in the given folder",
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -757,8 +757,13 @@ var dashboardImportLookmlCmd = &cobra.Command{
 	},
 }
 
+var dashboardSyncCmd = &cobra.Command{
+	Use:   "sync",
+	Short: "Sync dashboards",
+}
+
 var dashboardSyncLookmlCmd = &cobra.Command{
-	Use:   "sync_lookml [DASHBOARD_ID]",
+	Use:   "lookml [DASHBOARD_ID]",
 	Short: "Sync any UDD from a lookml dashboard",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -788,8 +793,11 @@ func init() {
 	DashboardCmd.AddCommand(dashboardRmCmd)
 	DashboardCmd.AddCommand(dashboardImportCmd)
 	DashboardCmd.AddCommand(dashboardMvCmd)
-	DashboardCmd.AddCommand(dashboardImportLookmlCmd)
-	DashboardCmd.AddCommand(dashboardSyncLookmlCmd)
+
+	dashboardImportCmd.AddCommand(dashboardImportLookmlCmd)
+
+	DashboardCmd.AddCommand(dashboardSyncCmd)
+	dashboardSyncCmd.AddCommand(dashboardSyncLookmlCmd)
 
 	dashboardCatCmd.Flags().StringVar(&dashboardCatDir, "dir", "", "Directory to store output file")
 	dashboardCatCmd.Flags().StringVar(&dashboardCatFields, "fields", "", "Fields to display")

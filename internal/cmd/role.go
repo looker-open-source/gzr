@@ -171,8 +171,18 @@ var roleCreateCmd = &cobra.Command{
 	},
 }
 
+var roleGroupCmd = &cobra.Command{
+	Use:   "group",
+	Short: "Manage groups associated with a role",
+}
+
+var roleUserCmd = &cobra.Command{
+	Use:   "user",
+	Short: "Manage users associated with a role",
+}
+
 var roleGroupLsCmd = &cobra.Command{
-	Use:   "group_ls [ROLE_ID]",
+	Use:   "ls [ROLE_ID]",
 	Short: "List the groups assigned to a role",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -195,7 +205,7 @@ var roleGroupLsCmd = &cobra.Command{
 }
 
 var roleUserLsCmd = &cobra.Command{
-	Use:   "user_ls [ROLE_ID]",
+	Use:   "ls [ROLE_ID]",
 	Short: "List the users assigned to a role",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -225,7 +235,7 @@ var roleUserLsCmd = &cobra.Command{
 }
 
 var roleGroupAddCmd = &cobra.Command{
-	Use:   "group_add [ROLE_ID] [GROUP_ID...]",
+	Use:   "add [ROLE_ID] [GROUP_ID...]",
 	Short: "Add indicated groups to role",
 	Args:  cobra.MinimumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -256,7 +266,7 @@ var roleGroupAddCmd = &cobra.Command{
 }
 
 var roleGroupRmCmd = &cobra.Command{
-	Use:   "group_rm [ROLE_ID] [GROUP_ID...]",
+	Use:   "rm [ROLE_ID] [GROUP_ID...]",
 	Short: "Remove indicated groups from role",
 	Args:  cobra.MinimumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -286,7 +296,7 @@ var roleGroupRmCmd = &cobra.Command{
 }
 
 var roleUserAddCmd = &cobra.Command{
-	Use:   "user_add [ROLE_ID] [USER_ID...]",
+	Use:   "add [ROLE_ID] [USER_ID...]",
 	Short: "Add indicated users to role",
 	Args:  cobra.MinimumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -319,7 +329,7 @@ var roleUserAddCmd = &cobra.Command{
 }
 
 var roleUserRmCmd = &cobra.Command{
-	Use:   "user_rm [ROLE_ID] [USER_ID...]",
+	Use:   "rm [ROLE_ID] [USER_ID...]",
 	Short: "Remove indicated users from role",
 	Args:  cobra.MinimumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -354,12 +364,16 @@ func init() {
 	RoleCmd.AddCommand(roleCatCmd)
 	RoleCmd.AddCommand(roleRmCmd)
 	RoleCmd.AddCommand(roleCreateCmd)
-	RoleCmd.AddCommand(roleGroupLsCmd)
-	RoleCmd.AddCommand(roleUserLsCmd)
-	RoleCmd.AddCommand(roleGroupAddCmd)
-	RoleCmd.AddCommand(roleGroupRmCmd)
-	RoleCmd.AddCommand(roleUserAddCmd)
-	RoleCmd.AddCommand(roleUserRmCmd)
+
+	RoleCmd.AddCommand(roleGroupCmd)
+	roleGroupCmd.AddCommand(roleGroupLsCmd)
+	roleGroupCmd.AddCommand(roleGroupAddCmd)
+	roleGroupCmd.AddCommand(roleGroupRmCmd)
+
+	RoleCmd.AddCommand(roleUserCmd)
+	roleUserCmd.AddCommand(roleUserLsCmd)
+	roleUserCmd.AddCommand(roleUserAddCmd)
+	roleUserCmd.AddCommand(roleUserRmCmd)
 
 	roleLsCmd.Flags().StringVar(&roleLsFields, "fields", "id,name,permission_set.id,permission_set.name,model_set.id,model_set.name", "Fields to display")
 	roleLsCmd.Flags().BoolVar(&roleLsPlain, "plain", false, "print without formatting")
