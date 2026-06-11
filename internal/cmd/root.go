@@ -40,7 +40,6 @@ var (
 	cfgTimeout      int
 	cfgHTTPProxy    string
 	cfgForce        bool
-	cfgWidth        int
 	cfgProfile      string
 )
 
@@ -71,7 +70,6 @@ func init() {
 	RootCmd.PersistentFlags().IntVar(&cfgTimeout, "timeout", 60, "Seconds to wait for a response from the server")
 	RootCmd.PersistentFlags().StringVar(&cfgHTTPProxy, "http-proxy", "", "HTTP Proxy for connecting to Looker host")
 	RootCmd.PersistentFlags().BoolVar(&cfgForce, "force", false, "Overwrite objects on server")
-	RootCmd.PersistentFlags().IntVar(&cfgWidth, "width", 0, "Width of rendering for tables")
 	RootCmd.PersistentFlags().StringVar(&cfgProfile, "profile", "", "Use a specific profile from config.yaml")
 
 	client.UserAgent = fmt.Sprintf("looker-cli %s", Version)
