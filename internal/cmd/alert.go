@@ -69,8 +69,7 @@ var alertLsCmd = &cobra.Command{
 		alerts, err := c.SDK.SearchAlerts(req, nil)
 		if err != nil { return fmt.Errorf("failed to list alerts: %w", err) }
 
-		headers := strings.Split(alertLsFields, ",")
-		for i := range headers { headers[i] = strings.TrimSpace(headers[i]) }
+		headers := util.ParseFieldsForHeaders(alertLsFields)
 
 		table := util.NewTable(headers)
 		for _, a := range alerts {
@@ -369,7 +368,7 @@ func init() {
 	AlertCmd.AddCommand(alertReadCmd)
 	AlertCmd.AddCommand(alertImportCmd)
 
-	alertLsCmd.Flags().StringVar(&alertLsFields, "fields", "id,field.title,field.name,comparison_type,threshold,cron,custom_title,dashboard_element_id,description", "Fields to display")
+	alertLsCmd.Flags().StringVar(&alertLsFields, "fields", "id,field(title,name),comparison_type,threshold,cron,custom_title,dashboard_element_id,description", "Fields to display")
 	alertLsCmd.Flags().StringVar(&alertLsDisabled, "disabled", "", "return disabled alerts (true/false)")
 	alertLsCmd.Flags().BoolVar(&alertLsAll, "all", false, "return alerts from all users")
 	alertLsCmd.Flags().BoolVar(&alertLsPlain, "plain", false, "print without formatting")

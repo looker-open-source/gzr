@@ -66,10 +66,7 @@ var planLsCmd = &cobra.Command{
 			return fmt.Errorf("failed to list plans: %w", err)
 		}
 
-		headers := strings.Split(planLsFields, ",")
-		for i := range headers {
-			headers[i] = strings.TrimSpace(headers[i])
-		}
+		headers := util.ParseFieldsForHeaders(planLsFields)
 
 		table := util.NewTable(headers)
 		for _, p := range plans {
@@ -448,7 +445,7 @@ func init() {
 	PlanCmd.AddCommand(planFailuresCmd)
 	PlanCmd.AddCommand(planRandomizeCmd)
 
-	planLsCmd.Flags().StringVar(&planLsFields, "fields", "id,enabled,name,user.id,user.display_name,look_id,dashboard_id,lookml_dashboard_id,crontab", "Fields to display")
+	planLsCmd.Flags().StringVar(&planLsFields, "fields", "id,enabled,name,user(id,display_name),look_id,dashboard_id,lookml_dashboard_id,crontab", "Fields to display")
 	planLsCmd.Flags().BoolVar(&planLsDisabled, "disabled", false, "Retrieve disabled plans")
 	planLsCmd.Flags().BoolVar(&planLsPlain, "plain", false, "print without formatting")
 	planLsCmd.Flags().BoolVar(&planLsCSV, "csv", false, "output in csv format")

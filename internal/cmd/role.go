@@ -60,8 +60,7 @@ var roleLsCmd = &cobra.Command{
 		roles, err := c.SDK.AllRoles(req, nil)
 		if err != nil { return fmt.Errorf("failed to list roles: %w", err) }
 
-		headers := strings.Split(roleLsFields, ",")
-		for i := range headers { headers[i] = strings.TrimSpace(headers[i]) }
+		headers := util.ParseFieldsForHeaders(roleLsFields)
 
 		table := util.NewTable(headers)
 		for _, r := range roles {
@@ -375,7 +374,7 @@ func init() {
 	roleUserCmd.AddCommand(roleUserAddCmd)
 	roleUserCmd.AddCommand(roleUserRmCmd)
 
-	roleLsCmd.Flags().StringVar(&roleLsFields, "fields", "id,name,permission_set.id,permission_set.name,model_set.id,model_set.name", "Fields to display")
+	roleLsCmd.Flags().StringVar(&roleLsFields, "fields", "id,name,permission_set(id,name,permissions),model_set(id,name,models)", "Fields to display")
 	roleLsCmd.Flags().BoolVar(&roleLsPlain, "plain", false, "print without formatting")
 	roleLsCmd.Flags().BoolVar(&roleLsCSV, "csv", false, "output in csv format")
 

@@ -176,12 +176,26 @@ func extractFields(item interface{}, fieldsStr string) []string {
 	var m map[string]interface{}
 	_ = json.Unmarshal(b, &m)
 
-	fields := strings.Split(fieldsStr, ",")
-	row := make([]string, len(fields))
-	for i, f := range fields {
-		f = strings.TrimSpace(f)
-		val, ok := m[f]
-		if !ok || val == nil {
+	headers := util.ParseFieldsForHeaders(fieldsStr)
+	row := make([]string, len(headers))
+	for i, h := range headers {
+		parts := util.HeaderToParts(h)
+		var val interface{} = m
+		for _, part := range parts {
+			if currMap, isMap := val.(map[string]interface{}); isMap {
+				var ok bool
+				val, ok = currMap[part]
+				if !ok {
+					val = nil
+					break
+				}
+			} else {
+				val = nil
+				break
+			}
+		}
+
+		if val == nil {
 			row[i] = ""
 		} else {
 			switch v := val.(type) {
@@ -191,6 +205,23 @@ func extractFields(item interface{}, fieldsStr string) []string {
 				row[i] = strconv.FormatFloat(v, 'f', -1, 64)
 			case bool:
 				row[i] = strconv.FormatBool(v)
+			case []interface{}:
+				strSlice := make([]string, len(v))
+				isAllStrings := true
+				for j, item := range v {
+					if s, ok := item.(string); ok {
+						strSlice[j] = s
+					} else {
+						isAllStrings = false
+						break
+					}
+				}
+				if isAllStrings {
+					row[i] = strings.Join(strSlice, "\n")
+				} else {
+					vb, _ := json.Marshal(v)
+					row[i] = string(vb)
+				}
 			default:
 				vb, _ := json.Marshal(v)
 				row[i] = string(vb)

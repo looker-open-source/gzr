@@ -62,10 +62,7 @@ var connectionLsCmd = &cobra.Command{
 			return fmt.Errorf("failed to list connections: %w", err)
 		}
 
-		headers := strings.Split(connectionLsFields, ",")
-		for i := range headers {
-			headers[i] = strings.TrimSpace(headers[i])
-		}
+		headers := util.ParseFieldsForHeaders(connectionLsFields)
 
 		table := util.NewTable(headers)
 		for _, conn := range connections {
@@ -278,7 +275,7 @@ func init() {
 	ConnectionCmd.AddCommand(connectionImportCmd)
 	ConnectionCmd.AddCommand(connectionTestCmd)
 
-	connectionLsCmd.Flags().StringVar(&connectionLsFields, "fields", "name,dialect.name,host,port,database,schema", "Fields to display")
+	connectionLsCmd.Flags().StringVar(&connectionLsFields, "fields", "name,dialect(name),host,port,database,schema", "Fields to display")
 	connectionLsCmd.Flags().BoolVar(&connectionLsPlain, "plain", false, "print without any extra formatting")
 	connectionLsCmd.Flags().BoolVar(&connectionLsCSV, "csv", false, "output in csv format")
 

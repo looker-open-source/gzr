@@ -177,10 +177,7 @@ var folderLsCmd = &cobra.Command{
 		}
 
 		var rows [][]string
-		headers := strings.Split(folderLsFields, ",")
-		for i := range headers {
-			headers[i] = strings.TrimSpace(headers[i])
-		}
+		headers := util.ParseFieldsForHeaders(folderLsFields)
 
 		for _, fID := range fIDs {
 			folder, err := c.SDK.Folder(fID, fields, nil)
@@ -672,6 +669,8 @@ func writeArchiveFile(archiver interface{}, name string, data []byte) {
 	}
 }
 
+
+
 func init() {
 	RootCmd.AddCommand(FolderCmd)
 	FolderCmd.AddCommand(folderLsCmd)
@@ -682,7 +681,7 @@ func init() {
 	FolderCmd.AddCommand(folderCreateCmd)
 	FolderCmd.AddCommand(folderExportCmd)
 
-	folderLsCmd.Flags().StringVar(&folderLsFields, "fields", "parent_id,id,name,looks(id),looks(title),dashboards(id),dashboards(title)", "Fields to display")
+	folderLsCmd.Flags().StringVar(&folderLsFields, "fields", "parent_id,id,name,looks(id,title),dashboards(id,title)", "Fields to display")
 	folderLsCmd.Flags().BoolVar(&folderLsPlain, "plain", false, "print without any extra formatting")
 	folderLsCmd.Flags().BoolVar(&folderLsCSV, "csv", false, "output in csv format")
 

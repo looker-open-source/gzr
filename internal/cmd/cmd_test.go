@@ -26,6 +26,7 @@ import (
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
+	"github.com/looker-open-source/gzr/internal/util"
 )
 
 type mockDoer struct {
@@ -217,8 +218,16 @@ func (m *mockDoer) Do(result interface{}, method, ver, path string, reqPars map[
 			role := v4.Role{
 				Id:            ptr("1"),
 				Name:          ptr("my_role"),
-				PermissionSet: &v4.PermissionSet{Id: ptr("2"), Name: ptr("my_perm_set")},
-				ModelSet:      &v4.ModelSet{Id: ptr("3"), Name: ptr("my_model_set")},
+				PermissionSet: &v4.PermissionSet{
+					Id:          ptr("2"),
+					Name:        ptr("my_perm_set"),
+					Permissions: &[]string{"access_data", "see_looks"},
+				},
+				ModelSet: &v4.ModelSet{
+					Id:     ptr("3"),
+					Name:   ptr("my_model_set"),
+					Models: &[]string{"my_model"},
+				},
 			}
 			
 			var fields string
@@ -295,6 +304,37 @@ func (m *mockDoer) Do(result interface{}, method, ver, path string, reqPars map[
 			{Id: ptr("3"), Name: "Personal Space", IsPersonal: ptrBool(true)},
 		}
 		b, _ := json.Marshal(folders)
+		return json.Unmarshal(b, result)
+	}
+	if method == "GET" && path == "/roles" {
+		roles := []v4.Role{
+			{
+				Id:            ptr("1"),
+				Name:          ptr("my_role"),
+				PermissionSet: &v4.PermissionSet{
+					Id:          ptr("2"),
+					Name:        ptr("my_perm_set"),
+					Permissions: &[]string{"access_data", "see_looks"},
+				},
+				ModelSet: &v4.ModelSet{
+					Id:     ptr("3"),
+					Name:   ptr("my_model_set"),
+					Models: &[]string{"my_model"},
+				},
+			},
+		}
+		b, _ := json.Marshal(roles)
+		return json.Unmarshal(b, result)
+	}
+	if method == "GET" && path == "/connections" {
+		conns := []v4.DBConnection{
+			{
+				Name: ptr("my_conn"),
+				Dialect: &v4.Dialect{Name: ptr("mysql")},
+				Host: ptr("localhost"),
+			},
+		}
+		b, _ := json.Marshal(conns)
 		return json.Unmarshal(b, result)
 	}
 	if method == "GET" && strings.HasPrefix(path, "/queries/slug/") {
@@ -1068,12 +1108,22 @@ func TestFolderTopCommand(t *testing.T) {
 }
 
 func TestInitClient_EnvVars(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "looker_cli_test_cmd_*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	origHome := os.Getenv("HOME")
+	_ = os.Setenv("HOME", tmpDir)
+
 	// Clean up existing environment variables at end of test
 	origBase := os.Getenv("LOOKERSDK_BASE_URL")
 	origVerify := os.Getenv("LOOKERSDK_VERIFY_SSL")
 	defer func() {
 		_ = os.Setenv("LOOKERSDK_BASE_URL", origBase)
 		_ = os.Setenv("LOOKERSDK_VERIFY_SSL", origVerify)
+		_ = os.Setenv("HOME", origHome)
 	}()
 
 	// Reset flags to their default values
@@ -1322,3 +1372,148 @@ func TestQueryRunQuery(t *testing.T) {
 		}
 	})
 }
+
+func TestParseFieldsForHeaders(t *testing.T) {
+	tests := []struct {
+		fields   string
+		expected []string
+	}{
+		{
+			"parent_id,id,name",
+			[]string{"parent_id", "id", "name"},
+		},
+		{
+			"parent_id,id,name,looks(id,title)",
+			[]string{"parent_id", "id", "name", "looks(id)", "looks(title)"},
+		},
+		{
+			"parent_id,id,name,looks(id,title),dashboards(id,title)",
+			[]string{"parent_id", "id", "name", "looks(id)", "looks(title)", "dashboards(id)", "dashboards(title)"},
+		},
+		{
+			"looks(id,title),dashboards(id,title)",
+			[]string{"looks(id)", "looks(title)", "dashboards(id)", "dashboards(title)"},
+		},
+		{
+			"id,name,permission_set(name,permissions),model_set(name,models)",
+			[]string{"id", "name", "permission_set(name)", "permission_set(permissions)", "model_set(name)", "model_set(models)"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.fields, func(t *testing.T) {
+			actual := util.ParseFieldsForHeaders(tt.fields)
+			if len(actual) != len(tt.expected) {
+				t.Fatalf("expected %v, got %v", tt.expected, actual)
+			}
+			for i, v := range actual {
+				if v != tt.expected[i] {
+					t.Errorf("at index %d: expected %q, got %q", i, tt.expected[i], v)
+				}
+			}
+		})
+	}
+}
+
+func TestHeaderToParts(t *testing.T) {
+	tests := []struct {
+		header   string
+		expected []string
+	}{
+		{"name", []string{"name"}},
+		{"permission_set(id)", []string{"permission_set", "id"}},
+		{"model_set(name)", []string{"model_set", "name"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.header, func(t *testing.T) {
+			actual := util.HeaderToParts(tt.header)
+			if len(actual) != len(tt.expected) {
+				t.Fatalf("expected %v, got %v", tt.expected, actual)
+			}
+			for i, v := range actual {
+				if v != tt.expected[i] {
+					t.Errorf("at index %d: expected %q, got %q", i, tt.expected[i], v)
+				}
+			}
+		})
+	}
+}
+
+func TestRoleLsCommand(t *testing.T) {
+	MockSDK = v4.NewLookerSDK(&mockDoer{t: t})
+	defer func() { MockSDK = nil }()
+
+	oldStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	RootCmd.SetArgs([]string{"role", "ls", "--plain"})
+	err := RootCmd.Execute()
+	if err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	_ = w.Close()
+	os.Stdout = oldStdout
+	var buf bytes.Buffer
+	_, _ = io.Copy(&buf, r)
+	out := buf.String()
+
+	expected := []string{"1", "my_role", "2", "my_perm_set", "access_data\nsee_looks", "3", "my_model_set", "my_model"}
+	for _, exp := range expected {
+		if !strings.Contains(out, exp) {
+			t.Errorf("expected to contain %q, got %q", exp, out)
+		}
+	}
+}
+
+func TestConnectionLsCommand(t *testing.T) {
+	MockSDK = v4.NewLookerSDK(&mockDoer{t: t})
+	defer func() { MockSDK = nil }()
+
+	oldStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	RootCmd.SetArgs([]string{"connection", "ls", "--plain"})
+	err := RootCmd.Execute()
+	if err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	_ = w.Close()
+	os.Stdout = oldStdout
+	var buf bytes.Buffer
+	_, _ = io.Copy(&buf, r)
+	out := buf.String()
+
+	expected := []string{"my_conn", "mysql", "localhost"}
+	for _, exp := range expected {
+		if !strings.Contains(out, exp) {
+			t.Errorf("expected to contain %q, got %q", exp, out)
+		}
+	}
+}
+
+func TestExtractFieldsSlice(t *testing.T) {
+	role := v4.Role{
+		Id:   ptr("1"),
+		Name: ptr("my_role"),
+		PermissionSet: &v4.PermissionSet{
+			Name:        ptr("my_perm_set"),
+			Permissions: &[]string{"access_data", "see_looks"},
+		},
+	}
+
+	fields := "permission_set(permissions)"
+	row := extractFields(role, fields)
+	expected := "access_data\nsee_looks"
+	if row[0] != expected {
+		t.Errorf("expected %q, got %q", expected, row[0])
+	}
+}
+
+
+
+
