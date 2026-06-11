@@ -20,6 +20,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/looker-open-source/gzr/internal/client"
+	"github.com/looker-open-source/gzr/internal/config"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
@@ -79,9 +80,23 @@ var sessionLoginCmd = &cobra.Command{
 			return nil
 		}
 
-		err = client.StoreToken(cfgHost, cfgSuUser, tok, "", "", exp)
-		if err != nil {
-			return fmt.Errorf("failed to store token: %w", err)
+		if c.ActiveProfile != "" {
+			cfg, err := config.Load()
+			if err == nil {
+				prof := cfg.Profiles[c.ActiveProfile]
+				prof.AccessToken = tok
+				prof.Expiration = exp.Format(client.TimeFormat)
+				cfg.Profiles[c.ActiveProfile] = prof
+				err = cfg.Save()
+			}
+			if err != nil {
+				return fmt.Errorf("failed to store token in profile: %w", err)
+			}
+		} else {
+			err = client.StoreToken(cfgHost, cfgSuUser, tok, "", "", exp)
+			if err != nil {
+				return fmt.Errorf("failed to store token: %w", err)
+			}
 		}
 
 		fmt.Println("Login successful and token stored.")

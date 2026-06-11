@@ -23,6 +23,7 @@ import (
 	"github.com/spf13/cobra"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 	"github.com/looker-open-source/gzr/internal/client"
+	"github.com/looker-open-source/gzr/internal/config"
 )
 
 var (
@@ -40,6 +41,7 @@ var (
 	cfgHTTPProxy    string
 	cfgForce        bool
 	cfgWidth        int
+	cfgProfile      string
 )
 
 var RootCmd = &cobra.Command{
@@ -70,6 +72,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVar(&cfgHTTPProxy, "http-proxy", "", "HTTP Proxy for connecting to Looker host")
 	RootCmd.PersistentFlags().BoolVar(&cfgForce, "force", false, "Overwrite objects on server")
 	RootCmd.PersistentFlags().IntVar(&cfgWidth, "width", 0, "Width of rendering for tables")
+	RootCmd.PersistentFlags().StringVar(&cfgProfile, "profile", "", "Use a specific profile from config.yaml")
 
 	client.UserAgent = fmt.Sprintf("looker-cli %s", Version)
 }
@@ -81,9 +84,32 @@ func initClient(ctx context.Context, oauth bool) (*client.ClientWrapper, error) 
 		return &client.ClientWrapper{SDK: MockSDK, Host: cfgHost, SuUser: cfgSuUser}, nil
 	}
 
+	cfg, err := config.Load()
+	if err != nil {
+		if cfgProfile != "" {
+			return nil, fmt.Errorf("failed to load config: %w", err)
+		}
+	}
+
+	var prof config.Profile
+	activeProfile := cfgProfile
+	if activeProfile == "" && cfg != nil {
+		activeProfile = cfg.Default
+	}
+
+	if activeProfile != "" && cfg != nil {
+		if p, ok := cfg.Profiles[activeProfile]; ok {
+			prof = p
+		} else if cfgProfile != "" {
+			return nil, fmt.Errorf("profile %q not found", cfgProfile)
+		}
+	}
+
 	host := cfgHost
 	if !RootCmd.PersistentFlags().Lookup("host").Changed {
-		if envURL := os.Getenv("LOOKERSDK_BASE_URL"); envURL != "" {
+		if prof.Host != "" {
+			host = prof.Host
+		} else if envURL := os.Getenv("LOOKERSDK_BASE_URL"); envURL != "" {
 			if u, err := url.Parse(envURL); err == nil && u.Hostname() != "" {
 				host = u.Hostname()
 			}
@@ -92,11 +118,28 @@ func initClient(ctx context.Context, oauth bool) (*client.ClientWrapper, error) 
 
 	port := cfgPort
 	if !RootCmd.PersistentFlags().Lookup("port").Changed {
-		if envURL := os.Getenv("LOOKERSDK_BASE_URL"); envURL != "" {
+		if prof.Port != "" {
+			port = prof.Port
+		} else if envURL := os.Getenv("LOOKERSDK_BASE_URL"); envURL != "" {
 			if u, err := url.Parse(envURL); err == nil && u.Port() != "" {
 				port = u.Port()
 			}
 		}
+	}
+
+	clientID := cfgClientID
+	if !RootCmd.PersistentFlags().Lookup("client-id").Changed && prof.ClientID != "" {
+		clientID = prof.ClientID
+	}
+
+	clientSecret := cfgClientSecret
+	if !RootCmd.PersistentFlags().Lookup("client-secret").Changed && prof.ClientSecret != "" {
+		clientSecret = prof.ClientSecret
+	}
+
+	token := ""
+	if RootCmd.PersistentFlags().Lookup("token").Changed {
+		token = cfgToken
 	}
 
 	verifySSL := cfgVerifySSL
@@ -110,13 +153,14 @@ func initClient(ctx context.Context, oauth bool) (*client.ClientWrapper, error) 
 		ctx,
 		host,
 		port,
-		cfgClientID,
-		cfgClientSecret,
-		cfgToken,
+		clientID,
+		clientSecret,
+		token,
 		cfgSuUser,
 		cfgSSL,
 		verifySSL,
 		oauth,
 		cfgTokenFile,
+		activeProfile,
 	)
 }

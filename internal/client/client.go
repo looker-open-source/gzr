@@ -26,20 +26,22 @@ import (
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
+	"github.com/looker-open-source/gzr/internal/config"
 	"golang.org/x/oauth2"
 )
 
 type ClientWrapper struct {
-	SDK     *v4.LookerSDK
-	Session *rtl.AuthSession
-	Host    string
-	SuUser  string
+	SDK           *v4.LookerSDK
+	Session       *rtl.AuthSession
+	Host          string
+	SuUser        string
+	ActiveProfile string
 }
 
 var UserAgent = "looker-cli/unknown"
 
 // NewClient initializes LookerSDK based on provided flags and auth mechanisms.
-func NewClient(ctx context.Context, host, port, clientID, clientSecret, token, suUser string, ssl, verifySSL, oauth, tokenFile bool) (*ClientWrapper, error) {
+func NewClient(ctx context.Context, host, port, clientID, clientSecret, token, suUser string, ssl, verifySSL, oauth, tokenFile bool, activeProfile string) (*ClientWrapper, error) {
 	scheme := "https"
 	if !ssl {
 		scheme = "http"
@@ -61,10 +63,53 @@ func NewClient(ctx context.Context, host, port, clientID, clientSecret, token, s
 	settings.Headers["User-Agent"] = UserAgent
 
 	var activeToken string
+	activeClientID := clientID
+	activeClientSecret := clientSecret
+
+	var prof config.Profile
+	if activeProfile != "" {
+		cfg, err := config.Load()
+		if err == nil {
+			prof = cfg.Profiles[activeProfile]
+		}
+	}
 
 	if token != "" {
 		activeToken = token
-	} else if tokenFile {
+	} else if activeProfile != "" && prof.AccessToken != "" && !oauth {
+		activeToken = prof.AccessToken
+		expired := false
+		if prof.Expiration != "" {
+			exp, err := time.Parse(TimeFormat, prof.Expiration)
+			if err != nil {
+				expired = true
+			} else if time.Now().After(exp.Add(-5 * time.Minute)) {
+				expired = true
+			}
+		}
+
+		if expired && prof.RefreshToken != "" {
+			cID := activeClientID
+			if cID == "" {
+				cID = determineOAuthClientID(ctx, host, port, ssl, verifySSL)
+			}
+			tok, refTok, newExp, err := RefreshOAuthToken(ctx, host, port, cID, prof.RefreshToken, ssl)
+			if err == nil {
+				prof.AccessToken = tok
+				prof.RefreshToken = refTok
+				prof.Expiration = newExp.Format(TimeFormat)
+				if cfg, err := config.Load(); err == nil {
+					cfg.Profiles[activeProfile] = prof
+					_ = cfg.Save()
+				}
+				activeToken = tok
+			} else {
+				return nil, fmt.Errorf("token expired and refresh failed: %w", err)
+			}
+		} else if expired {
+			return nil, fmt.Errorf("token expired and cannot be refreshed (no refresh token found)")
+		}
+	} else if tokenFile && !oauth {
 		entry, err := GetTokenEntry(host, suUser)
 		if err != nil && suUser != "" {
 			entry, err = GetTokenEntry(host, "")
@@ -98,37 +143,6 @@ func NewClient(ctx context.Context, host, port, clientID, clientSecret, token, s
 		} else {
 			activeToken = entry.Token
 		}
-	} else if oauth {
-		if clientID == "" {
-			clientID = determineOAuthClientID(ctx, host, port, ssl, verifySSL)
-		}
-		tok, refTok, exp, err := PerformOAuthLogin(ctx, host, port, clientID, ssl)
-		if err != nil {
-			return nil, fmt.Errorf("oauth login failed: %w", err)
-		}
-		activeToken = tok
-		_ = StoreToken(host, suUser, tok, refTok, clientID, exp)
-	} else {
-		if clientID == "" || clientSecret == "" {
-			cID, cSec, err := GetNetrcCredentials(host)
-			if err == nil && cID != "" && cSec != "" {
-				clientID = cID
-				clientSecret = cSec
-			} else {
-				envSettings, _ := rtl.NewSettingsFromEnv()
-				if envSettings.ClientId != "" && envSettings.ClientSecret != "" {
-					clientID = envSettings.ClientId
-					clientSecret = envSettings.ClientSecret
-				}
-			}
-		}
-
-		if clientID != "" && clientSecret != "" {
-			settings.ClientId = clientID
-			settings.ClientSecret = clientSecret
-		} else {
-			return nil, fmt.Errorf("auth required: must provide token, oauth, netrc, or client_id/secret")
-		}
 	}
 
 	if activeToken != "" {
@@ -136,6 +150,53 @@ func NewClient(ctx context.Context, host, port, clientID, clientSecret, token, s
 			activeToken = "Bearer " + activeToken
 		}
 		settings.Headers["Authorization"] = activeToken
+	} else if oauth {
+		cID := activeClientID
+		if cID == "" {
+			cID = determineOAuthClientID(ctx, host, port, ssl, verifySSL)
+		}
+		tok, refTok, exp, err := PerformOAuthLogin(ctx, host, port, cID, ssl)
+		if err != nil {
+			return nil, fmt.Errorf("oauth login failed: %w", err)
+		}
+		activeToken = tok
+		if activeProfile != "" {
+			if cfg, err := config.Load(); err == nil {
+				p := cfg.Profiles[activeProfile]
+				p.AccessToken = tok
+				p.RefreshToken = refTok
+				p.Expiration = exp.Format(TimeFormat)
+				cfg.Profiles[activeProfile] = p
+				_ = cfg.Save()
+			}
+		} else {
+			_ = StoreToken(host, suUser, tok, refTok, cID, exp)
+		}
+		if !strings.HasPrefix(activeToken, "Bearer ") && !strings.HasPrefix(activeToken, "token ") {
+			activeToken = "Bearer " + activeToken
+		}
+		settings.Headers["Authorization"] = activeToken
+	} else {
+		if activeClientID == "" || activeClientSecret == "" {
+			cID, cSec, err := GetNetrcCredentials(host)
+			if err == nil && cID != "" && cSec != "" {
+				activeClientID = cID
+				activeClientSecret = cSec
+			} else {
+				envSettings, _ := rtl.NewSettingsFromEnv()
+				if envSettings.ClientId != "" && envSettings.ClientSecret != "" {
+					activeClientID = envSettings.ClientId
+					activeClientSecret = envSettings.ClientSecret
+				}
+			}
+		}
+
+		if activeClientID != "" && activeClientSecret != "" {
+			settings.ClientId = activeClientID
+			settings.ClientSecret = activeClientSecret
+		} else {
+			return nil, fmt.Errorf("auth required: must provide token, oauth, netrc, or client_id/secret")
+		}
 	}
 
 	session := rtl.NewAuthSession(settings)
@@ -158,10 +219,11 @@ func NewClient(ctx context.Context, host, port, clientID, clientSecret, token, s
 	sdk := v4.NewLookerSDK(session)
 
 	wrapper := &ClientWrapper{
-		SDK:     sdk,
-		Session: session,
-		Host:    host,
-		SuUser:  suUser,
+		SDK:           sdk,
+		Session:       session,
+		Host:          host,
+		SuUser:        suUser,
+		ActiveProfile: activeProfile,
 	}
 
 	if suUser != "" && (settings.ClientId != "" || settings.Headers["Authorization"] != "") {

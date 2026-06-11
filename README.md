@@ -9,8 +9,9 @@ This is a Go-based reimplementation of the original Ruby `gzr` tool, utilizing t
 ## Table of Contents
 1. [Installation](#installation)
 2. [Authentication Guide](#authentication-guide)
-3. [Global Flags](#global-flags)
-4. [Complete Command Reference](#complete-command-reference)
+3. [Profile Management](#profile-management)
+4. [Global Flags](#global-flags)
+5. [Complete Command Reference](#complete-command-reference)
    * [alert](#alert)
    * [attribute](#attribute)
    * [connection](#connection)
@@ -129,6 +130,60 @@ export LOOKERSDK_CLIENT_SECRET="your_client_secret"
 
 ---
 
+## Profile Management
+
+`looker-cli` supports configuration profiles to easily switch between different Looker instances or environments (e.g., dev, staging, production). Profiles are stored in `$HOME/.config/looker-cli/config.yaml`.
+
+A profile stores the host, port, and optionally client credentials (`client_id`, `client_secret`) and/or OAuth tokens (`access_token`, `refresh_token`, `expiration`).
+
+### Managing Profiles
+
+*   **Add a new profile**:
+    ```bash
+    ./looker-cli profile add my-dev --host dev.looker.com --port 19999 --client-id "ID" --client-secret "SECRET"
+    ```
+    *Note: Only `--host` is required. If client credentials are not provided, they can be retrieved from `.netrc` or environment variables when the profile is used.*
+
+*   **List all profiles**:
+    ```bash
+    ./looker-cli profile ls
+    ```
+    The active (default) profile is marked with an asterisk (`*`).
+
+*   **Set a default profile**:
+    ```bash
+    ./looker-cli profile use my-dev
+    ```
+
+*   **Delete a profile**:
+    ```bash
+    ./looker-cli profile rm my-dev
+    ```
+
+### Using Profiles
+
+Once you have profiles configured:
+
+1.  **Default Profile**: If you don't specify a profile or connection flags, `looker-cli` will automatically use the default profile marked in `config.yaml`.
+    ```bash
+    # Uses default profile
+    ./looker-cli user me
+    ```
+
+2.  **Explicit Profile**: Use the `--profile` global flag to use a specific profile.
+    ```bash
+    # Uses 'my-prod' profile
+    ./looker-cli user me --profile my-prod
+    ```
+
+3.  **OAuth with Profiles**: If you use OAuth login with an active profile, the tokens will be saved directly into that profile in `config.yaml`.
+    ```bash
+    ./looker-cli session login --oauth --profile my-dev
+    ```
+    Subsequent commands using that profile will automatically reuse and refresh these tokens.
+
+---
+
 ## Global Flags
 
 Every command accepts the following optional global parameters to customize connection and behavior:
@@ -137,6 +192,7 @@ Every command accepts the following optional global parameters to customize conn
 | :--- | :--- | :--- |
 | `--host` | Looker Hostname | `localhost` |
 | `--port` | Looker API Port | `19999` |
+| `--profile` | Use a specific profile from `config.yaml` | `""` |
 | `--ssl` | Use SSL/TLS for communication | `true` |
 | `--verify-ssl` | Verify server SSL certificate | `true` |
 | `--su` | Act as another user ID (Sudo) | `""` |
