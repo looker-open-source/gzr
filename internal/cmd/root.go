@@ -47,7 +47,7 @@ var (
 var RootCmd = &cobra.Command{
 	Use:   "looker-cli",
 	Short: "Looker CLI - A Looker Content Utility",
-	Long:  `Looker CLI can be used to navigate and manage Spaces, Looks, and Dashboards via a simple command line tool.`,
+	Long:  `Looker CLI can be used to navigate and manage Folders, Looks, and Dashboards via a simple command line tool.`,
 }
 
 func Execute() {

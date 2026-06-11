@@ -268,28 +268,39 @@ func TestUserMeCommand(t *testing.T) {
 	}
 }
 
-func TestSpaceLsCommand(t *testing.T) {
-	MockSDK = v4.NewLookerSDK(&mockDoer{t: t})
-	defer func() { MockSDK = nil }()
-
-	oldStdout := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-
-	RootCmd.SetArgs([]string{"space", "ls", "709", "--plain"})
-	err := RootCmd.Execute()
-	if err != nil {
-		t.Fatalf("Execute failed: %v", err)
+func TestFolderLsCommand(t *testing.T) {
+	tests := []struct {
+		name string
+		cmd  string
+	}{
+		{"primary", "folder"},
+		{"alias", "space"},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			MockSDK = v4.NewLookerSDK(&mockDoer{t: t})
+			defer func() { MockSDK = nil }()
 
-	_ = w.Close()
-	os.Stdout = oldStdout
-	var buf bytes.Buffer
-	_, _ = io.Copy(&buf, r)
-	out := buf.String()
+			oldStdout := os.Stdout
+			r, w, _ := os.Pipe()
+			os.Stdout = w
 
-	if !strings.Contains(out, "Daily Profit") || !strings.Contains(out, "Daily Profit Dashboard") {
-		t.Errorf("expected Daily Profit, got %s", out)
+			RootCmd.SetArgs([]string{tt.cmd, "ls", "709", "--plain"})
+			err := RootCmd.Execute()
+			if err != nil {
+				t.Fatalf("Execute failed: %v", err)
+			}
+
+			_ = w.Close()
+			os.Stdout = oldStdout
+			var buf bytes.Buffer
+			_, _ = io.Copy(&buf, r)
+			out := buf.String()
+
+			if !strings.Contains(out, "Daily Profit") || !strings.Contains(out, "Daily Profit Dashboard") {
+				t.Errorf("expected Daily Profit, got %s", out)
+			}
+		})
 	}
 }
 
@@ -887,32 +898,43 @@ func TestPermissionSetRmCommand(t *testing.T) {
 	}
 }
 
-func TestSpaceTopCommand(t *testing.T) {
-	MockSDK = v4.NewLookerSDK(&mockDoer{t: t})
-	defer func() { MockSDK = nil }()
-
-	oldStdout := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-
-	RootCmd.SetArgs([]string{"space", "top", "--plain"})
-	err := RootCmd.Execute()
-	if err != nil {
-		t.Fatalf("Execute failed: %v", err)
+func TestFolderTopCommand(t *testing.T) {
+	tests := []struct {
+		name string
+		cmd  string
+	}{
+		{"primary", "folder"},
+		{"alias", "space"},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			MockSDK = v4.NewLookerSDK(&mockDoer{t: t})
+			defer func() { MockSDK = nil }()
 
-	_ = w.Close()
-	os.Stdout = oldStdout
-	var buf bytes.Buffer
-	_, _ = io.Copy(&buf, r)
-	out := buf.String()
+			oldStdout := os.Stdout
+			r, w, _ := os.Pipe()
+			os.Stdout = w
 
-	// Verify output contains Shared Root and Users Root but not Personal Space
-	if !strings.Contains(out, "Shared Root") || !strings.Contains(out, "Users Root") {
-		t.Errorf("expected Shared Root and Users Root, got:\n%s", out)
-	}
-	if strings.Contains(out, "Personal Space") {
-		t.Errorf("unexpected Personal Space in top-level folders, got:\n%s", out)
+			RootCmd.SetArgs([]string{tt.cmd, "top", "--plain"})
+			err := RootCmd.Execute()
+			if err != nil {
+				t.Fatalf("Execute failed: %v", err)
+			}
+
+			_ = w.Close()
+			os.Stdout = oldStdout
+			var buf bytes.Buffer
+			_, _ = io.Copy(&buf, r)
+			out := buf.String()
+
+			// Verify output contains Shared Root and Users Root but not Personal Space
+			if !strings.Contains(out, "Shared Root") || !strings.Contains(out, "Users Root") {
+				t.Errorf("expected Shared Root and Users Root, got:\n%s", out)
+			}
+			if strings.Contains(out, "Personal Space") {
+				t.Errorf("unexpected Personal Space in top-level folders, got:\n%s", out)
+			}
+		})
 	}
 }
 

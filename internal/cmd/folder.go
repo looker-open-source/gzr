@@ -34,27 +34,27 @@ import (
 )
 
 var (
-	spaceLsFields     string
-	spaceLsPlain      bool
-	spaceLsCSV        bool
-	spaceTopFields    string
-	spaceTopPlain     bool
-	spaceTopCSV       bool
-	spaceTreePlain    bool
-	spaceCatFields    string
-	spaceCatDir       string
-	spaceExportDir    string
-	spaceExportTar    string
-	spaceExportTgz    string
-	spaceExportZip    string
-	spaceExportTrim   bool
-	spaceRmForce      bool
+	folderLsFields     string
+	folderLsPlain      bool
+	folderLsCSV        bool
+	folderTopFields    string
+	folderTopPlain     bool
+	folderTopCSV       bool
+	folderTreePlain    bool
+	folderCatFields    string
+	folderCatDir       string
+	folderExportDir    string
+	folderExportTar    string
+	folderExportTgz    string
+	folderExportZip    string
+	folderExportTrim   bool
+	folderRmForce      bool
 )
 
-var SpaceCmd = &cobra.Command{
-	Use:     "space",
-	Aliases: []string{"folder"},
-	Short:   "Commands pertaining to spaces/folders",
+var FolderCmd = &cobra.Command{
+	Use:     "folder",
+	Aliases: []string{"space"},
+	Short:   "Commands pertaining to folders/spaces",
 }
 
 func resolveFolderID(c *client.ClientWrapper, arg string) ([]string, error) {
@@ -150,9 +150,9 @@ func resolveFolderID(c *client.ClientWrapper, arg string) ([]string, error) {
 
 func ptr(s string) *string { return &s }
 
-var spaceLsCmd = &cobra.Command{
+var folderLsCmd = &cobra.Command{
 	Use:   "ls [FOLDER_ID]",
-	Short: "list the contents of a space/folder",
+	Short: "list the contents of a folder",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := initClient(cmd.Context(), false)
 		if err != nil {
@@ -171,13 +171,13 @@ var spaceLsCmd = &cobra.Command{
 			return nil
 		}
 
-		fields := spaceLsFields
+		fields := folderLsFields
 		if arg == "lookml" {
 			fields = "dashboards(id,title)"
 		}
 
 		var rows [][]string
-		headers := strings.Split(spaceLsFields, ",")
+		headers := strings.Split(folderLsFields, ",")
 		for i := range headers {
 			headers[i] = strings.TrimSpace(headers[i])
 		}
@@ -234,12 +234,12 @@ var spaceLsCmd = &cobra.Command{
 
 		table := util.NewTable(headers)
 		table.Rows = rows
-		table.Render(spaceLsPlain, spaceLsCSV)
+		table.Render(folderLsPlain, folderLsCSV)
 		return nil
 	},
 }
 
-var spaceTopCmd = &cobra.Command{
+var folderTopCmd = &cobra.Command{
 	Use:   "top",
 	Short: "Retrieve the top level (or root) folders",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -249,7 +249,7 @@ var spaceTopCmd = &cobra.Command{
 		}
 
 		extraFields := []string{"is_shared_root", "is_users_root", "is_embed_shared_root", "is_embed_users_root"}
-		queryFieldsSlice := strings.Split(spaceTopFields, ",")
+		queryFieldsSlice := strings.Split(folderTopFields, ",")
 		for i := range queryFieldsSlice {
 			queryFieldsSlice[i] = strings.TrimSpace(queryFieldsSlice[i])
 		}
@@ -285,17 +285,17 @@ var spaceTopCmd = &cobra.Command{
 			return nil
 		}
 
-		headers := strings.Split(spaceTopFields, ",")
+		headers := strings.Split(folderTopFields, ",")
 		for i := range headers {
 			headers[i] = strings.TrimSpace(headers[i])
 		}
 
 		table := util.NewTable(headers)
 		for _, f := range topFolders {
-			table.Append(extractFields(f, spaceTopFields))
+			table.Append(extractFields(f, folderTopFields))
 		}
 
-		table.Render(spaceTopPlain, spaceTopCSV)
+		table.Render(folderTopPlain, folderTopCSV)
 		return nil
 	},
 }
@@ -326,9 +326,9 @@ func mapToRow(m map[string]interface{}, headers []string) []string {
 	return row
 }
 
-var spaceTreeCmd = &cobra.Command{
+var folderTreeCmd = &cobra.Command{
 	Use:   "tree [FOLDER_ID]",
-	Short: "display child spaces, dashboards, and looks in a tree format",
+	Short: "display child folders, dashboards, and looks in a tree format",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := initClient(cmd.Context(), false)
 		if err != nil {
@@ -403,7 +403,7 @@ func printTree(c *client.ClientWrapper, folderID, indent string) {
 	}
 }
 
-var spaceCatCmd = &cobra.Command{
+var folderCatCmd = &cobra.Command{
 	Use:   "cat [FOLDER_ID]",
 	Short: "output json describing a folder",
 	Args:  cobra.ExactArgs(1),
@@ -413,14 +413,14 @@ var spaceCatCmd = &cobra.Command{
 			return err
 		}
 		fID := args[0]
-		folder, err := c.SDK.Folder(fID, spaceCatFields, nil)
+		folder, err := c.SDK.Folder(fID, folderCatFields, nil)
 		if err != nil {
 			return fmt.Errorf("failed to get folder %s: %w", fID, err)
 		}
 
 		bytes, _ := json.MarshalIndent(folder, "", "  ")
-		if spaceCatDir != "" {
-			fn := fmt.Sprintf("%s/Space_%s_%s.json", spaceCatDir, fID, sanitizeFilename(folder.Name))
+		if folderCatDir != "" {
+			fn := fmt.Sprintf("%s/Folder_%s_%s.json", folderCatDir, fID, sanitizeFilename(folder.Name))
 			_ = os.WriteFile(fn, bytes, 0644)
 			fmt.Printf("Wrote %s\n", fn)
 		} else {
@@ -430,7 +430,7 @@ var spaceCatCmd = &cobra.Command{
 	},
 }
 
-var spaceRmCmd = &cobra.Command{
+var folderRmCmd = &cobra.Command{
 	Use:   "rm [FOLDER_ID]",
 	Short: "delete a folder",
 	Args:  cobra.ExactArgs(1),
@@ -441,7 +441,7 @@ var spaceRmCmd = &cobra.Command{
 		}
 		fID := args[0]
 
-		if !spaceRmForce {
+		if !folderRmForce {
 			folder, err := c.SDK.Folder(fID, "id,name,looks(id),dashboards(id)", nil)
 			if err != nil {
 				return fmt.Errorf("folder %s not found: %w", fID, err)
@@ -464,9 +464,9 @@ var spaceRmCmd = &cobra.Command{
 	},
 }
 
-var spaceCreateCmd = &cobra.Command{
+var folderCreateCmd = &cobra.Command{
 	Use:   "create [NAME] [PARENT_ID]",
-	Short: "create a new subspace/folder",
+	Short: "create a new subfolder",
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := initClient(cmd.Context(), false)
@@ -488,9 +488,9 @@ var spaceCreateCmd = &cobra.Command{
 	},
 }
 
-var spaceExportCmd = &cobra.Command{
+var folderExportCmd = &cobra.Command{
 	Use:   "export [FOLDER_ID]",
-	Short: "export a space and its subspaces, looks, and dashboards",
+	Short: "export a folder and its subfolders, looks, and dashboards",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := initClient(cmd.Context(), false)
@@ -499,16 +499,16 @@ var spaceExportCmd = &cobra.Command{
 		}
 		fID := args[0]
 
-		if spaceExportTar != "" || spaceExportTgz != "" || spaceExportZip != "" {
+		if folderExportTar != "" || folderExportTgz != "" || folderExportZip != "" {
 			var buf bytes.Buffer
 			var archiver interface{}
 			var gzw *gzip.Writer
 
-			if spaceExportZip != "" {
+			if folderExportZip != "" {
 				archiver = zip.NewWriter(&buf)
 			} else {
 				var w io.Writer = &buf
-				if spaceExportTgz != "" {
+				if folderExportTgz != "" {
 					gzw = gzip.NewWriter(&buf)
 					w = gzw
 				}
@@ -522,7 +522,7 @@ var spaceExportCmd = &cobra.Command{
 
 			if zw, ok := archiver.(*zip.Writer); ok {
 				_ = zw.Close()
-				fn := spaceExportZip
+				fn := folderExportZip
 				_ = os.WriteFile(fn, buf.Bytes(), 0644)
 				fmt.Printf("Wrote zip %s\n", fn)
 			} else if tw, ok := archiver.(*tar.Writer); ok {
@@ -530,18 +530,18 @@ var spaceExportCmd = &cobra.Command{
 				if gzw != nil {
 					_ = gzw.Close()
 				}
-				fn := spaceExportTar
-				if spaceExportTgz != "" { fn = spaceExportTgz }
+				fn := folderExportTar
+				if folderExportTgz != "" { fn = folderExportTgz }
 				_ = os.WriteFile(fn, buf.Bytes(), 0644)
 				fmt.Printf("Wrote archive %s\n", fn)
 			}
 			return nil
 		}
 
-		if spaceExportDir == "" {
-			spaceExportDir = "."
+		if folderExportDir == "" {
+			folderExportDir = "."
 		}
-		return exportFolderDir(c, fID, spaceExportDir)
+		return exportFolderDir(c, fID, folderExportDir)
 	},
 }
 
@@ -552,7 +552,7 @@ func exportFolderDir(c *client.ClientWrapper, fID, baseDir string) error {
 	}
 	name := folder.Name
 	cleanName := sanitizeFilename(name)
-	dirName := filepath.Join(baseDir, fmt.Sprintf("Space_%s_%s", fID, cleanName))
+	dirName := filepath.Join(baseDir, fmt.Sprintf("Folder_%s_%s", fID, cleanName))
 	_ = os.MkdirAll(dirName, 0755)
 
 	b, _ := json.Marshal(folder)
@@ -561,7 +561,7 @@ func exportFolderDir(c *client.ClientWrapper, fID, baseDir string) error {
 	delete(m, "looks")
 	delete(m, "dashboards")
 	fb, _ := json.MarshalIndent(m, "", "  ")
-	_ = os.WriteFile(filepath.Join(dirName, fmt.Sprintf("Space_%s_%s.json", fID, cleanName)), fb, 0644)
+	_ = os.WriteFile(filepath.Join(dirName, fmt.Sprintf("Folder_%s_%s.json", fID, cleanName)), fb, 0644)
 
 	if folder.Looks != nil {
 		for _, l := range *folder.Looks {
@@ -606,7 +606,7 @@ func exportFolderArchive(c *client.ClientWrapper, fID string, archiver interface
 	}
 	name := folder.Name
 	cleanName := sanitizeFilename(name)
-	dirName := fmt.Sprintf("Space_%s_%s/", fID, cleanName)
+	dirName := fmt.Sprintf("Folder_%s_%s/", fID, cleanName)
 	if pathPrefix != "" { dirName = pathPrefix + dirName }
 
 	b, _ := json.Marshal(folder)
@@ -616,7 +616,7 @@ func exportFolderArchive(c *client.ClientWrapper, fID string, archiver interface
 	delete(m, "dashboards")
 	fb, _ := json.MarshalIndent(m, "", "  ")
 
-	fn := dirName + fmt.Sprintf("Space_%s_%s.json", fID, cleanName)
+	fn := dirName + fmt.Sprintf("Folder_%s_%s.json", fID, cleanName)
 	writeArchiveFile(archiver, fn, fb)
 
 	if folder.Looks != nil {
@@ -673,35 +673,35 @@ func writeArchiveFile(archiver interface{}, name string, data []byte) {
 }
 
 func init() {
-	RootCmd.AddCommand(SpaceCmd)
-	SpaceCmd.AddCommand(spaceLsCmd)
-	SpaceCmd.AddCommand(spaceTopCmd)
-	SpaceCmd.AddCommand(spaceTreeCmd)
-	SpaceCmd.AddCommand(spaceCatCmd)
-	SpaceCmd.AddCommand(spaceRmCmd)
-	SpaceCmd.AddCommand(spaceCreateCmd)
-	SpaceCmd.AddCommand(spaceExportCmd)
+	RootCmd.AddCommand(FolderCmd)
+	FolderCmd.AddCommand(folderLsCmd)
+	FolderCmd.AddCommand(folderTopCmd)
+	FolderCmd.AddCommand(folderTreeCmd)
+	FolderCmd.AddCommand(folderCatCmd)
+	FolderCmd.AddCommand(folderRmCmd)
+	FolderCmd.AddCommand(folderCreateCmd)
+	FolderCmd.AddCommand(folderExportCmd)
 
-	spaceLsCmd.Flags().StringVar(&spaceLsFields, "fields", "parent_id,id,name,looks(id),looks(title),dashboards(id),dashboards(title)", "Fields to display")
-	spaceLsCmd.Flags().BoolVar(&spaceLsPlain, "plain", false, "print without any extra formatting")
-	spaceLsCmd.Flags().BoolVar(&spaceLsCSV, "csv", false, "output in csv format")
+	folderLsCmd.Flags().StringVar(&folderLsFields, "fields", "parent_id,id,name,looks(id),looks(title),dashboards(id),dashboards(title)", "Fields to display")
+	folderLsCmd.Flags().BoolVar(&folderLsPlain, "plain", false, "print without any extra formatting")
+	folderLsCmd.Flags().BoolVar(&folderLsCSV, "csv", false, "output in csv format")
 
-	spaceTopCmd.Flags().StringVar(&spaceTopFields, "fields", "id,name,parent_id", "Fields to display")
-	spaceTopCmd.Flags().BoolVar(&spaceTopPlain, "plain", false, "print without any extra formatting")
-	spaceTopCmd.Flags().BoolVar(&spaceTopCSV, "csv", false, "output in csv format")
+	folderTopCmd.Flags().StringVar(&folderTopFields, "fields", "id,name,parent_id", "Fields to display")
+	folderTopCmd.Flags().BoolVar(&folderTopPlain, "plain", false, "print without any extra formatting")
+	folderTopCmd.Flags().BoolVar(&folderTopCSV, "csv", false, "output in csv format")
 
-	spaceTreeCmd.Flags().BoolVar(&spaceTreePlain, "plain", false, "print without any extra formatting")
+	folderTreeCmd.Flags().BoolVar(&folderTreePlain, "plain", false, "print without any extra formatting")
 
-	spaceCatCmd.Flags().StringVar(&spaceCatFields, "fields", "", "Fields to display")
-	spaceCatCmd.Flags().StringVar(&spaceCatDir, "dir", "", "Directory to store output file")
+	folderCatCmd.Flags().StringVar(&folderCatFields, "fields", "", "Fields to display")
+	folderCatCmd.Flags().StringVar(&folderCatDir, "dir", "", "Directory to store output file")
 
-	spaceRmCmd.Flags().BoolVar(&spaceRmForce, "force", false, "Delete folder even if not empty")
+	folderRmCmd.Flags().BoolVar(&folderRmForce, "force", false, "Delete folder even if not empty")
 
-	spaceExportCmd.Flags().StringVar(&spaceExportDir, "dir", "", "Directory to store folder tree")
-	spaceExportCmd.Flags().StringVar(&spaceExportTar, "tar", "", "Tar file to store folder tree")
-	spaceExportCmd.Flags().StringVar(&spaceExportTgz, "tgz", "", "Targz file to store folder tree")
-	spaceExportCmd.Flags().StringVar(&spaceExportZip, "zip", "", "Zip file to store folder tree")
-	spaceExportCmd.Flags().BoolVar(&spaceExportTrim, "trim", false, "Trim output to minimal set of fields")
+	folderExportCmd.Flags().StringVar(&folderExportDir, "dir", "", "Directory to store folder tree")
+	folderExportCmd.Flags().StringVar(&folderExportTar, "tar", "", "Tar file to store folder tree")
+	folderExportCmd.Flags().StringVar(&folderExportTgz, "tgz", "", "Targz file to store folder tree")
+	folderExportCmd.Flags().StringVar(&folderExportZip, "zip", "", "Zip file to store folder tree")
+	folderExportCmd.Flags().BoolVar(&folderExportTrim, "trim", false, "Trim output to minimal set of fields")
 }
 
 func sanitizeFilename(name string) string {
