@@ -15,6 +15,7 @@
 package client
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"crypto/rand"
@@ -26,10 +27,14 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/pkg/browser"
 )
+
+var oauthStdin io.Reader = os.Stdin
+
 
 const (
 	redirectPort = "7777"
@@ -112,33 +117,88 @@ func PerformOAuthLogin(ctx context.Context, host, port, clientID string, ssl boo
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			errChan <- fmt.Errorf("local server error: %w", err)
+			fmt.Printf("Warning: local callback server failed to start: %v. Automatic redirect will not work, but you can still use the manual fallback.\n", err)
 		}
 	}()
 	defer func() { _ = srv.Shutdown(context.Background()) }()
 
 	if isSSHSession() {
 		fmt.Println("=======================================================================")
-		fmt.Println("WARNING: SSH session detected!")
-		fmt.Println("OAuth redirect requires forwarding port 7777 back to your local machine.")
-		fmt.Println("Ensure you connected using port forwarding, for example:")
-		fmt.Println("  ssh -L 7777:127.0.0.1:7777 user@remote-host")
-		fmt.Println("If you did not, please cancel (Ctrl+C) and reconnect, or use a different")
-		fmt.Println("authentication method (e.g. .netrc API keys or --token).")
+		fmt.Println("SSH session detected! You can:")
+		fmt.Println("A. (Recommended) Copy the authorization URL below into your local browser.")
+		fmt.Println("   After authorizing, copy the redirected URL (even if it fails to load)")
+		fmt.Println("   and paste it back here to complete login.")
+		fmt.Println("B. Forward port 7777 back to your local machine:")
+		fmt.Println("   ssh -L 7777:127.0.0.1:7777 user@remote-host")
 		fmt.Println("=======================================================================")
 	}
 
 	fmt.Printf("Opening browser to URL: %s\n", authURL.String())
+	browserOpened := true
 	if err := browser.OpenURL(authURL.String()); err != nil {
 		fmt.Printf("Failed to open browser automatically. Please visit the URL above.\n")
+		browserOpened = false
 	}
 
+	stdinCodeChan := make(chan string, 1)
+	stdinErrChan := make(chan error, 1)
+
+	go func() {
+		// Only print fallback instructions if browser failed to open, or after 1.5s if no response yet
+		if !browserOpened {
+			fmt.Println("\n--- OAuth Stdin Fallback ---")
+			fmt.Println("Please open the URL above in a browser.")
+			fmt.Printf("After authorizing, you will be redirected to %s/?code=...\n", redirectURI)
+			fmt.Println("Copy the full redirected URL and paste it below.")
+			fmt.Print("Paste redirected URL here: ")
+		} else {
+			// Wait a bit before printing instructions to not clutter automatic redirect flow
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(1500 * time.Millisecond):
+				// If we got here, maybe browser is slow or didn't actually open, or redirect is taking time
+				fmt.Println("\n--- OAuth Stdin Fallback ---")
+				fmt.Println("If the browser did not open or redirect automatically, please:")
+				fmt.Println("1. Copy the URL above into your browser.")
+				fmt.Printf("2. After authorizing, copy the redirected URL (starting with %s/?code=...)\n", redirectURI)
+				fmt.Println("3. Paste the URL here.")
+				fmt.Print("Paste redirected URL here: ")
+			}
+		}
+
+		scanner := bufio.NewScanner(oauthStdin)
+		for {
+			if !scanner.Scan() {
+				if err := scanner.Err(); err != nil {
+					stdinErrChan <- fmt.Errorf("failed to read from stdin: %w", err)
+				}
+				return
+			}
+			input := scanner.Text()
+			code, err := parsePastedAuthInput(input)
+			if err != nil {
+				fmt.Printf("Error: %v. Please try again: ", err)
+				continue
+			}
+			stdinCodeChan <- code
+			return
+		}
+	}()
+
+	var code string
 	select {
 	case <-ctx.Done():
 		return "", "", time.Time{}, ctx.Err()
 	case err := <-errChan:
 		return "", "", time.Time{}, err
-	case code := <-codeChan:
+	case err := <-stdinErrChan:
+		return "", "", time.Time{}, err
+	case code = <-codeChan:
+		// Succeeded via local server redirect
+	case code = <-stdinCodeChan:
+		// Succeeded via copy-paste fallback
+	}
 		// Exchange code for token
 		apiHost := host
 		if port != "" {
@@ -180,8 +240,8 @@ func PerformOAuthLogin(ctx context.Context, host, port, clientID string, ssl boo
 
 		expiration := time.Now().Add(time.Duration(tokResp.ExpiresIn) * time.Second)
 		return tokResp.AccessToken, tokResp.RefreshToken, expiration, nil
-	}
 }
+
 
 // RefreshOAuthToken performs explicit OAuth2 refresh token grant to get a new short-lived access token.
 func RefreshOAuthToken(ctx context.Context, host, port, clientID, refreshToken string, ssl bool) (string, string, time.Time, error) {
@@ -240,4 +300,29 @@ func RefreshOAuthToken(ctx context.Context, host, port, clientID, refreshToken s
 func isSSHSession() bool {
 	return os.Getenv("SSH_CLIENT") != "" || os.Getenv("SSH_TTY") != "" || os.Getenv("SSH_CONNECTION") != ""
 }
+
+func parsePastedAuthInput(input string) (string, error) {
+	input = strings.TrimSpace(input)
+	if input == "" {
+		return "", fmt.Errorf("empty input")
+	}
+
+	// Try to parse as URL
+	u, err := url.Parse(input)
+	if err == nil && u.Scheme != "" && u.Host != "" {
+		code := u.Query().Get("code")
+		if code != "" {
+			return code, nil
+		}
+		return "", fmt.Errorf("pasted URL did not contain a 'code' parameter")
+	}
+
+	// Fallback: if it doesn't look like a URL but could be the code
+	if len(input) > 5 && !strings.Contains(input, "/") && !strings.Contains(input, " ") {
+		return input, nil
+	}
+
+	return "", fmt.Errorf("could not parse input as a redirect URL or authorization code")
+}
+
 
