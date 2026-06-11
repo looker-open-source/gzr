@@ -59,10 +59,7 @@ var permissionLsCmd = &cobra.Command{
 			return fmt.Errorf("failed to list permissions: %w", err)
 		}
 
-		headers := strings.Split(permissionLsFields, ",")
-		for i := range headers {
-			headers[i] = strings.TrimSpace(headers[i])
-		}
+		headers := util.ParseFieldsForHeaders(permissionLsFields)
 
 		table := util.NewTable(headers)
 		for _, p := range permissions {
@@ -172,10 +169,7 @@ var permissionSetLsCmd = &cobra.Command{
 			return fmt.Errorf("failed to list permission sets: %w", err)
 		}
 
-		headers := strings.Split(permissionSetLsFields, ",")
-		for i := range headers {
-			headers[i] = strings.TrimSpace(headers[i])
-		}
+		headers := util.ParseFieldsForHeaders(permissionSetLsFields)
 
 		table := util.NewTable(headers)
 		for _, s := range sets {

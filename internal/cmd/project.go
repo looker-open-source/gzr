@@ -53,8 +53,7 @@ var projectLsCmd = &cobra.Command{
 		projects, err := c.SDK.AllProjects(projectLsFields, nil)
 		if err != nil { return fmt.Errorf("failed to list projects: %w", err) }
 
-		headers := strings.Split(projectLsFields, ",")
-		for i := range headers { headers[i] = strings.TrimSpace(headers[i]) }
+		headers := util.ParseFieldsForHeaders(projectLsFields)
 
 		table := util.NewTable(headers)
 		for _, p := range projects {

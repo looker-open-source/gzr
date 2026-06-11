@@ -244,10 +244,7 @@ var userMeCmd = &cobra.Command{
 			return fmt.Errorf("failed to get me: %w", err)
 		}
 
-		headers := strings.Split(userMeFields, ",")
-		for i := range headers {
-			headers[i] = strings.TrimSpace(headers[i])
-		}
+		headers := util.ParseFieldsForHeaders(userMeFields)
 		table := util.NewTable(headers)
 		table.Append(extractFields(me, userMeFields))
 		table.Render(userMePlain, userMeCSV)
@@ -294,10 +291,7 @@ var userLsCmd = &cobra.Command{
 			offset += limit
 		}
 
-		headers := strings.Split(userLsFields, ",")
-		for i := range headers {
-			headers[i] = strings.TrimSpace(headers[i])
-		}
+		headers := util.ParseFieldsForHeaders(userLsFields)
 		if userLsLastLogin {
 			headers = append(headers, "last_login")
 		}

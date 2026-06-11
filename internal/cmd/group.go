@@ -70,10 +70,7 @@ var groupLsCmd = &cobra.Command{
 			offset += limit
 		}
 
-		headers := strings.Split(groupLsFields, ",")
-		for i := range headers {
-			headers[i] = strings.TrimSpace(headers[i])
-		}
+		headers := util.ParseFieldsForHeaders(groupLsFields)
 
 		table := util.NewTable(headers)
 		for _, g := range allGroups {

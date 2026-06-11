@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
@@ -65,10 +64,7 @@ var modelLsCmd = &cobra.Command{
 			return fmt.Errorf("failed to list models: %w", err)
 		}
 
-		headers := strings.Split(modelLsFields, ",")
-		for i := range headers {
-			headers[i] = strings.TrimSpace(headers[i])
-		}
+		headers := util.ParseFieldsForHeaders(modelLsFields)
 
 		table := util.NewTable(headers)
 		for _, m := range models {
@@ -206,10 +202,7 @@ var modelSetLsCmd = &cobra.Command{
 			return fmt.Errorf("failed to list model sets: %w", err)
 		}
 
-		headers := strings.Split(modelSetLsFields, ",")
-		for i := range headers {
-			headers[i] = strings.TrimSpace(headers[i])
-		}
+		headers := util.ParseFieldsForHeaders(modelSetLsFields)
 
 		table := util.NewTable(headers)
 		for _, s := range sets {

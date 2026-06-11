@@ -176,61 +176,31 @@ var folderLsCmd = &cobra.Command{
 			fields = "dashboards(id,title)"
 		}
 
-		var rows [][]string
+		var data []map[string]interface{}
 		headers := util.ParseFieldsForHeaders(folderLsFields)
 
 		for _, fID := range fIDs {
 			folder, err := c.SDK.Folder(fID, fields, nil)
 			if err == nil {
-				if folder.Looks != nil {
-					for _, l := range *folder.Looks {
-						m := map[string]interface{}{
-							"parent_id": fID,
-							"id":        folder.Id,
-							"name":      folder.Name,
-							"looks(id)": l.Id,
-							"looks(title)": l.Title,
-						}
-						rows = append(rows, mapToRow(m, headers))
-					}
-				}
-				if folder.Dashboards != nil {
-					for _, d := range *folder.Dashboards {
-						m := map[string]interface{}{
-							"parent_id": fID,
-							"id":        folder.Id,
-							"name":      folder.Name,
-							"dashboards(id)": d.Id,
-							"dashboards(title)": d.Title,
-						}
-						rows = append(rows, mapToRow(m, headers))
-					}
-				}
-				if (folder.Looks == nil || len(*folder.Looks) == 0) && (folder.Dashboards == nil || len(*folder.Dashboards) == 0) {
-					m := map[string]interface{}{
-						"parent_id": folder.ParentId,
-						"id":        folder.Id,
-						"name":      folder.Name,
-					}
-					rows = append(rows, mapToRow(m, headers))
-				}
+				var m map[string]interface{}
+				b, _ := json.Marshal(folder)
+				_ = json.Unmarshal(b, &m)
+				data = append(data, m)
 			}
 
 			children, err := c.SDK.FolderChildren(v4.RequestFolderChildren{FolderId: fID, Fields: ptr("id,name,parent_id")}, nil)
 			if err == nil {
 				for _, ch := range children {
-					m := map[string]interface{}{
-						"parent_id": ch.ParentId,
-						"id":        ch.Id,
-						"name":      ch.Name,
-					}
-					rows = append(rows, mapToRow(m, headers))
+					var m map[string]interface{}
+					b, _ := json.Marshal(ch)
+					_ = json.Unmarshal(b, &m)
+					data = append(data, m)
 				}
 			}
 		}
 
 		table := util.NewTable(headers)
-		table.Rows = rows
+		table.Rows = flattenData(data, headers)
 		table.Render(folderLsPlain, folderLsCSV)
 		return nil
 	},
@@ -282,10 +252,7 @@ var folderTopCmd = &cobra.Command{
 			return nil
 		}
 
-		headers := strings.Split(folderTopFields, ",")
-		for i := range headers {
-			headers[i] = strings.TrimSpace(headers[i])
-		}
+		headers := util.ParseFieldsForHeaders(folderTopFields)
 
 		table := util.NewTable(headers)
 		for _, f := range topFolders {
@@ -685,7 +652,7 @@ func init() {
 	folderLsCmd.Flags().BoolVar(&folderLsPlain, "plain", false, "print without any extra formatting")
 	folderLsCmd.Flags().BoolVar(&folderLsCSV, "csv", false, "output in csv format")
 
-	folderTopCmd.Flags().StringVar(&folderTopFields, "fields", "id,name,parent_id", "Fields to display")
+	folderTopCmd.Flags().StringVar(&folderTopFields, "fields", "id,name,is_shared_root,is_users_root,is_embed_shared_root,is_embed_users_root", "Fields to display")
 	folderTopCmd.Flags().BoolVar(&folderTopPlain, "plain", false, "print without any extra formatting")
 	folderTopCmd.Flags().BoolVar(&folderTopCSV, "csv", false, "output in csv format")
 
@@ -718,4 +685,47 @@ func sanitizeFilename(name string) string {
 		}
 	}
 	return sb.String()
+}
+
+func flattenData(data []map[string]interface{}, headers []string) [][]string {
+	var rows [][]string
+
+	// 1. Map basic info (non-array, non-map fields)
+	for _, entry := range data {
+		basicEntry := make(map[string]interface{})
+		for k, v := range entry {
+			if v == nil {
+				continue
+			}
+			switch v.(type) {
+			case []interface{}, map[string]interface{}:
+				// skip
+			default:
+				basicEntry[k] = v
+			}
+		}
+		rows = append(rows, mapToRow(basicEntry, headers))
+	}
+
+	// 2. Map array fields
+	for _, entry := range data {
+		for k, v := range entry {
+			if v == nil {
+				continue
+			}
+			if sliceVal, ok := v.([]interface{}); ok {
+				for _, item := range sliceVal {
+					if mapItem, ok := item.(map[string]interface{}); ok {
+						h := make(map[string]interface{})
+						for subK, subV := range mapItem {
+							h[fmt.Sprintf("%s(%s)", k, subK)] = subV
+						}
+						rows = append(rows, mapToRow(h, headers))
+					}
+				}
+			}
+		}
+	}
+
+	return rows
 }

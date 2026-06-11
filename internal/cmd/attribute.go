@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/looker-open-source/gzr/internal/client"
@@ -87,8 +86,7 @@ var attributeLsCmd = &cobra.Command{
 		attrs, err := c.SDK.AllUserAttributes(v4.RequestAllUserAttributes{Fields: &attributeLsFields}, nil)
 		if err != nil { return err }
 
-		headers := strings.Split(attributeLsFields, ",")
-		for i := range headers { headers[i] = strings.TrimSpace(headers[i]) }
+		headers := util.ParseFieldsForHeaders(attributeLsFields)
 
 		table := util.NewTable(headers)
 		for _, a := range attrs {
