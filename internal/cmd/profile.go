@@ -93,6 +93,12 @@ var profileAddCmd = &cobra.Command{
 			return fmt.Errorf("profile %q already exists", name)
 		}
 
+		var verifySSL *bool
+		if flag := cmd.Flags().Lookup("verify-ssl"); flag != nil && flag.Changed {
+			val, _ := cmd.Flags().GetBool("verify-ssl")
+			verifySSL = &val
+		}
+
 		prof := config.Profile{
 			Host:         profHost,
 			Port:         profPort,
@@ -100,6 +106,7 @@ var profileAddCmd = &cobra.Command{
 			ClientSecret: profClientSecret,
 			AccessToken:  profToken,
 			RefreshToken: profRefreshToken,
+			VerifySSL:    verifySSL,
 		}
 
 		cfg.Profiles[name] = prof

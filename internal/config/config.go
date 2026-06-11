@@ -31,6 +31,7 @@ type Profile struct {
 	AccessToken  string `yaml:"access_token,omitempty"`
 	RefreshToken string `yaml:"refresh_token,omitempty"`
 	Expiration   string `yaml:"expiration,omitempty"`
+	VerifySSL    *bool  `yaml:"verify_ssl,omitempty"`
 }
 
 // Config represents the structure of the config file.

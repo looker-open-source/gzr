@@ -144,7 +144,9 @@ func initClient(ctx context.Context, oauth bool) (*client.ClientWrapper, error) 
 
 	verifySSL := cfgVerifySSL
 	if !RootCmd.PersistentFlags().Lookup("verify-ssl").Changed {
-		if envVerify := os.Getenv("LOOKERSDK_VERIFY_SSL"); envVerify == "false" {
+		if prof.VerifySSL != nil {
+			verifySSL = *prof.VerifySSL
+		} else if envVerify := os.Getenv("LOOKERSDK_VERIFY_SSL"); envVerify == "false" {
 			verifySSL = false
 		}
 	}

@@ -176,10 +176,12 @@ func TestInitClient_Profile(t *testing.T) {
 	_ = RootCmd.PersistentFlags().Set("port", "19999")
 	_ = RootCmd.PersistentFlags().Set("client-id", "")
 	_ = RootCmd.PersistentFlags().Set("client-secret", "")
+	_ = RootCmd.PersistentFlags().Set("verify-ssl", "true")
 	RootCmd.PersistentFlags().Lookup("host").Changed = false
 	RootCmd.PersistentFlags().Lookup("port").Changed = false
 	RootCmd.PersistentFlags().Lookup("client-id").Changed = false
 	RootCmd.PersistentFlags().Lookup("client-secret").Changed = false
+	RootCmd.PersistentFlags().Lookup("verify-ssl").Changed = false
 	cfgProfile = ""
 
 	t.Run("Default profile is used when no flags are set", func(t *testing.T) {
@@ -245,6 +247,64 @@ func TestInitClient_Profile(t *testing.T) {
 		// Port should still come from profile
 		if wrapper.Session.Config.BaseUrl != "https://override-host.com:1234" {
 			t.Errorf("expected base URL 'https://override-host.com:1234', got '%s'", wrapper.Session.Config.BaseUrl)
+		}
+	})
+
+	t.Run("Profile verify-ssl is used when flag is omitted", func(t *testing.T) {
+		cfg, _ := config.Load()
+		falseVal := false
+		cfg.Profiles["prof-no-ssl"] = config.Profile{
+			Host:         "profile-host.com",
+			Port:         "1234",
+			ClientID:     "prof-id",
+			ClientSecret: "prof-sec",
+			VerifySSL:    &falseVal,
+		}
+		_ = cfg.Save()
+		_ = RootCmd.PersistentFlags().Set("profile", "prof-no-ssl")
+		defer func() {
+			_ = RootCmd.PersistentFlags().Set("profile", "")
+			cfgProfile = ""
+		}()
+
+		wrapper, err := initClient(context.Background(), false)
+		if err != nil {
+			t.Fatalf("initClient failed: %v", err)
+		}
+
+		if wrapper.Session.Config.VerifySsl {
+			t.Errorf("expected verifySSL to be false from profile, got true")
+		}
+	})
+
+	t.Run("Explicit verify-ssl flag overrides profile value", func(t *testing.T) {
+		cfg, _ := config.Load()
+		falseVal := false
+		cfg.Profiles["prof-no-ssl"] = config.Profile{
+			Host:         "profile-host.com",
+			Port:         "1234",
+			ClientID:     "prof-id",
+			ClientSecret: "prof-sec",
+			VerifySSL:    &falseVal,
+		}
+		_ = cfg.Save()
+		_ = RootCmd.PersistentFlags().Set("profile", "prof-no-ssl")
+		_ = RootCmd.PersistentFlags().Set("verify-ssl", "true")
+		RootCmd.PersistentFlags().Lookup("verify-ssl").Changed = true
+		defer func() {
+			_ = RootCmd.PersistentFlags().Set("profile", "")
+			cfgProfile = ""
+			_ = RootCmd.PersistentFlags().Set("verify-ssl", "true")
+			RootCmd.PersistentFlags().Lookup("verify-ssl").Changed = false
+		}()
+
+		wrapper, err := initClient(context.Background(), false)
+		if err != nil {
+			t.Fatalf("initClient failed: %v", err)
+		}
+
+		if !wrapper.Session.Config.VerifySsl {
+			t.Errorf("expected verifySSL to be true from flag, got false")
 		}
 	})
 }

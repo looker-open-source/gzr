@@ -134,13 +134,13 @@ export LOOKERSDK_CLIENT_SECRET="your_client_secret"
 
 `looker-cli` supports configuration profiles to easily switch between different Looker instances or environments (e.g., dev, staging, production). Profiles are stored in `$HOME/.config/looker-cli/config.yaml`.
 
-A profile stores the host, port, and optionally client credentials (`client_id`, `client_secret`) and/or OAuth tokens (`access_token`, `refresh_token`, `expiration`).
+A profile stores the host, port, and optionally client credentials (`client_id`, `client_secret`), `verify_ssl` setting, and/or OAuth tokens (`access_token`, `refresh_token`, `expiration`).
 
 ### Managing Profiles
 
 *   **Add a new profile**:
     ```bash
-    ./looker-cli profile add my-dev --host dev.looker.com --port 19999 --client-id "ID" --client-secret "SECRET"
+    ./looker-cli profile add my-dev --host dev.looker.com --port 19999 --client-id "ID" --client-secret "SECRET" --verify-ssl=false
     ```
     *Note: Only `--host` is required. If client credentials are not provided, they can be retrieved from `.netrc` or environment variables when the profile is used.*
 
