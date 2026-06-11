@@ -29,6 +29,7 @@ var (
 	roleLsFields      string
 	roleLsPlain       bool
 	roleLsCSV         bool
+	roleCatFields     string
 	roleCatDir        string
 	roleCatTrim       bool
 	roleCreatePlain   bool
@@ -79,8 +80,18 @@ var roleCatCmd = &cobra.Command{
 		c, err := initClient(cmd.Context(), false)
 		if err != nil { return err }
 		rID := args[0]
-		role, err := c.SDK.Role(rID, nil)
+		req := v4.RequestSearchRoles{
+			Id: &rID,
+		}
+		if roleCatFields != "" {
+			req.Fields = &roleCatFields
+		}
+		roles, err := c.SDK.SearchRoles(req, nil)
 		if err != nil { return err }
+		if len(roles) == 0 {
+			return fmt.Errorf("role %s not found", rID)
+		}
+		role := roles[0]
 
 		b, _ := json.Marshal(role)
 		var m map[string]interface{}
@@ -355,6 +366,7 @@ func init() {
 	roleLsCmd.Flags().BoolVar(&roleLsCSV, "csv", false, "output in csv format")
 
 	roleCatCmd.Flags().StringVar(&roleCatDir, "dir", "", "Directory to store output file")
+	roleCatCmd.Flags().StringVar(&roleCatFields, "fields", "", "Fields to display")
 	roleCatCmd.Flags().BoolVar(&roleCatTrim, "trim", false, "Trim output to minimal set of fields")
 
 	roleCreateCmd.Flags().BoolVar(&roleCreatePlain, "plain", false, "Provide minimal response")

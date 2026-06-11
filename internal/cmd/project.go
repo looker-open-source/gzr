@@ -29,6 +29,7 @@ var (
 	projectLsFields     string
 	projectLsPlain      bool
 	projectLsCSV        bool
+	projectCatFields    string
 	projectCatDir       string
 	projectCatTrim      bool
 	projectBranchAll    bool
@@ -72,7 +73,7 @@ var projectCatCmd = &cobra.Command{
 		c, err := initClient(cmd.Context(), false)
 		if err != nil { return err }
 		pID := args[0]
-		project, err := c.SDK.Project(pID, "", nil)
+		project, err := c.SDK.Project(pID, projectCatFields, nil)
 		if err != nil { return err }
 
 		b, _ := json.Marshal(project)
@@ -259,6 +260,7 @@ func init() {
 	projectLsCmd.Flags().BoolVar(&projectLsCSV, "csv", false, "output in csv format")
 
 	projectCatCmd.Flags().StringVar(&projectCatDir, "dir", "", "Directory to store output file")
+	projectCatCmd.Flags().StringVar(&projectCatFields, "fields", "", "Fields to display")
 	projectCatCmd.Flags().BoolVar(&projectCatTrim, "trim", false, "Trim output to minimal set of fields")
 
 	projectBranchCmd.Flags().BoolVar(&projectBranchAll, "all", false, "List all branches")

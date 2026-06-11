@@ -207,7 +207,65 @@ func (m *mockDoer) Do(result interface{}, method, ver, path string, reqPars map[
 		b, _ := json.Marshal(sets)
 		return json.Unmarshal(b, result)
 	}
+	if method == "GET" && path == "/roles/search" {
+		m.t.Logf("mockDoer GET /roles/search called with reqPars: %v", reqPars)
+		var id string
+		if idPtr, ok := reqPars["id"].(*string); ok && idPtr != nil {
+			id = *idPtr
+		}
+		if id == "1" {
+			role := v4.Role{
+				Id:            ptr("1"),
+				Name:          ptr("my_role"),
+				PermissionSet: &v4.PermissionSet{Id: ptr("2"), Name: ptr("my_perm_set")},
+				ModelSet:      &v4.ModelSet{Id: ptr("3"), Name: ptr("my_model_set")},
+			}
+			
+			var fields string
+			if fieldsPtr, ok := reqPars["fields"].(*string); ok && fieldsPtr != nil {
+				fields = *fieldsPtr
+			}
+			
+			if fields != "" {
+				filteredRole := v4.Role{}
+				if strings.Contains(fields, "name") {
+					filteredRole.Name = role.Name
+				}
+				if strings.Contains(fields, "id") {
+					filteredRole.Id = role.Id
+				}
+				if strings.Contains(fields, "permission_set") {
+					filteredRole.PermissionSet = role.PermissionSet
+				}
+				if strings.Contains(fields, "model_set") {
+					filteredRole.ModelSet = role.ModelSet
+				}
+				roles := []v4.Role{filteredRole}
+				b, _ := json.Marshal(roles)
+				return json.Unmarshal(b, result)
+			}
+			
+			roles := []v4.Role{role}
+			b, _ := json.Marshal(roles)
+			return json.Unmarshal(b, result)
+		}
+		roles := []v4.Role{}
+		b, _ := json.Marshal(roles)
+		return json.Unmarshal(b, result)
+	}
 	if method == "GET" && path == "/permission_sets/3" {
+		m.t.Logf("mockDoer GET /permission_sets/3 called with reqPars: %v", reqPars)
+		if fields, ok := reqPars["fields"].(string); ok && fields != "" {
+			set := v4.PermissionSet{}
+			if strings.Contains(fields, "name") {
+				set.Name = ptr("my_permission_set")
+			}
+			if strings.Contains(fields, "id") {
+				set.Id = ptr("3")
+			}
+			b, _ := json.Marshal(set)
+			return json.Unmarshal(b, result)
+		}
 		set := v4.PermissionSet{Id: ptr("3"), Name: ptr("my_permission_set"), Permissions: &[]string{"access_data"}}
 		b, _ := json.Marshal(set)
 		return json.Unmarshal(b, result)
@@ -843,6 +901,37 @@ func TestPermissionSetCatCommand(t *testing.T) {
 	}
 }
 
+func TestPermissionSetCatCommandFields(t *testing.T) {
+	MockSDK = v4.NewLookerSDK(&mockDoer{t: t})
+	defer func() {
+		MockSDK = nil
+		permissionSetCatFields = ""
+	}()
+
+	oldStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	RootCmd.SetArgs([]string{"permission", "set", "cat", "3", "--fields", "name"})
+	err := RootCmd.Execute()
+	if err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	_ = w.Close()
+	os.Stdout = oldStdout
+	var buf bytes.Buffer
+	_, _ = io.Copy(&buf, r)
+	out := buf.String()
+
+	if strings.Contains(out, "3") {
+		t.Errorf("expected NOT to contain '3' (id), got %s", out)
+	}
+	if !strings.Contains(out, "my_permission_set") {
+		t.Errorf("expected to contain my_permission_set, got %s", out)
+	}
+}
+
 func TestPermissionSetImportCommand(t *testing.T) {
 	MockSDK = v4.NewLookerSDK(&mockDoer{t: t})
 	defer func() { MockSDK = nil }()
@@ -1030,3 +1119,63 @@ func TestInitClient_EnvVars(t *testing.T) {
 		}
 	})
 }
+
+func TestRoleCatCommand(t *testing.T) {
+	MockSDK = v4.NewLookerSDK(&mockDoer{t: t})
+	defer func() { MockSDK = nil }()
+
+	oldStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	RootCmd.SetArgs([]string{"role", "cat", "1"})
+	err := RootCmd.Execute()
+	if err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	_ = w.Close()
+	os.Stdout = oldStdout
+	var buf bytes.Buffer
+	_, _ = io.Copy(&buf, r)
+	out := buf.String()
+
+	if !strings.Contains(out, "my_role") || !strings.Contains(out, "my_perm_set") {
+		t.Errorf("expected my_role and my_perm_set, got %s", out)
+	}
+}
+
+func TestRoleCatCommandFields(t *testing.T) {
+	MockSDK = v4.NewLookerSDK(&mockDoer{t: t})
+	defer func() {
+		MockSDK = nil
+		roleCatFields = ""
+	}()
+
+	oldStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	RootCmd.SetArgs([]string{"role", "cat", "1", "--fields", "name"})
+	err := RootCmd.Execute()
+	if err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	_ = w.Close()
+	os.Stdout = oldStdout
+	var buf bytes.Buffer
+	_, _ = io.Copy(&buf, r)
+	out := buf.String()
+
+	if !strings.Contains(out, "my_role") {
+		t.Errorf("expected to contain my_role, got %s", out)
+	}
+	if strings.Contains(out, "my_perm_set") {
+		t.Errorf("expected NOT to contain my_perm_set, got %s", out)
+	}
+	if strings.Contains(out, `"id"`) {
+		t.Errorf("expected NOT to contain 'id', got %s", out)
+	}
+}
+

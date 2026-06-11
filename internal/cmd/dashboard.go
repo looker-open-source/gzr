@@ -27,6 +27,7 @@ import (
 )
 
 var (
+	dashboardCatFields          string
 	dashboardCatDir             string
 	dashboardCatTransform       string
 	dashboardCatTrim            bool
@@ -56,7 +57,7 @@ var dashboardCatCmd = &cobra.Command{
 			return err
 		}
 		dID := args[0]
-		dash, err := c.SDK.Dashboard(dID, "", nil)
+		dash, err := c.SDK.Dashboard(dID, dashboardCatFields, nil)
 		if err != nil {
 			return fmt.Errorf("failed to get dashboard %s: %w", dID, err)
 		}
@@ -791,6 +792,7 @@ func init() {
 	DashboardCmd.AddCommand(dashboardSyncLookmlCmd)
 
 	dashboardCatCmd.Flags().StringVar(&dashboardCatDir, "dir", "", "Directory to store output file")
+	dashboardCatCmd.Flags().StringVar(&dashboardCatFields, "fields", "", "Fields to display")
 	dashboardCatCmd.Flags().StringVar(&dashboardCatTransform, "transform", "", "Transform file to apply")
 	dashboardCatCmd.Flags().BoolVar(&dashboardCatTrim, "trim", false, "Trim output to minimal set of fields")
 	dashboardCatCmd.Flags().BoolVar(&dashboardCatPlans, "plans", false, "Include scheduled plans")

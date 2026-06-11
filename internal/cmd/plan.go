@@ -31,6 +31,7 @@ var (
 	planLsDisabled    bool
 	planLsPlain       bool
 	planLsCSV         bool
+	planCatFields     string
 	planCatDir        string
 	planImportPlain   bool
 	planImportEnable  bool
@@ -93,7 +94,7 @@ var planCatCmd = &cobra.Command{
 		}
 		pID := args[0]
 
-		plan, err := c.SDK.ScheduledPlan(pID, "", nil)
+		plan, err := c.SDK.ScheduledPlan(pID, planCatFields, nil)
 		if err != nil {
 			return err
 		}
@@ -453,6 +454,7 @@ func init() {
 	planLsCmd.Flags().BoolVar(&planLsCSV, "csv", false, "output in csv format")
 
 	planCatCmd.Flags().StringVar(&planCatDir, "dir", "", "Directory to store output file")
+	planCatCmd.Flags().StringVar(&planCatFields, "fields", "", "Fields to display")
 
 	planImportCmd.Flags().BoolVar(&planImportPlain, "plain", false, "Provide minimal response")
 	planImportCmd.Flags().BoolVar(&planImportEnable, "enable", false, "Enable plan on import")

@@ -33,6 +33,7 @@ var (
 	permissionSetLsFields    string
 	permissionSetLsPlain     bool
 	permissionSetLsCSV       bool
+	permissionSetCatFields   string
 	permissionSetCatDir      string
 	permissionSetCatTrim     bool
 	permissionSetImportForce bool
@@ -196,7 +197,7 @@ var permissionSetCatCmd = &cobra.Command{
 			return err
 		}
 		setID := args[0]
-		set, err := c.SDK.PermissionSet(setID, "", nil)
+		set, err := c.SDK.PermissionSet(setID, permissionSetCatFields, nil)
 		if err != nil {
 			return fmt.Errorf("failed to get permission set %s: %w", setID, err)
 		}
@@ -350,6 +351,7 @@ func init() {
 	permissionSetLsCmd.Flags().BoolVar(&permissionSetLsCSV, "csv", false, "output in csv format")
 
 	permissionSetCatCmd.Flags().StringVar(&permissionSetCatDir, "dir", "", "Directory to store output file")
+	permissionSetCatCmd.Flags().StringVar(&permissionSetCatFields, "fields", "", "Fields to display")
 	permissionSetCatCmd.Flags().BoolVar(&permissionSetCatTrim, "trim", false, "Trim output to minimal set of fields")
 
 	permissionSetImportCmd.Flags().BoolVar(&permissionSetImportForce, "force", false, "Overwrite existing permission set")
