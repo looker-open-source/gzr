@@ -628,7 +628,7 @@ Manage physical directories within your Looker LookML projects.
 ### query
 Commands to retrieve and run queries.
 
-*   **`runquery <query_id | slug | json_file>`**: Execute a query and return the results.
+*   **`runquery [QUERY_DEF]`**: Execute a query and return the results.
     ```bash
     # Run by ID
     ./looker-cli query runquery 123 --token-file
@@ -636,8 +636,11 @@ Commands to retrieve and run queries.
     # Run by slug
     ./looker-cli query runquery "abc123xyz" --token-file
     
-    # Run using a local JSON query definition
-    ./looker-cli query runquery query_definition.json --token-file
+    # Run using raw JSON query definition
+    ./looker-cli query runquery '{"model":"dev","view":"users","fields":["id"]}' --token-file
+
+    # Run using a local JSON query definition file
+    ./looker-cli query runquery --file query_definition.json --token-file
     ```
 
 ---

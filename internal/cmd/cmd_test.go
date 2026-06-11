@@ -297,6 +297,46 @@ func (m *mockDoer) Do(result interface{}, method, ver, path string, reqPars map[
 		b, _ := json.Marshal(folders)
 		return json.Unmarshal(b, result)
 	}
+	if method == "GET" && strings.HasPrefix(path, "/queries/slug/") {
+		slug := strings.TrimPrefix(path, "/queries/slug/")
+		slug = strings.Split(slug, "?")[0]
+		if slug == "my_slug" {
+			q := v4.Query{Id: ptr("9999")}
+			b, _ := json.Marshal(q)
+			return json.Unmarshal(b, result)
+		}
+		return fmt.Errorf("query for slug %s not found", slug)
+	}
+	if method == "GET" && strings.HasPrefix(path, "/queries/") && strings.Contains(path, "/run/") {
+		parts := strings.Split(path, "/")
+		if len(parts) >= 5 && parts[1] == "queries" && parts[3] == "run" {
+			qID := parts[2]
+			format := parts[4]
+			format = strings.Split(format, "?")[0]
+			resStr := fmt.Sprintf(`{"query_id": "%s", "format": "%s", "result": "mocked_data"}`, qID, format)
+			if target, ok := result.(*string); ok {
+				*target = resStr
+				return nil
+			}
+			b, _ := json.Marshal(resStr)
+			return json.Unmarshal(b, result)
+		}
+	}
+	if method == "POST" && strings.HasPrefix(path, "/queries/run/") {
+		parts := strings.Split(path, "/")
+		if len(parts) >= 4 && parts[1] == "queries" && parts[2] == "run" {
+			format := parts[3]
+			format = strings.Split(format, "?")[0]
+			bodyBytes, _ := json.Marshal(body)
+			resStr := fmt.Sprintf(`{"format": "%s", "query_body": %s, "result": "mocked_inline_data"}`, format, string(bodyBytes))
+			if target, ok := result.(*string); ok {
+				*target = resStr
+				return nil
+			}
+			b, _ := json.Marshal(resStr)
+			return json.Unmarshal(b, result)
+		}
+	}
 
 	return fmt.Errorf("mock path not found: %s", path)
 }
@@ -1179,3 +1219,106 @@ func TestRoleCatCommandFields(t *testing.T) {
 	}
 }
 
+func TestQueryRunQuery(t *testing.T) {
+	MockSDK = v4.NewLookerSDK(&mockDoer{t: t})
+	defer func() { MockSDK = nil }()
+
+	captureStdout := func(args []string) (string, error) {
+		queryRunInputFile = ""
+		queryRunOutputFile = ""
+		queryRunFormat = "json"
+
+		oldStdout := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+
+		RootCmd.SetArgs(args)
+		err := RootCmd.Execute()
+
+		_ = w.Close()
+		os.Stdout = oldStdout
+		var buf bytes.Buffer
+		_, _ = io.Copy(&buf, r)
+		return buf.String(), err
+	}
+
+	t.Run("Run by ID", func(t *testing.T) {
+		out, err := captureStdout([]string{"query", "runquery", "1234"})
+		if err != nil {
+			t.Fatalf("Execute failed: %v", err)
+		}
+		if !strings.Contains(out, `"query_id": "1234"`) || !strings.Contains(out, `"format": "json"`) {
+			t.Errorf("unexpected output: %s", out)
+		}
+	})
+
+	t.Run("Run by Slug", func(t *testing.T) {
+		out, err := captureStdout([]string{"query", "runquery", "my_slug"})
+		if err != nil {
+			t.Fatalf("Execute failed: %v", err)
+		}
+		if !strings.Contains(out, `"query_id": "9999"`) {
+			t.Errorf("expected query_id 9999 for slug my_slug, got: %s", out)
+		}
+	})
+
+	t.Run("Run by JSON inline", func(t *testing.T) {
+		out, err := captureStdout([]string{"query", "runquery", `{"model":"test_model","view":"test_view"}`})
+		if err != nil {
+			t.Fatalf("Execute failed: %v", err)
+		}
+		if !strings.Contains(out, "mocked_inline_data") || !strings.Contains(out, "test_model") {
+			t.Errorf("unexpected output: %s", out)
+		}
+	})
+
+	t.Run("Run by File", func(t *testing.T) {
+		tmpFile, err := os.CreateTemp("", "query*.json")
+		if err != nil {
+			t.Fatalf("failed to create temp file: %v", err)
+		}
+		defer func() { _ = os.Remove(tmpFile.Name()) }()
+
+		queryDef := `{"model":"file_model","view":"file_view"}`
+		_, _ = tmpFile.WriteString(queryDef)
+		_ = tmpFile.Close()
+
+		out, err := captureStdout([]string{"query", "runquery", "--file", tmpFile.Name()})
+		if err != nil {
+			t.Fatalf("Execute failed: %v", err)
+		}
+		if !strings.Contains(out, "mocked_inline_data") || !strings.Contains(out, "file_model") {
+			t.Errorf("unexpected output: %s", out)
+		}
+	})
+
+	t.Run("Error both args and file", func(t *testing.T) {
+		_, err := captureStdout([]string{"query", "runquery", "1234", "--file", "somefile.json"})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		if !strings.Contains(err.Error(), "cannot provide both QUERY_DEF argument and --file flag") {
+			t.Errorf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("Error neither args nor file", func(t *testing.T) {
+		_, err := captureStdout([]string{"query", "runquery"})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		if !strings.Contains(err.Error(), "either QUERY_DEF argument or --file flag must be provided") {
+			t.Errorf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("Error file not found", func(t *testing.T) {
+		_, err := captureStdout([]string{"query", "runquery", "--file", "non_existent_file.json"})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		if !strings.Contains(err.Error(), "failed to read input file") {
+			t.Errorf("unexpected error: %v", err)
+		}
+	})
+}

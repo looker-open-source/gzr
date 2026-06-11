@@ -27,8 +27,9 @@ import (
 )
 
 var (
-	queryRunFile   string
-	queryRunFormat string
+	queryRunInputFile  string
+	queryRunOutputFile string
+	queryRunFormat     string
 )
 
 var QueryCmd = &cobra.Command{
@@ -39,18 +40,34 @@ var QueryCmd = &cobra.Command{
 var queryRunCmd = &cobra.Command{
 	Use:   "runquery [QUERY_DEF]",
 	Short: "Run query_id, query_slug, or json_query_desc",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if queryRunInputFile == "" && len(args) == 0 {
+			return fmt.Errorf("either QUERY_DEF argument or --file flag must be provided")
+		}
+		if queryRunInputFile != "" && len(args) > 0 {
+			return fmt.Errorf("cannot provide both QUERY_DEF argument and --file flag")
+		}
+
 		c, err := initClient(cmd.Context(), false)
 		if err != nil { return err }
 
-		qDef := args[0]
+		var qDef string
+		if queryRunInputFile != "" {
+			content, err := os.ReadFile(queryRunInputFile)
+			if err != nil {
+				return fmt.Errorf("failed to read input file: %w", err)
+			}
+			qDef = string(content)
+		} else {
+			qDef = args[0]
+		}
 		format := queryRunFormat
 
 		switch format {
 		case "png", "jpg", "xlsx":
-			if queryRunFile == "" {
-				return fmt.Errorf("output file must be specified with '--file' when using format %s", format)
+			if queryRunOutputFile == "" {
+				return fmt.Errorf("output file must be specified with '--output' when using format %s", format)
 			}
 		case "json", "json_detail", "csv", "txt", "html", "md", "sql":
 			// valid
@@ -74,8 +91,8 @@ var queryRunCmd = &cobra.Command{
 
 		var outWriter io.Writer = os.Stdout
 		var file *os.File
-		if queryRunFile != "" {
-			file, err = os.Create(queryRunFile)
+		if queryRunOutputFile != "" {
+			file, err = os.Create(queryRunOutputFile)
 			if err != nil { return err }
 			defer func() { _ = file.Close() }()
 			outWriter = file
@@ -113,8 +130,8 @@ var queryRunCmd = &cobra.Command{
 			_, _ = outWriter.Write([]byte(res))
 		}
 
-		if queryRunFile != "" {
-			fmt.Printf("Wrote %s\n", queryRunFile)
+		if queryRunOutputFile != "" {
+			fmt.Printf("Wrote %s\n", queryRunOutputFile)
 		}
 		return nil
 	},
@@ -124,6 +141,7 @@ func init() {
 	RootCmd.AddCommand(QueryCmd)
 	QueryCmd.AddCommand(queryRunCmd)
 
-	queryRunCmd.Flags().StringVar(&queryRunFile, "file", "", "Filename for saved data")
+	queryRunCmd.Flags().StringVar(&queryRunInputFile, "file", "", "JSON file containing query definition")
+	queryRunCmd.Flags().StringVar(&queryRunOutputFile, "output", "", "Filename for saved data")
 	queryRunCmd.Flags().StringVar(&queryRunFormat, "format", "json", "One of json,json_detail,csv,txt,html,md,xlsx,sql,png,jpg")
 }
