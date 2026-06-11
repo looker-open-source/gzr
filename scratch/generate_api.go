@@ -169,6 +169,7 @@ func main() {
 			}
 
 			var bodySchemaJSON string
+			var bodyTemplateJSON string
 			if bodyParamPtr != nil && bodyParamPtr.Schema != nil && bodyParamPtr.Schema.Ref != "" {
 				ref := bodyParamPtr.Schema.Ref
 				defName := strings.TrimPrefix(ref, "#/definitions/")
@@ -177,9 +178,15 @@ func main() {
 						stripped := stripReadOnly(deepCopyMap(defMap))
 						defBytes, _ := json.MarshalIndent(stripped, "", "  ")
 						bodySchemaJSON = string(defBytes)
+
+						// Generate template
+						template := generateTemplate(stripped, spec.Definitions, map[string]bool{defName: true})
+						templateBytes, _ := json.MarshalIndent(template, "", "  ")
+						bodyTemplateJSON = string(templateBytes)
 					} else {
 						defBytes, _ := json.MarshalIndent(def, "", "  ")
 						bodySchemaJSON = string(defBytes)
+						bodyTemplateJSON = "{}"
 					}
 				}
 			}
@@ -195,6 +202,7 @@ func main() {
 				BodyParam:           bodyParam,
 				QueryFlags:          queryFlags,
 				BodySchemaJSON:      bodySchemaJSON,
+				BodyTemplateJSON:    bodyTemplateJSON,
 				Deprecated:          op.Deprecated,
 			}
 
@@ -306,6 +314,9 @@ func init() {
 				out.WriteString("\t\tif val, _ := cmd.Flags().GetBool(\"describe-body\"); val {\n")
 				out.WriteString("\t\t\treturn nil\n")
 				out.WriteString("\t\t}\n")
+				out.WriteString("\t\tif val, _ := cmd.Flags().GetBool(\"template\"); val {\n")
+				out.WriteString("\t\t\treturn nil\n")
+				out.WriteString("\t\t}\n")
 				fmt.Fprintf(&out, "\t\treturn cobra.ExactArgs(%d)(cmd, args)\n", numArgs)
 				out.WriteString("\t},\n")
 			} else {
@@ -317,6 +328,10 @@ func init() {
 			if op.BodyParam != "" {
 				out.WriteString("\t\tif val, _ := cmd.Flags().GetBool(\"describe-body\"); val {\n")
 				fmt.Fprintf(&out, "\t\t\tfmt.Println(%sBodySchema)\n", opCmdName)
+				out.WriteString("\t\t\treturn nil\n")
+				out.WriteString("\t\t}\n")
+				out.WriteString("\t\tif val, _ := cmd.Flags().GetBool(\"template\"); val {\n")
+				fmt.Fprintf(&out, "\t\t\tfmt.Println(%sBodyTemplate)\n", opCmdName)
 				out.WriteString("\t\t\treturn nil\n")
 				out.WriteString("\t\t}\n")
 			}
@@ -376,13 +391,15 @@ func init() {
 			out.WriteString("}\n\n")
 
 			if op.BodyParam != "" {
-				fmt.Fprintf(&out, "const %sBodySchema = %s\n\n", opCmdName, strconv.Quote(op.BodySchemaJSON))
+				fmt.Fprintf(&out, "const %sBodySchema = %s\n", opCmdName, strconv.Quote(op.BodySchemaJSON))
+				fmt.Fprintf(&out, "const %sBodyTemplate = %s\n\n", opCmdName, strconv.Quote(op.BodyTemplateJSON))
 			}
 
 			// init registration and flags
 			fmt.Fprintf(&out, "func init() {\n\t%s.AddCommand(%s)\n", tagCmdName, opCmdName)
 			if op.BodyParam != "" {
 				fmt.Fprintf(&out, "\t%s.Flags().Bool(\"describe-body\", false, \"Describe the JSON schema expected in the body\")\n", opCmdName)
+				fmt.Fprintf(&out, "\t%s.Flags().Bool(\"template\", false, \"Output a simplified JSON template for the request body\")\n", opCmdName)
 			}
 			for _, fName := range qFlags {
 				p := op.QueryFlags[fName]
@@ -550,6 +567,7 @@ type OpMetadata struct {
 	BodyParam           string
 	QueryFlags          map[string]*Parameter
 	BodySchemaJSON      string
+	BodyTemplateJSON    string
 	Deprecated          bool
 }
 
@@ -630,4 +648,90 @@ func deepCopySlice(s []interface{}) []interface{} {
 		}
 	}
 	return cp
+}
+
+func generateTemplate(schema interface{}, definitions map[string]interface{}, visited map[string]bool) interface{} {
+	m, ok := schema.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	if ro, ok := m["readOnly"].(bool); ok && ro {
+		return nil
+	}
+
+	if ref, ok := m["$ref"].(string); ok {
+		defName := strings.TrimPrefix(ref, "#/definitions/")
+		if visited[defName] {
+			return nil
+		}
+		if def, ok := definitions[defName]; ok {
+			newVisited := make(map[string]bool)
+			for k, v := range visited {
+				newVisited[k] = v
+			}
+			newVisited[defName] = true
+			return generateTemplate(def, definitions, newVisited)
+		}
+		return nil
+	}
+
+	tType, _ := m["type"].(string)
+	switch tType {
+	case "object":
+		properties, ok := m["properties"].(map[string]interface{})
+		if !ok {
+			return map[string]interface{}{}
+		}
+		res := make(map[string]interface{})
+		for k, v := range properties {
+			if propMap, ok := v.(map[string]interface{}); ok {
+				if ro, ok := propMap["readOnly"].(bool); ok && ro {
+					continue
+				}
+			}
+			val := generateTemplate(v, definitions, visited)
+			if val != nil {
+				res[k] = val
+			}
+		}
+		return res
+	case "array":
+		items, ok := m["items"].(map[string]interface{})
+		if !ok {
+			return []interface{}{}
+		}
+		itemTemplate := generateTemplate(items, definitions, visited)
+		if itemTemplate != nil {
+			return []interface{}{itemTemplate}
+		}
+		return []interface{}{}
+	case "string":
+		if defVal, ok := m["default"]; ok {
+			return defVal
+		}
+		if enumVals, ok := m["enum"].([]interface{}); ok && len(enumVals) > 0 {
+			return enumVals[0]
+		}
+		if xLookerVals, ok := m["x-looker-values"].([]interface{}); ok && len(xLookerVals) > 0 {
+			return xLookerVals[0]
+		}
+		return ""
+	case "integer", "number":
+		if defVal, ok := m["default"]; ok {
+			return defVal
+		}
+		return 0
+	case "boolean":
+		if defVal, ok := m["default"]; ok {
+			return defVal
+		}
+		return false
+	default:
+		if _, ok := m["properties"].(map[string]interface{}); ok {
+			m["type"] = "object"
+			return generateTemplate(m, definitions, visited)
+		}
+		return nil
+	}
 }
