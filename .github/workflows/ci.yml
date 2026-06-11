@@ -148,7 +148,7 @@ jobs:
 
       - name: Create a deploy key and set it on the github repo for the project
         run: |
-          DEPLOY_KEY=$(./looker-cli project deploy_key faa --token-file)
+          DEPLOY_KEY=$(./looker-cli project deploy key faa --token-file)
           echo $DEPLOY_KEY
           SET_KEY_RESPONSE=$(
           curl -L \
