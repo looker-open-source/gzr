@@ -228,10 +228,7 @@ var projectDirectoryLsCmd = &cobra.Command{
 			return fmt.Errorf("failed to list directories (status %s): %s", resp.Status, string(bodyBytes))
 		}
 
-		type Directory struct {
-			Path string `json:"path"`
-		}
-		var dirs []Directory
+		var dirs []string
 		if err := json.Unmarshal(bodyBytes, &dirs); err != nil {
 			return fmt.Errorf("failed to parse response: %w", err)
 		}
@@ -239,7 +236,7 @@ var projectDirectoryLsCmd = &cobra.Command{
 		headers := []string{"DIRECTORY PATH"}
 		table := util.NewTable(headers)
 		for _, d := range dirs {
-			table.Append([]string{d.Path})
+			table.Append([]string{d})
 		}
 
 		table.Render(projectDirLsPlain, projectDirLsCSV)
