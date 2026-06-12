@@ -36,6 +36,9 @@ var (
 	projectBranchFields string
 	projectBranchPlain  bool
 	projectBranchCSV    bool
+	projectValidateFields string
+	projectValidatePlain  bool
+	projectValidateCSV    bool
 )
 
 var ProjectCmd = &cobra.Command{
@@ -243,6 +246,55 @@ var projectCheckoutCmd = &cobra.Command{
 	},
 }
 
+var projectCreateCmd = &cobra.Command{
+	Use:   "create [PROJECT_NAME]",
+	Short: "Create a new project",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c, err := initClient(cmd.Context(), false)
+		if err != nil { return err }
+		name := args[0]
+
+		wp := v4.WriteProject{
+			Name: &name,
+		}
+
+		project, err := c.SDK.CreateProject(wp, nil)
+		if err != nil { return err }
+
+		fmt.Printf("Created project %s\n", *project.Id)
+		return nil
+	},
+}
+
+var projectValidateCmd = &cobra.Command{
+	Use:   "validate [PROJECT_ID]",
+	Short: "Validate a project",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c, err := initClient(cmd.Context(), false)
+		if err != nil { return err }
+		pID := args[0]
+
+		validation, err := c.SDK.ValidateProject(pID, "", nil)
+		if err != nil { return err }
+
+		if validation.Errors == nil || len(*validation.Errors) == 0 {
+			fmt.Println("Project is valid.")
+			return nil
+		}
+
+		headers := util.ParseFieldsForHeaders(projectValidateFields)
+		table := util.NewTable(headers)
+		for _, e := range *validation.Errors {
+			table.Append(extractFields(e, projectValidateFields))
+		}
+		table.Render(projectValidatePlain, projectValidateCSV)
+
+		return fmt.Errorf("project validation failed with %d errors", len(*validation.Errors))
+	},
+}
+
 func init() {
 	RootCmd.AddCommand(ProjectCmd)
 	ProjectCmd.AddCommand(projectLsCmd)
@@ -252,6 +304,8 @@ func init() {
 	ProjectCmd.AddCommand(projectBranchCmd)
 	ProjectCmd.AddCommand(projectDeployCmd)
 	ProjectCmd.AddCommand(projectCheckoutCmd)
+	ProjectCmd.AddCommand(projectCreateCmd)
+	ProjectCmd.AddCommand(projectValidateCmd)
 
 	projectDeployCmd.AddCommand(projectDeployKeyCmd)
 
@@ -267,4 +321,8 @@ func init() {
 	projectBranchCmd.Flags().StringVar(&projectBranchFields, "fields", "name,error,message", "Fields to display")
 	projectBranchCmd.Flags().BoolVar(&projectBranchPlain, "plain", false, "print without formatting")
 	projectBranchCmd.Flags().BoolVar(&projectBranchCSV, "csv", false, "output in csv format")
+
+	projectValidateCmd.Flags().StringVar(&projectValidateFields, "fields", "severity,file_path,line_number,message", "Fields to display")
+	projectValidateCmd.Flags().BoolVar(&projectValidatePlain, "plain", false, "print without formatting")
+	projectValidateCmd.Flags().BoolVar(&projectValidateCSV, "csv", false, "output in csv format")
 }

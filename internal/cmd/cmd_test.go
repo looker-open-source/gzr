@@ -378,6 +378,46 @@ func (m *mockDoer) Do(result interface{}, method, ver, path string, reqPars map[
 		}
 	}
 
+	if method == "POST" && path == "/projects" {
+		var wp v4.WriteProject
+		bodyBytes, _ := json.Marshal(body)
+		_ = json.Unmarshal(bodyBytes, &wp)
+
+		projectName := "default_project"
+		if wp.Name != nil {
+			projectName = *wp.Name
+		}
+
+		project := v4.Project{
+			Id:   ptr(projectName),
+			Name: ptr(projectName),
+		}
+		b, _ := json.Marshal(project)
+		return json.Unmarshal(b, result)
+	}
+	if method == "POST" && strings.HasPrefix(path, "/projects/") && strings.HasSuffix(path, "/validate") {
+		parts := strings.Split(path, "/")
+		projectID := parts[2]
+
+		var errors []v4.ProjectError
+		if projectID == "invalid_project" {
+			errors = []v4.ProjectError{
+				{
+					Severity:   ptr("error"),
+					FilePath:   ptr("model.model.lkml"),
+					LineNumber: ptrInt64(10),
+					Message:    ptr("Model configuration error"),
+				},
+			}
+		}
+
+		validation := v4.ProjectValidation{
+			Errors: &errors,
+		}
+		b, _ := json.Marshal(validation)
+		return json.Unmarshal(b, result)
+	}
+
 	return fmt.Errorf("mock path not found: %s", path)
 }
 
@@ -1513,7 +1553,86 @@ func TestExtractFieldsSlice(t *testing.T) {
 		t.Errorf("expected %q, got %q", expected, row[0])
 	}
 }
+func ptrInt64(i int64) *int64 { return &i }
 
+func TestProjectCreateCommand(t *testing.T) {
+	MockSDK = v4.NewLookerSDK(&mockDoer{t: t})
+	defer func() { MockSDK = nil }()
 
+	oldStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
 
+	RootCmd.SetArgs([]string{"project", "create", "new_project"})
+	err := RootCmd.Execute()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
+	_ = w.Close()
+	os.Stdout = oldStdout
+	var buf bytes.Buffer
+	_, _ = io.Copy(&buf, r)
+	out := buf.String()
+
+	expected := "Created project new_project"
+	if !strings.Contains(out, expected) {
+		t.Errorf("expected %q, got %q", expected, out)
+	}
+}
+
+func TestProjectValidateCommand(t *testing.T) {
+	MockSDK = v4.NewLookerSDK(&mockDoer{t: t})
+	defer func() { MockSDK = nil }()
+
+	t.Run("valid project", func(t *testing.T) {
+		oldStdout := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+
+		RootCmd.SetArgs([]string{"project", "validate", "valid_project"})
+		err := RootCmd.Execute()
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		_ = w.Close()
+		os.Stdout = oldStdout
+		var buf bytes.Buffer
+		_, _ = io.Copy(&buf, r)
+		out := buf.String()
+
+		expected := "Project is valid."
+		if !strings.Contains(out, expected) {
+			t.Errorf("expected %q, got %q", expected, out)
+		}
+	})
+
+	t.Run("invalid project", func(t *testing.T) {
+		oldStdout := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+
+		RootCmd.SetArgs([]string{"project", "validate", "invalid_project"})
+		err := RootCmd.Execute()
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+
+		_ = w.Close()
+		os.Stdout = oldStdout
+		var buf bytes.Buffer
+		_, _ = io.Copy(&buf, r)
+		out := buf.String()
+
+		expectedErr := "project validation failed with 1 errors"
+		if !strings.Contains(err.Error(), expectedErr) {
+			t.Errorf("expected error %q, got %q", expectedErr, err.Error())
+		}
+
+		// It should print the table with the error
+		if !strings.Contains(out, "model.model.lkml") {
+			t.Errorf("expected output to contain file path, got %q", out)
+		}
+	})
+}
