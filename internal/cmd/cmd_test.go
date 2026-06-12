@@ -26,7 +26,7 @@ import (
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
-	"github.com/looker-open-source/gzr/internal/util"
+	"github.com/looker-open-source/looker-cli/internal/util"
 )
 
 type mockDoer struct {

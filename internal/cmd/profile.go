@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/looker-open-source/gzr/internal/config"
+	"github.com/looker-open-source/looker-cli/internal/config"
 )
 
 var (

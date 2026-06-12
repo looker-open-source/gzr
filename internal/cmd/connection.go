@@ -23,7 +23,7 @@ import (
 
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 	"github.com/spf13/cobra"
-	"github.com/looker-open-source/gzr/internal/util"
+	"github.com/looker-open-source/looker-cli/internal/util"
 )
 
 var (

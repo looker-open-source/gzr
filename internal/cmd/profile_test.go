@@ -23,7 +23,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/looker-open-source/gzr/internal/config"
+	"github.com/looker-open-source/looker-cli/internal/config"
 )
 
 func setupTempConfig(t *testing.T) string {

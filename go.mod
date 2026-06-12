@@ -1,4 +1,4 @@
-module github.com/looker-open-source/gzr
+module github.com/looker-open-source/looker-cli
 
 go 1.26.2
 

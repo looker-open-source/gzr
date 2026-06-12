@@ -14,7 +14,7 @@
 
 package main
 
-import "github.com/looker-open-source/gzr/internal/cmd"
+import "github.com/looker-open-source/looker-cli/internal/cmd"
 
 func main() {
 	cmd.Execute()

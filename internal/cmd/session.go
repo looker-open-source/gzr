@@ -19,8 +19,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/looker-open-source/gzr/internal/client"
-	"github.com/looker-open-source/gzr/internal/config"
+	"github.com/looker-open-source/looker-cli/internal/client"
+	"github.com/looker-open-source/looker-cli/internal/config"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
