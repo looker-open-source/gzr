@@ -42,6 +42,12 @@ go build -o looker-cli ./cmd/looker-cli
 ./looker-cli version
 ```
 
+> [!NOTE]
+> If you want to uninstall the legacy `gzr` tool, use the command:
+> ```bash
+> gem uninstall gazer
+> ```
+
 ---
 
 ## Authentication Guide
