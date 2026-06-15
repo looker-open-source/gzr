@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.0](https://github.com/looker-open-source/gzr/compare/v0.3.19...v0.4.0) (2026-06-15)
+
+
+### Features
+
+* Rewrite in Go plus full api coverage and OAuth support ([#281](https://github.com/looker-open-source/gzr/issues/281)) ([fe2ebda](https://github.com/looker-open-source/gzr/commit/fe2ebda30f1ecaa1b89d79520b3cea20be4cf457))
+
+
+### Bug Fixes
+
+* fix release please settings ([#280](https://github.com/looker-open-source/gzr/issues/280)) ([ff53d8c](https://github.com/looker-open-source/gzr/commit/ff53d8c1f503a975ac8b1f88ef85469c8cfc77ae))
+* handle-missing-versions-endpoint-in-api-call ([#270](https://github.com/looker-open-source/gzr/issues/270)) ([6b146b3](https://github.com/looker-open-source/gzr/commit/6b146b30c7acb4e3ccbe74537cfc8f9fa19a0f0e))
+
 ## [0.3.19](https://github.com/looker-open-source/gzr/compare/v0.3.18...v0.3.19) (2026-03-30)
 
 
