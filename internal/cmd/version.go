@@ -20,7 +20,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const Version = "0.4.3" // x-release-please-version
+// x-release-please-start-version
+const Version = "0.4.3"
+// x-release-please-end
 
 var VersionCmd = &cobra.Command{
 	Use:   "version",
