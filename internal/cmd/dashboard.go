@@ -512,12 +512,12 @@ var dashboardImportCmd = &cobra.Command{
 
 								var elemMap map[string]interface{}
 								if cm, ok := cv.(map[string]interface{}); ok {
-									if eIDVal, ok := cm["dashboard_element_id"].(float64); ok {
-										matchID := int64(eIDVal)
+									matchIDStr := idToStr(cm["dashboard_element_id"])
+									if matchIDStr != "" {
 										if elementsVal, ok := m["dashboard_elements"].([]interface{}); ok {
 											for _, ev := range elementsVal {
 												if em, ok := ev.(map[string]interface{}); ok {
-													if idVal, ok := em["id"].(float64); ok && int64(idVal) == matchID {
+													if idToStr(em["id"]) == matchIDStr {
 														elemMap = em
 														break
 													}
@@ -785,6 +785,24 @@ var dashboardSyncLookmlCmd = &cobra.Command{
 		fmt.Printf("Synced dashboards %v\n", ids)
 		return nil
 	},
+}
+
+func idToStr(val interface{}) string {
+	if val == nil {
+		return ""
+	}
+	switch v := val.(type) {
+	case string:
+		return v
+	case float64:
+		return strconv.FormatInt(int64(v), 10)
+	case int:
+		return strconv.Itoa(v)
+	case int64:
+		return strconv.FormatInt(v, 10)
+	default:
+		return fmt.Sprintf("%v", val)
+	}
 }
 
 func init() {
