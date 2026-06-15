@@ -3,6 +3,7 @@
     ".": {
       "release-type": "go",
       "package-name": "looker-cli",
+      "include-component-in-tag": false,
       "extra-files": [
         {
           "type": "generic",
