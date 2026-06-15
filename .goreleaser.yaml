@@ -20,3 +20,11 @@ release:
   # By default it is 'keep-existing', but being explicit is safer.
   # You can also use 'append' if you want GoReleaser to add checksums at the bottom.
   mode: keep-existing
+
+archives:
+  - formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
