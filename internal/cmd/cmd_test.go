@@ -1729,3 +1729,68 @@ func TestDashboardImportCommand(t *testing.T) {
 		t.Errorf("expected 1 element created, got %d", doer.elementsCreated)
 	}
 }
+
+func TestDashboardImportFallbackCommand(t *testing.T) {
+	doer := &mockDoer{t: t}
+	MockSDK = v4.NewLookerSDK(doer)
+	defer func() { MockSDK = nil }()
+
+	dashJSON := `{
+  "title": "Test Fallback Dash",
+  "dashboard_elements": [
+    {
+      "title": "My Boxplot",
+      "type": "text",
+      "body_text": "hello"
+    }
+  ],
+  "dashboard_layouts": [
+    {
+      "id": "layout_1",
+      "active": true,
+      "dashboard_layout_components": [
+        {
+          "id": "comp_1",
+          "dashboard_element_id": "270",
+          "element_title": "My Boxplot"
+        }
+      ]
+    }
+  ]
+}`
+
+	tmpFile, err := os.CreateTemp("", "dashboard_import_fallback_*.json")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	if _, err := tmpFile.Write([]byte(dashJSON)); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+	tmpFile.Close()
+
+	oldStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	RootCmd.SetArgs([]string{"dashboard", "import", tmpFile.Name(), "801", "--plain"})
+	err = RootCmd.Execute()
+	if err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	_ = w.Close()
+	os.Stdout = oldStdout
+	var buf bytes.Buffer
+	_, _ = io.Copy(&buf, r)
+	out := strings.TrimSpace(buf.String())
+
+	if out != "new_dash_1" {
+		t.Errorf("expected new_dash_1, got %s", out)
+	}
+
+	if doer.elementsCreated != 1 {
+		t.Errorf("expected 1 element created via fallback, got %d", doer.elementsCreated)
+	}
+}

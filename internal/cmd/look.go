@@ -242,6 +242,7 @@ var lookImportCmd = &cobra.Command{
 		qb, _ := json.Marshal(qVal)
 		var wq v4.WriteQuery
 		_ = json.Unmarshal(qb, &wq)
+		wq.ClientId = nil
 		createdQuery, err := c.SDK.CreateQuery(wq, "", nil)
 		if err != nil || createdQuery.Id == nil {
 			return fmt.Errorf("failed to create query: %v", err)
@@ -347,6 +348,7 @@ func UpsertLookHelper(c *client.ClientWrapper, folderID, myID string, m map[stri
 	qb, _ := json.Marshal(qVal)
 	var wq v4.WriteQuery
 	_ = json.Unmarshal(qb, &wq)
+	wq.ClientId = nil
 	createdQuery, err := c.SDK.CreateQuery(wq, "", nil)
 	if err != nil || createdQuery.Id == nil {
 		return "", fmt.Errorf("failed to create query: %v", err)

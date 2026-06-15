@@ -504,7 +504,8 @@ var dashboardImportCmd = &cobra.Command{
 					activeLayoutID = *layoutObj.Id
 					if lm, ok := lv.(map[string]interface{}); ok {
 						if componentsVal, ok := lm["dashboard_layout_components"].([]interface{}); ok {
-							for _, cv := range componentsVal {
+							matchedElems := make(map[int]bool)
+							for cIdx, cv := range componentsVal {
 								cb, _ := json.Marshal(cv)
 								var wdlc v4.WriteDashboardLayoutComponent
 								_ = json.Unmarshal(cb, &wdlc)
@@ -513,15 +514,42 @@ var dashboardImportCmd = &cobra.Command{
 								var elemMap map[string]interface{}
 								if cm, ok := cv.(map[string]interface{}); ok {
 									matchIDStr := idToStr(cm["dashboard_element_id"])
-									if matchIDStr != "" {
-										if elementsVal, ok := m["dashboard_elements"].([]interface{}); ok {
-											for _, ev := range elementsVal {
+									compTitle, _ := cm["element_title"].(string)
+
+									if elementsVal, ok := m["dashboard_elements"].([]interface{}); ok {
+										if matchIDStr != "" {
+											for eIdx, ev := range elementsVal {
+												if matchedElems[eIdx] {
+													continue
+												}
 												if em, ok := ev.(map[string]interface{}); ok {
 													if idToStr(em["id"]) == matchIDStr {
 														elemMap = em
+														matchedElems[eIdx] = true
 														break
 													}
 												}
+											}
+										}
+										if elemMap == nil && compTitle != "" {
+											for eIdx, ev := range elementsVal {
+												if matchedElems[eIdx] {
+													continue
+												}
+												if em, ok := ev.(map[string]interface{}); ok {
+													elemTitle, _ := em["title"].(string)
+													if elemTitle != "" && elemTitle == compTitle {
+														elemMap = em
+														matchedElems[eIdx] = true
+														break
+													}
+												}
+											}
+										}
+										if elemMap == nil && cIdx < len(elementsVal) && !matchedElems[cIdx] {
+											if em, ok := elementsVal[cIdx].(map[string]interface{}); ok {
+												elemMap = em
+												matchedElems[cIdx] = true
 											}
 										}
 									}
@@ -533,24 +561,42 @@ var dashboardImportCmd = &cobra.Command{
 									_ = json.Unmarshal(eb, &wde)
 									wde.DashboardId = &resID
 
+									wde.ResultMakerId = nil
+									wde.ResultMaker = nil
+									wde.LookId = nil
+									wde.QueryId = nil
+									wde.MergeResultId = nil
+
 									if lookVal, ok := elemMap["look"].(map[string]interface{}); ok {
-										lID, _ := UpsertLookHelper(c, folderID, myID, lookVal, dashboardImportForce)
-										wde.LookId = &lID
+										if qMap, ok := lookVal["query"].(map[string]interface{}); ok {
+											delete(qMap, "client_id")
+										}
+										lID, err := UpsertLookHelper(c, folderID, myID, lookVal, dashboardImportForce)
+										if err == nil && lID != "" {
+											wde.LookId = &lID
+										} else if err != nil {
+											fmt.Fprintf(os.Stderr, "UpsertLookHelper failed: %v\n", err)
+										}
 									} else if qVal, ok := elemMap["query"].(map[string]interface{}); ok {
 										qb, _ := json.Marshal(qVal)
 										var wq v4.WriteQuery
 										_ = json.Unmarshal(qb, &wq)
-										cq, _ := c.SDK.CreateQuery(wq, "", nil)
-										if cq.Id != nil {
+										wq.ClientId = nil
+										cq, err := c.SDK.CreateQuery(wq, "", nil)
+										if err == nil && cq.Id != nil {
 											wde.QueryId = cq.Id
+										} else if err != nil {
+											fmt.Fprintf(os.Stderr, "CreateQuery failed: %v\n", err)
 										}
 									} else if mVal, ok := elemMap["merge_result"].(map[string]interface{}); ok {
 										mb, _ := json.Marshal(mVal)
 										var wmq v4.WriteMergeQuery
 										_ = json.Unmarshal(mb, &wmq)
-										cmq, _ := c.SDK.CreateMergeQuery(wmq, "", nil)
-										if cmq.Id != nil {
+										cmq, err := c.SDK.CreateMergeQuery(wmq, "", nil)
+										if err == nil && cmq.Id != nil {
 											wde.MergeResultId = cmq.Id
+										} else if err != nil {
+											fmt.Fprintf(os.Stderr, "CreateMergeQuery failed: %v\n", err)
 										}
 									}
 
@@ -578,6 +624,8 @@ var dashboardImportCmd = &cobra.Command{
 												break
 											}
 										}
+									} else if err != nil {
+										fmt.Fprintf(os.Stderr, "CreateDashboardElement failed: %v\n", err)
 									}
 								}
 							}
