@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.4](https://github.com/looker-open-source/looker-cli/compare/v0.4.3...v0.4.4) (2026-06-15)
+
+
+### Bug Fixes
+
+* switch to block annotation markers for release-please ([24b7dc0](https://github.com/looker-open-source/looker-cli/commit/24b7dc048fb306654e3447f7e2fae262afde3593))
+* update extra-files configuration to specify generic updater type ([f684ae6](https://github.com/looker-open-source/looker-cli/commit/f684ae65c942bd3ae922c389a0e3c93d8df9a6c8))
+
 ## [0.4.3](https://github.com/looker-open-source/looker-cli/compare/v0.4.2...v0.4.3) (2026-06-15)
 
 
