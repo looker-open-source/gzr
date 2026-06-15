@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.1](https://github.com/looker-open-source/looker-cli/compare/v0.4.0...v0.4.1) (2026-06-15)
+
+
+### Bug Fixes
+
+* Dashboard import works properly ([#285](https://github.com/looker-open-source/looker-cli/issues/285)) ([f47cbd8](https://github.com/looker-open-source/looker-cli/commit/f47cbd839d7b402fb779dbc95fe10036452aff42))
+* release zip archives for windows ([#282](https://github.com/looker-open-source/looker-cli/issues/282)) ([0981942](https://github.com/looker-open-source/looker-cli/commit/09819429597f74a7d734bf1a2e630985548ade40))
+* update release-please config to use extra-files for Go ([#284](https://github.com/looker-open-source/looker-cli/issues/284)) ([79e6a75](https://github.com/looker-open-source/looker-cli/commit/79e6a75680934e3480cd583e07e750c29f025dee))
+
 ## [0.4.0](https://github.com/looker-open-source/gzr/compare/v0.3.19...v0.4.0) (2026-06-15)
 
 
