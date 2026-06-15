@@ -21,9 +21,9 @@ jobs:
         id: release
         uses: googleapis/release-please-action@v4
         with:
-          release-type: go
           token: ${{ secrets.LOS_AUTO_BOT_RP_TOKEN }}
           config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
 
   goreleaser:
     needs: release-please
