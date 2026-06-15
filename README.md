@@ -1,617 +1,793 @@
-# Gazer - A Looker Content Utility
+# Looker CLI (looker-cli) Go Implementation
 
-Gazer can be used to navigate and manage Spaces, Looks, 
-and Dashboards via a simple command line tool.
+Looker CLI (`looker-cli`) is a robust, fast command-line interface (CLI) tool designed to navigate, manage, and automate Looker resources (Folders/Spaces, Looks, Dashboards, Users, and more) via the Looker API 4.0.
 
-<br/>
+This is a Go-based reimplementation of the original Ruby `gzr` tool, utilizing the official Looker Go SDK for high performance and type safety.
 
+---
 
-## Status and Support
+## Table of Contents
+1. [Installation](#installation)
+2. [Authentication Guide](#authentication-guide)
+3. [Profile Management](#profile-management)
+4. [Global Flags](#global-flags)
+5. [Complete Command Reference](#complete-command-reference)
+   * [alert](#alert)
+   * [attribute](#attribute)
+   * [connection](#connection)
+   * [dashboard](#dashboard)
+   * [group](#group)
+   * [look](#look)
+   * [model](#model)
+   * [permission](#permission)
+   * [plan](#plan)
+   * [project](#project)
+   * [query](#query)
+   * [role](#role)
+   * [session](#session)
+   * [space / folder](#space--folder)
+   * [user](#user)
 
-As of 2023, Gazer is supported, but not warrantied by Google.  Issues and feature requests can be reported via https://github.com/looker-open-source/gzr/issues, which will be regularly monitored and prioritized.
+---
 
 ## Installation
 
-You can install this gem by simply typing:
+To compile `looker-cli` from source:
 
-    $ gem install gazer
+```bash
+# Build the binary in the current workspace
+go build -o looker-cli ./cmd/looker-cli
 
-Alternately you can follow the Development setup below, typing `bundle exec rake install` to install it
-locally
-
-## Usage
-
-Display help information...
-
-    $ gzr help
-
-### Storing Credentials
-Store login information by creating the file `~/.netrc` in your home directory with the api3 credentials
-
-```
-machine foo.bar.mycompany.com
-  login AbCdEfGhIjKlMnOp
-  password QrStUvWxYz1234567890
+# Verify the installation
+./looker-cli version
 ```
 
-Make sure that the `~/.netrc` file has restricted permissions by running `chmod 600 ~/.netrc`.
+> [!NOTE]
+> If you want to uninstall the legacy `gzr` tool, use the command:
+> ```bash
+> gem uninstall gazer
+> ```
 
-### API port
-Most instances of Looker use port 19999 for the API. Gazer will use that port by default when executing a command.
-Looker instances that are hosted in Google Cloud direct both the API and the web
-interface traffic through port 443, the standard https port. Some other
-installations may also use port 443.
+---
 
-If your Looker instance is GCP-hosted (*.cloud.looker.com), you must specify `--port 443`, eg:
+## Authentication Guide
 
+`looker-cli` supports several secure and flexible ways to connect to your Looker instance.
+
+### 1. Interactive OAuth PKCE (Recommended for Users)
+Log in interactively using a browser-based OAuth PKCE flow. You do not need to supply or save your API keys.
+
+```bash
+# Start the interactive OAuth login flow
+./looker-cli session login --oauth --host your-looker-domain.com --port 443
 ```
-$ gzr user me --host mycompany.cloud.looker.com --port 443
-```
+This will:
+1. Generate a secure PKCE verifier and challenge.
+2. Spin up a temporary local callback server on port `7777` (listening strictly on local interface `127.0.0.1`).
+3. Open your default web browser to authenticate with Looker.
+4. Exchange the authentication code for an access token and store it in `~/.looker_auth`.
 
-### Options that apply to many commands
+#### Setting up the OAuth Client Application in Looker
+In version 26.10 and later, the **OAuth Client Application** `com.looker.cli` is
+already registered. You may need to enable it under Admin-\>Platform-\>BI
+Connectors. Under **Developer Tools** slide the toggle next to `Looker CLI`.
 
-#### --su option
+In version 26.8 and earlier, before you can use the `--oauth` login, your Looker Administrator must register `looker-cli` as an **OAuth Client Application** in your Looker instance:
 
-The `--su` option can be used with a user id to run the command as another user. This options works
-with all commands. In order to use the `--su` option the user must provide admin credentials.
+1. Navigate to the **API Explorer** in Looker.
+2. Click **Auth** then **Register OAuth App**.
+3. Choose **Runit**.
+4. Configure the following settings:
+    * **client_guid**: `looker-cli` (This must match `looker-cli`'s default Client ID. If you register a different custom Client ID, you must pass it via the `--client-id` flag when logging in).
+    * **Display Name**: `Looker CLI`
+    * **Description**: `Looker CLI`
+    * **Redirect URI**: Add `http://127.0.0.1:7777` (This is the temporary port spawned locally by `looker-cli` to retrieve the authorization code).
+    * **Enabled**: Must be set to true.
+5. Check the box "I understand that this API endpoint will change data."
+6. Click **Run**.
 
-For example...
+Once registered, the `looker-cli session login --oauth` browser login will work seamlessly.
 
-```
-$ gzr user me --su 1237 --host foo.bar.mycompany.com
-+----+----------+---------+---------------------+
-|  id|first_name|last_name|email                |
-+----+----------+---------+---------------------+
-|1237|Susan     |Gibson   |sgibson@mycompany.com|
-+----+----------+---------+---------------------+
-````
-#### Suppressing Formatted Output
-
-Many commands provide tabular output. For tables the
-option `--plain` will suppress the table headers and format lines, making it easier to use tools
-like grep, awk, etc. to retrieve values from the output of these commands.
-
-#### CSV Output
-
-Many commands provide tabular output. For tables thehe option `--csv` will output tabular data in
-csv format. When combined with `--plain` the header will also be suppressed.
-
-### User Information
-
-The command `gzr user help` will show details about subcommands of the user command.
-
-#### user me
-
-Display information about the current user with the command `gzr user me`.
-
-```
-$ gzr user me --host foo.bar.mycompany.com
-+----+----------+---------+--------------------+
-|  id|first_name|last_name|email               |
-+----+----------+---------+--------------------+
-|1234|John      |Smith    |jsmith@mycompany.com|
-+----+----------+---------+--------------------+
-```
-
-#### user ls
-
-Display information about all users with the command `gzr user ls`.
-
-```
-$ gzr user ls --host foo.bar.mycompany.com
-+----+----------+---------+---------------------+
-|  id|first_name|last_name|email                |
-+----+----------+---------+---------------------+
-|1234|John      |Smith    |jsmith@mycompany.com |
-|1235|Frank     |Jones    |fjones@mycompany.com |
-|1236|Bill      |Weld     |wweld@mycompany.com  |
-|1237|Susan     |Gibson   |sgibson@mycompany.com|
-|1238|Anna      |Grace    |agrace@mycompany.com |
-|1239|Mike      |Arthur   |marthur@mycompany.com|
-+----+----------+---------+---------------------+
-```
-
-Different fields can be returned using the `--fields` option. For example the option
-`--fields id,first_name,last_name,email,personal_space_id,home_space_id`.
-
-### Group Information
-
-The command `gzr group help` will show details about subcommands of the group command.
-
-#### group ls
-
-The command `gzr group ls` will list the groups defined on a particular Looker instance.
-
-```
-gzr  group ls  --host foo.bar.mycompany.com
-+--+------------------------------------+----------+---------------------+------------------+-----------------+
-|id|name                                |user_count|contains_current_user|externally_managed|external_group_id|
-+--+------------------------------------+----------+---------------------+------------------+-----------------+
-| 4|Ecommerce Dashboard-only User       |         2|false                |                  |                 |
-| 5|Marketing                           |         3|false                |                  |                 |
-| 6|Developer (no deploy)               |         6|false                |                  |                 |
-| 9|dashboard_only                      |         7|false                |                  |                 |
-|24|Finance Team                        |         2|false                |                  |                 |
-|25|Marketing Team                      |         1|false                |                  |                 |
-|36|Embed Shared Group Engineering      |         0|false                |                  |Engineering      |
-|37|Embed Shared Group ecomm_only_users |         1|false                |                  |ecomm_only_users |
-|38|Embed Shared Group awesome_engineers|         1|false                |                  |awesome_engineers|
-|39|sub finance                         |         1|false                |                  |                 |
-|49|All Users                           |       570|true                 |true              |                 |
-+--+------------------------------------+----------+---------------------+------------------+-----------------+
-```
-
-#### group member_groups
-
-The command `gzr group member_group GROUP_ID` will list the groups that have been added
-as members of the given group id.
-
-```
-$ gzr  group member_group 24  --host foo.bar.mycompany.com
-+--+-----------+----------+---------------------+------------------+-----------------+
-|id|name       |user_count|contains_current_user|externally_managed|external_group_id|
-+--+-----------+----------+---------------------+------------------+-----------------+
-|39|sub finance|         1|                     |                  |                 |
-+--+-----------+----------+---------------------+------------------+-----------------+
-```
-
-#### group member_users
-
-The command `gzr group member_users GROUP_ID` will list the users that have been added
-as members of the given group id.
-
-```
-$ gzr  group member_users 39  --host foo.bar.mycompany.com
-+----+---------------------+---------+----------+-----------------+-------------+
-|  id|email                |last_name|first_name|personal_space_id|home_space_id|
-+----+---------------------+---------+----------+-----------------+-------------+
-|1237|sgibson@mycompany.com|Gibson   |Susan     |              758|          758|
-+----+---------------------+---------+----------+-----------------+-------------+
-```
-
-### Space Information
-
-The command `gzr space help` will show details about subcommands of the space command.
-
-#### space ls
-
-The command `gzr space ls` will list the contents of a space, including subspaces, looks, and dashboards.
-
-Without any arguments, the command will list the contents of the user's "home" space.
-
-```
-$ gzr space ls --host foo.bar.mycompany.com
-+---------+---+------+---------+----------------------------+--------------+--------------------------------+
-|parent_id|id |  name|looks(id)|looks(title)                |dashboards(id)|dashboards(title)               |
-+---------+---+------+---------+----------------------------+--------------+--------------------------------+
-|         |801|Shared|         |                            |              |                                |
-|         |801|Shared|857      |Daily Profit                |              |                                |
-|         |801|Shared|1479     |totals                      |              |                                |
-|         |801|Shared|1486     |Test look2                  |              |                                |
-|         |801|Shared|1509     |Aircraft Production by Year |              |                                |
-|         |801|Shared|         |                            |192           |Daily Profit Dashboard          |
-|         |801|Shared|         |                            |261           |New Test Dashboard              |
-|         |801|Shared|         |                            |383           |Sales Dashboard                 |
-|         |801|Shared|         |                            |463           |Customer Dashboard              |
-+---------+---+------+---------+----------------------------+--------------+--------------------------------+
-```
-
-With the argument "~" the command will list the content of the calling user's "personal" space.
-
-```
-$ gzr space ls "~" --host foo.bar.mycompany.com
-+---------+----+----------+---------+-----------------+--------------+-------------------------------------+
-|parent_id|id  |      name|looks(id)|looks(title)     |dashboards(id)|dashboards(title)                    |
-+---------+----+----------+---------+-----------------+--------------+-------------------------------------+
-|      709|1132|John Smith|         |                 |              |                                     |
-|      709|1132|John Smith|1570     |test             |              |                                     |
-|      709|1132|John Smith|1726     |you can delete me|              |                                     |
-|      709|1132|John Smith|1737     |My First Look    |              |                                     |
-|      709|1132|John Smith|         |                 |410           |Indicator Dashboard                  |
-|      709|1132|John Smith|         |                 |413           |Accidents Dashboard 2011             |
-+---------+----+----------+---------+-----------------+--------------+-------------------------------------+
-```
-
-With a simple numeric argument the command will list the content of the space with the given space id.
-
-```
-$ gzr space ls 103 --host foo.bar.mycompany.com
-```
-
-With a tilde plus a simple numeric argument the command will list the content of the personal space
-of the given user id.
-
-```
-$ gzr space ls "~1237" --host foo.bar.mycompany.com
-```
-
-The user can be identified by name as well.
-
-```
-$ gzr space ls "~Susan Gibson" --host foo.bar.mycompany.com
-```
-Finally, the space can be searched by name.
-
-```
-$ gzr space ls "Marketing" --host foo.bar.mycompany.com
-```
-
-#### space tree
-
-The command `gzr space tree` will display the child spaces, dashboards, and looks in a tree format.
-
-```
-$ gzr space tree "~" --host foo.bar.mycompany.com
-John Smith
-├── Trace Data
-│   ├── (l) All-Time Visits
-│   └── (l) Sessions by Week
-├── (l) test
-├── (l) you can delete me
-├── (l) My First Look
-├── (d) Indicator Dashboard
-└── (d) Indicator Dashboard 2011
-```
-
-The same arguments are accepted as the `space ls` command.
-
-#### space cat
-
-The `space cat` command is used to output the json that describes the space.
-
-```
-$ gzr space cat 758 --host foo.bar.mycompany.com
+Alternately you can run the following if you have a `.netrc` with your
+credentials already, or you can run this with one of the authentication methods
+below:
+```bash
+echo << 'EOF' | ./looker-cli api auth register_oauth_client_app looker-cli - --host HOST [--port 443]
 {
-  "id": 758,
-  "creator_id": 1237,
-  "name": "Susan Gibson",
-  "content_metadata_id": 734,
-  "is_personal": true,
-  "is_shared_root": false,
-  "is_users_root": false,
-  "is_personal_descendant": false,
-  "is_embed": false,
-  "is_embed_shared_root": false,
-  "is_embed_users_root": false,
-  "external_id": null,
-  "parent_id": 709,
-  "is_user_root": false,
-  "is_root": false,
-  "looks": [
-  ],
-  "dashboards": [
-  ],
-  "can": {
-    "index": true,
-    "show": true,
-    "create": true,
-    "see_admin_spaces": true,
-    "update": false,
-    "destroy": false,
-    "move_content": true,
-    "edit_content": true
-  }
+  "description": "Looker CLI",
+  "display_name": "Looker CLI",
+  "enabled": true,
+  "redirect_uri": "http://127.0.0.1:7777"
 }
+EOF
 ```
 
-The output document can be very long. Usually one will use the switch `--dir DIRECTORY` to
-save to a file. The file will be named `Space_{SPACE_ID}_{SPACE_NAME}.json`.
+### 2. Headless Token Authentication (Recommended for Scripts)
+Once logged in, you can run automated scripts headlessly by referencing the stored token or passing one directly:
 
-#### space export
+```bash
+# Option A: Use the stored token file (~/.looker_auth)
+./looker-cli user ls --token-file --host your-looker-domain.com --port 443
 
-The `space export SPACE_ID` command is used to export a space and its subspaces, looks, and dashboards.
-The structure of spaces and subspaces will be mirrored in directories and subdirectories in the file system
-under the directory given by the `--dir DIRECTORY` switch. The directories will be named like
-`Space_{SPACE_ID}_{SPACE_NAME}` and the metadata for each space will be stored in a
-file with the name `Space_{SPACE_ID}_{SPACE_NAME}.json` within its corresponding directory.
-
-The JSON information for the Looks and Dashboards in a space are usually part of the space
-json data. When using the export command, this information would be redundant and so it is not
-included in the `Space_{SPACE_ID}_{SPACE_NAME}.json` file.
-
-Looks and Dashboards will be located in the space directories in files named like
-`Look_{LOOK_ID}_{LOOK_TITLE}.json` and `Dashboard_{DASHBOARD_ID}_{DASHBOARD_TITLE}.json`.
-
-```
-$ gzr space export 758 --host foo.bar.mycompany.com --dir .
+# Option B: Pass a static token directly via flag
+./looker-cli user ls --token "YOUR_ACCESS_TOKEN" --host your-looker-domain.com
 ```
 
-One interesting consequence of exporting a space into a directory tree is that you can then place its
-contents under version control using a tool like git. In this way user defined content changes can be
-tracked over time, and older versions of content can be restored if desired.
+### 3. Netrc File (`.netrc`) (Recommended for API Keys)
+Store your API Client ID and Client Secret securely in `~/.netrc` to keep them out of your shell history:
 
-Alternately, the space can be exported into a `tar` style archive file with the switch `--tar FILENAME`.
-
+```text
+machine your-looker-domain.com
+login YOUR_API_CLIENT_ID
+password YOUR_API_CLIENT_SECRET
 ```
-$ gzr space export 758 --host foo.bar.mycompany.com --tar export.tar
-```
+`looker-cli` will automatically retrieve these credentials when connecting to `your-looker-domain.com`.
 
-That tar file can also be automatically compressed with `gzip` compression by using the switch
-`--tgz FILENAME`.
-
-```
-$ gzr space export 758 --host foo.bar.mycompany.com --tgz export.tar.gz
-```
-
-#### space rm
-
-The `space rm SPACE_ID` command is used to delete a space. If the space is not empty
-this command will refuse to perform the delete. By adding the `--force` switch the command
-will also delete the subspaces, looks, and dashboards contained in the space.
-
-```
-$ gzr space rm 758 --host foo.bar.mycompany.com --force
+### 4. Environment Variables
+```bash
+export LOOKERSDK_CLIENT_ID="your_client_id"
+export LOOKERSDK_CLIENT_SECRET="your_client_secret"
 ```
 
-#### space create
-
-The `space create NAME PARENT_SPACE_ID` command is used to create a new subspace.
-
-```
-$ gzr space create "My New Space" 758 --host foo.bar.mycompany.com
+### 5. Direct Flags
+```bash
+./looker-cli user ls --client-id "ID" --client-secret "SECRET" --host your-looker-domain.com
 ```
 
-### Look Information
+---
 
-The command `gzr look help` will show details about subcommands of the look command.
+## Profile Management
 
-#### look cat
+`looker-cli` supports configuration profiles to easily switch between different Looker instances or environments (e.g., dev, staging, production). Profiles are stored in `$HOME/.config/looker-cli/config.yaml`.
 
-The `look cat` command is used to output the json that describes the look.
+A profile stores the host, port, and optionally client credentials (`client_id`, `client_secret`), `verify_ssl` setting, and/or OAuth tokens (`access_token`, `refresh_token`, `expiration`).
 
-```
-$ gzr look cat 758 --host foo.bar.mycompany.com
-JSON data for look
-```
+### Managing Profiles
 
-The output document can be very long. Usually one will use the switch `--dir DIRECTORY` to
-save to a file. The file will be named `Look_{LOOK_ID}_{LOOK_TITLE}.json`.
+*   **Add a new profile**:
+    ```bash
+    ./looker-cli profile add my-dev --host dev.looker.com --port 19999 --client-id "ID" --client-secret "SECRET" --verify-ssl=false
+    ```
+    *Note: Only `--host` is required. If client credentials are not provided, they can be retrieved from `.netrc` or environment variables when the profile is used.*
 
-#### look rm
+*   **List all profiles**:
+    ```bash
+    ./looker-cli profile ls
+    ```
+    The active (default) profile is marked with an asterisk (`*`).
 
-The `look rm LOOK_ID` command is used to delete a look.
+*   **Set a default profile**:
+    ```bash
+    ./looker-cli profile use my-dev
+    ```
 
-```
-$ gzr look rm 758 --host foo.bar.mycompany.com
-```
+*   **Delete a profile**:
+    ```bash
+    ./looker-cli profile rm my-dev
+    ```
 
-#### look import
+### Using Profiles
 
-The `look import LOOK_FILE SPACE_ID` command is used to import a look from a file. If a look by the same
-name exists in that space then the `--force` switch must be used.
+Once you have profiles configured:
 
-Gazer will attempt to update an existing look of the same name, rather than create a new look. In
-this way the look id, share URLs, schedules, permissions, etc. will be preserved.
+1.  **Default Profile**: If you don't specify a profile or connection flags, `looker-cli` will automatically use the default profile marked in `config.yaml`.
+    ```bash
+    # Uses default profile
+    ./looker-cli user me
+    ```
 
-```
-$ gzr look import Path/To/Look_123_My\ Look.json 123 --host foo.bar.mycompany.com --force
-```
+2.  **Explicit Profile**: Use the `--profile` global flag to use a specific profile.
+    ```bash
+    # Uses 'my-prod' profile
+    ./looker-cli user me --profile my-prod
+    ```
 
-### Dashboard Information
+3.  **OAuth with Profiles**: If you use OAuth login with an active profile, the tokens will be saved directly into that profile in `config.yaml`.
+    ```bash
+    ./looker-cli session login --oauth --profile my-dev
+    ```
+    Subsequent commands using that profile will automatically reuse and refresh these tokens.
 
-The command `gzr dashboard help` will show details about subcommands of the dashboard command.
+---
 
-#### dashboard cat
+## Global Flags
 
-The `dashboard cat` command is used to output the json that describes the dashboard.
+Every command accepts the following optional global parameters to customize connection and behavior:
 
-```
-$ gzr dashboard cat 192 --host foo.bar.mycompany.com
-JSON data for dashboard
-```
+| Flag | Description | Default |
+| :--- | :--- | :--- |
+| `--host` | Looker Hostname | `localhost` |
+| `--port` | Looker API Port | `19999` |
+| `--profile` | Use a specific profile from `config.yaml` | `""` |
+| `--ssl` | Use SSL/TLS for communication | `true` |
+| `--verify-ssl` | Verify server SSL certificate | `true` |
+| `--su` | Act as another user ID (Sudo) | `""` |
+| `--timeout` | Seconds to wait for a response | `60` |
+| `--token` | Access token to use for authentication | `""` |
+| `--token-file` | Use access token stored in `~/.looker_auth` | `false` |
+| `--client-id` | API Client ID | `""` |
+| `--client-secret` | API Client Secret | `""` |
+| `--debug` | Enable verbose API logging | `false` |
 
-The output document can be very long. Usually one will use the switch `--dir DIRECTORY` to
-save to a file. The file will be named `Dashboard_{DASHBOARD_ID}_{DASHBOARD_TITLE}.json`.
+---
 
-The `--transform FILE` switch can be used to update the output document. This is useful to automatically
-perform tasks when promoting dashboards to upper environments, such as adding header or footer
-text tiles, replacing model or explore names, or updating filter expressions. The `FILE` parameter
-accepts a fully-qualified path to a JSON file describing the transformations to apply.
+## Complete Command Reference
 
-```
-$ gzr dashboard cat 192 --host foo.bar.mycompany.com --transform path/to/transforms.json
-JSON data for dashboard modified by any transformations expressed in the transform file
-```
+### api
+Make raw Looker API calls based on the Looker API 4.0 Swagger specification. 
 
-The transform file uses a familiar JSON syntax. Within the file, you can define any number
-of `dashboard_elements` to append to your existing dashboard. Elements must be placed in either
-the top row or the bottom row of the existing dashboard, specified by the `position` attribute.
-You must also specify the `width` and `height` of your new elements.
+This command dynamically exposes all endpoints of the Looker API, organized into subcommands by Tag, and operation IDs as sub-subcommands.
 
-You can also define any number of `replacements`, which perform a simple find and replace
-within the JSON output based on the key-value pairs listed. This can be used to automatically
-replace model names or update filters for existing elements. You must escape double-quotes.
+*   **List all Categories (Tags)**:
+    ```bash
+    ./looker-cli api help
+    ```
+*   **List operations under a Category**:
+    ```bash
+    ./looker-cli api query help
+    ```
+*   **Get detailed help for an operation** (including parameters and types):
+    ```bash
+    ./looker-cli api query create_query_task --help
+    ```
+*   **Make an API Call with Query Flags**:
+    Required path parameters are passed as positional arguments. Optional parameters are passed as flags:
+    ```bash
+    ./looker-cli api user user 2456 --fields "id,email,first_name,last_name" --token-file --host your-domain.com
+    ```
+*   **Make an API Call with JSON Body**:
+    If the command takes a JSON request body, it must be passed as a file path or `-` for standard input (stdin):
+    ```bash
+    ./looker-cli api query run_inline_query json my_query.json --token-file --host your-domain.com
+    ```
+*   **Describe JSON Request Body Schema**:
+    If a command accepts a JSON request body, you can pass the `--describe-body` flag to output the full JSON schema of the expected body payload (bypassing other positional argument checks) and exit instantly:
+    ```bash
+    ./looker-cli api query create_query_task --describe-body
+    ```
 
-Example JSON transform file:
-```
-{
-  "dashboard_elements": [
-    {
-      "position": "top",
-      "width": 12,
-      "height": 2,
-      "body_text": "Production Version of Dashboard (deployed 2019-06-18)",
-      "body_text_as_html": "<p>Production Version of Dashboard (deployed 2019-06-18)</p>",
-      "note_display": null,
-      "note_state": null,
-      "note_text": null,
-      "note_text_as_html": null,
-      "subtitle_text": "",
-      "title": null,
-      "title_hidden": false,
-      "title_text": "",
-      "type": "text"
-    },
-    {
-      "position": "bottom",
-      "width": 6,
-      "height": 2,
-      "body_text": "Please contact the Business Intelligence Help Desk for any issues with this dashboard",
-      "body_text_as_html": "<p>Please contact the Business Intelligence Help Desk for any issues with this dashboard</p>",
-      "note_display": null,
-      "note_state": null,
-      "note_text": null,
-      "note_text_as_html": null,
-      "subtitle_text": "",
-      "title": null,
-      "title_hidden": false,
-      "title_text": "",
-      "type": "text"
-    }
-  ],
-  "replacements": [
-    {
-      "\"model\": \"staging\",": "\"model\": \"production\","
-    },
-    {
-      "\"filter_expression\": \"not(is_null(${view.allowed_user}))\": "\"filter_expression\": \"${view.allowed_user} = _user_attributes['username']\","
-    }
-  ]
-}
-```
-| WARNING: You will not be able to overwrite dashboards that have been transformed! |
-| --- |
+---
 
-In other words, you can&rsquo;t use the `--force` switch to replace a previously-transformed dashboard. Instead,
-you&rsquo;ll need to delete and recreate the dashboard. If you have stable content URLs enabled on your
-instance, the `slug` parameter ensures the URL for your dashboard won&rsquo;t change.
+### alert
+Commands pertaining to alerts.
 
-This is because it is impossible to know the element IDs for elements that were added by the `--transform` operation,
-which makes it impossible to synchronize these elements in the future.
+*   **`ls`**: List alerts on the server.
+    ```bash
+    ./looker-cli alert ls --token-file --host your-domain.com
+    ```
+*   **`cat <alert_id>`**: Output JSON details about an alert.
+    ```bash
+    ./looker-cli alert cat 12 --token-file > alert.json
+    ```
+*   **`chown <alert_id> <user_id>`**: Change the owner of an alert.
+    ```bash
+    ./looker-cli alert chown 12 45 --token-file
+    ```
+*   **`disable <alert_id>`**: Disable an alert.
+    ```bash
+    ./looker-cli alert disable 12 --token-file
+    ```
+*   **`enable <alert_id>`**: Enable an alert.
+    ```bash
+    ./looker-cli alert enable 12 --token-file
+    ```
+*   **`follow <alert_id>`**: Start following an alert.
+    ```bash
+    ./looker-cli alert follow 12 --token-file
+    ```
+*   **`unfollow <alert_id>`**: Stop following an alert.
+    ```bash
+    ./looker-cli alert unfollow 12 --token-file
+    ```
+*   **`import <file>`**: Import an alert from a JSON file.
+    ```bash
+    ./looker-cli alert import alert.json --token-file
+    ```
+*   **`notifications`**: Retrieve alert notifications.
+    ```bash
+    ./looker-cli alert notifications --token-file
+    ```
+*   **`read <notification_id>`**: Mark a notification as read.
+    ```bash
+    ./looker-cli alert read 78 --token-file
+    ```
+*   **`threshold <alert_id> <value>`**: Change the threshold of an alert.
+    ```bash
+    ./looker-cli alert threshold 12 "100.5" --token-file
+    ```
+*   **`randomize`**: Randomize scheduled alert times on the server (useful for dev environments).
+    ```bash
+    ./looker-cli alert randomize --token-file
+    ```
+*   **`rm <alert_id>`**: Delete an alert.
+    ```bash
+    ./looker-cli alert rm 12 --token-file
+    ```
 
-#### dashboard rm
+---
 
-The `dashboard rm DASHBOARD_ID` command is used to delete a dashboard.
+### attribute
+Commands pertaining to User Attributes.
 
-```
-$ gzr dashboard rm 192 --host foo.bar.mycompany.com
-```
+*   **`ls`**: List all defined user attributes.
+    ```bash
+    ./looker-cli attribute ls --token-file
+    ```
+*   **`cat <attribute_id>`**: Output JSON information about an attribute.
+    ```bash
+    ./looker-cli attribute cat 5 --token-file
+    ```
+*   **`create <name> <type>`**: Create or modify a user attribute.
+    ```bash
+    ./looker-cli attribute create "my_attribute" "string" --token-file
+    ```
+*   **`import <file>`**: Import a user attribute from a file.
+    ```bash
+    ./looker-cli attribute import attribute.json --token-file
+    ```
+*   **`get_group_value <attribute_id> <group_id>`**: Retrieve a user attribute value for a specific group.
+    ```bash
+    ./looker-cli attribute get_group_value 5 10 --token-file
+    ```
+*   **`set_group_value <attribute_id> <group_id> <value>`**: Set a user attribute value for a specific group.
+    ```bash
+    ./looker-cli attribute set_group_value 5 10 "US-EAST" --token-file
+    ```
+*   **`rm <attribute_id>`**: Delete a user attribute.
+    ```bash
+    ./looker-cli attribute rm 5 --token-file
+    ```
 
-#### dashboard import
+---
 
-The `dashboard import DASHBOARD_FILE SPACE_ID` command is used to import a dashboard and
-its associated looks from a file. If a dashboard or look by the same
-name exists in that space then the `--force` switch must be used.
+### connection
+Commands pertaining to database connections and dialects.
 
-Gazer will attempt to update an existing dashboard or look of the same name,
-rather than create a new dashboard or look. In this way the id, share URLs,
-schedules, permissions, etc. will be preserved.
+*   **`ls`**: List all database connections.
+    ```bash
+    ./looker-cli connection ls --token-file
+    ```
+*   **`cat <connection_name>`**: Output the JSON representation of a database connection.
+    ```bash
+    ./looker-cli connection cat "my_db" --token-file
+    ```
+*   **`import <file>`**: Import a database connection from a JSON file.
+    ```bash
+    ./looker-cli connection import conn.json --token-file
+    ```
+*   **`dialects`**: List all supported SQL dialects.
+    ```bash
+    ./looker-cli connection dialects --token-file
+    ```
+*   **`test <connection_name>`**: Test a database connection.
+    ```bash
+    ./looker-cli connection test "my_db" --token-file
+    ```
+*   **`rm <connection_name>`**: Delete a database connection.
+    ```bash
+    ./looker-cli connection rm "my_db" --token-file
+    ```
 
-```
-$ gzr dashboard import Path/To/Dashboard_123_My\ Dash.json 123 --host foo.bar.mycompany.com --force
-```
+---
 
-### Connection Information
+### dashboard
+Commands pertaining to dashboards.
 
-The command `gzr connection help` will show details about subcommands of the connection command.
+*   **`cat <dashboard_id>`**: Output JSON describing a dashboard.
+    ```bash
+    ./looker-cli dashboard cat 2 --token-file > dash.json
+    ```
+*   **`import <file> <folder_id>`**: Import a dashboard from a JSON file into a folder.
+    ```bash
+    ./looker-cli dashboard import dash.json 5 --token-file
+    ```
+*   **`import_lookml <lookml_dashboard_id> <folder_id>`**: Create a User Defined Dashboard (UDD) from a LookML dashboard.
+    ```bash
+    ./looker-cli dashboard import_lookml "model::my_dash" 5 --token-file
+    ```
+*   **`sync_lookml <lookml_dashboard_id> <folder_id>`**: Sync a UDD from its parent LookML dashboard.
+    ```bash
+    ./looker-cli dashboard sync_lookml "model::my_dash" 5 --token-file
+    ```
+*   **`mv <dashboard_id> <folder_id>`**: Move a dashboard to a different folder.
+    ```bash
+    ./looker-cli dashboard mv 2 10 --token-file
+    ```
+*   **`rm <dashboard_id>`**: Delete a dashboard.
+    ```bash
+    ./looker-cli dashboard rm 2 --token-file
+    ```
 
-#### connection ls
+---
 
-The command `gzr connection ls` will list the connections that exist in the Looker instance.
+### group
+Commands pertaining to groups.
 
-```
-$ gzr connection ls --host foo.bar.mycompany.com
-+-------------------------+---------------------+-----------------+----+--------------------------+-----------+
-|name                     |dialect.name         |host             |port|database                  |schema     |
-+-------------------------+---------------------+-----------------+----+--------------------------+-----------+
-|thelook                  |mysql                |db1.mycompany.com|3306|demo_db                   |           |
-|faa                      |mysql                |db1.mycompany.com|3306|flightstats               |           |
-|video_store              |mysql                |db1.mycompany.com|3306|sakila                    |           |
-|looker                   |mysql                |                 |    |                          |           |
-+-------------------------+---------------------+-----------------+----+--------------------------+-----------+
-```
+*   **`ls`**: List all groups.
+    ```bash
+    ./looker-cli group ls --token-file
+    ```
+*   **`member_groups <group_id>`**: List groups that are members of the given group.
+    ```bash
+    ./looker-cli group member_groups 3 --token-file
+    ```
+*   **`member_users <group_id>`**: List users that are members of the given group.
+    ```bash
+    ./looker-cli group member_users 3 --token-file
+    ```
 
-#### connection dialect
+---
 
-The command `gzr connection dialect` will list the dialects that have been defined in the Looker instance.
+### look
+Commands pertaining to Looks.
 
-```
-$ gzr connection dialect --host foo.bar.mycompany.com
-+---------------------+----------------------------------+
-|name                 |label                             |
-+---------------------+----------------------------------+
-|mysql                |MySQL                             |
-|amazonaurora         |Amazon Aurora                     |
-|googlecloudsql       |Google Cloud SQL                  |
-|memsql               |MemSQL                            |
-|mariadb              |MariaDB                           |
-|clustrix             |Clustrix                          |
-|postgres             |PostgreSQL                        |
-|google_cloud_postgres|Google Cloud PostgreSQL           |
-|azure_postgres       |Azure PostgreSQL                  |
-|presto               |PrestoDB                          |
-|athena               |Amazon Athena                     |
-|qubole_presto        |Qubole Presto v0.157+             |
-|qubole_presto_v142   |Qubole Presto v0.142              |
-|xtremedata           |XtremeData                        |
-|redshift             |Amazon Redshift                   |
-|snowflake            |Snowflake                         |
-|greenplum            |Greenplum                         |
-|mssql_2008           |Microsoft SQL Server 2008+        |
-|msazuresql           |Microsoft Azure SQL Database      |
-|mssql                |Microsoft SQL Server 2005         |
-|mssqldw              |Microsoft Azure SQL Data Warehouse|
-|aster                |Aster Data                        |
-|vertica              |Vertica 7.1+                      |
-|vertica_v5           |Vertica 6                         |
-|bigquery             |Google BigQuery Legacy SQL        |
-|bigquery_standard_sql|Google BigQuery Standard SQL      |
-|spanner              |Google Cloud Spanner              |
-|db2                  |IBM DB2                           |
-|datavirtuality       |DataVirtuality                    |
-|dashdb               |IBM DashDB                        |
-|hana                 |SAP HANA                          |
-|oracle               |Oracle                            |
-|oracle_dwcs          |Oracle ADWC                       |
-|hive2                |Apache Hive2                      |
-|impala               |Cloudera Impala                   |
-|spark1_5             |Apache Spark 1.5+                 |
-|spark2_0             |Apache Spark 2.0                  |
-|teradata             |Teradata                          |
-|exasol               |Exasol                            |
-|denodo               |Denodo                            |
-|druid                |Druid                             |
-|netezza              |IBM Netezza                       |
-|dremio               |Dremio                            |
-+---------------------+----------------------------------+
-```
+*   **`cat <look_id>`**: Output JSON describing a Look.
+    ```bash
+    ./looker-cli look cat 14 --token-file > look.json
+    ```
+*   **`import <file> <folder_id>`**: Import a Look from a JSON file into a folder.
+    ```bash
+    ./looker-cli look import look.json 5 --token-file
+    ```
+*   **`mv <look_id> <folder_id>`**: Move a Look to a different folder.
+    ```bash
+    ./looker-cli look mv 14 10 --token-file
+    ```
+*   **`rm <look_id>`**: Delete a Look.
+    ```bash
+    ./looker-cli look rm 14 --token-file
+    ```
 
-### Model Information
+---
 
-The command `gzr model help` will show details about subcommands of the model command.
+### model
+Commands pertaining to LookML Models.
 
-#### model ls
+*   **`ls`**: List all models.
+    ```bash
+    ./looker-cli model ls --token-file
+    ```
+*   **`cat <model_name>`**: Output JSON representation of a model.
+    ```bash
+    ./looker-cli model cat "my_model" --token-file
+    ```
+*   **`import <file>`**: Import a LookML model from a JSON file.
+    ```bash
+    ./looker-cli model import model.json --token-file
+    ```
 
-The command `gzr model ls` will list the models that exist in the Looker instance.
+#### model set
+Commands for managing Model Sets (groups of models for user roles).
+*   **`ls`**: List all model sets.
+    ```bash
+    ./looker-cli model set ls --token-file
+    ```
+*   **`cat <set_id>`**: Output JSON representation of a model set.
+    ```bash
+    ./looker-cli model set cat 2 --token-file
+    ```
+*   **`import <file>`**: Import a model set from a JSON file.
+    ```bash
+    ./looker-cli model set import set.json --token-file
+    ```
+*   **`rm <set_id>`**: Delete a model set.
+    ```bash
+    ./looker-cli model set rm 2 --token-file
+    ```
 
-```
-$ gzr model ls --host foo.bar.mycompany.com
-+---------------------------------------------+---------------------------------------------+-------------------------+
-|name                                         |label                                        |project_name             |
-+---------------------------------------------+---------------------------------------------+-------------------------+
-|faa                                          |Faa                                          |faa                      |
-|300_daily_active_users                       |300 Daily Active Users                       |lookml_design_patterns   |
-|001_hello_world                              |001 Hello World                              |lookml_design_patterns   |
-|video_store                                  |Video Store                                  |video_store              |
-|looker                                       |Looker                                       |i__looker_dev            |
-|faa_redshift                                 |Faa Redshift                                 |faa_redshift             |
-+---------------------------------------------+---------------------------------------------+-------------------------+
-```
+---
 
-## Development
+### permission
+Commands to retrieve permissions and manage Permission Sets.
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+*   **`ls`**: List all raw available system permissions.
+    ```bash
+    ./looker-cli permission ls --token-file
+    ```
+*   **`tree`**: Display system permissions in a hierarchical tree view.
+    ```bash
+    ./looker-cli permission tree --token-file
+    ```
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+#### permission set
+Commands for managing Permission Sets (permissions assigned to roles).
+*   **`ls`**: List all permission sets.
+    ```bash
+    ./looker-cli permission set ls --token-file
+    ```
+*   **`cat <set_id>`**: Output JSON representation of a permission set.
+    ```bash
+    ./looker-cli permission set cat 4 --token-file
+    ```
+*   **`import <file>`**: Import a permission set from a JSON file.
+    ```bash
+    ./looker-cli permission set import perm_set.json --token-file
+    ```
+*   **`rm <set_id>`**: Delete a permission set.
+    ```bash
+    ./looker-cli permission set rm 4 --token-file
+    ```
 
-## Contributing
+---
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/looker-open-source/gzr. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+### plan
+Commands pertaining to Scheduled Plans.
 
-## Code of Conduct
+*   **`ls`**: List scheduled plans.
+    ```bash
+    ./looker-cli plan ls --token-file
+    ```
+*   **`cat <plan_id>`**: Output JSON representation of a scheduled plan.
+    ```bash
+    ./looker-cli plan cat 8 --token-file > plan.json
+    ```
+*   **`import <file>`**: Import a scheduled plan from a JSON file.
+    ```bash
+    ./looker-cli plan import plan.json --token-file
+    ```
+*   **`runit <plan_id>`**: Execute a saved scheduled plan immediately.
+    ```bash
+    ./looker-cli plan runit 8 --token-file
+    ```
+*   **`enable <plan_id>`**: Enable a scheduled plan.
+    ```bash
+    ./looker-cli plan enable 8 --token-file
+    ```
+*   **`disable <plan_id>`**: Disable a scheduled plan.
+    ```bash
+    ./looker-cli plan disable 8 --token-file
+    ```
+*   **`failures`**: Report all scheduled plans that failed in their most recent execution attempt.
+    ```bash
+    ./looker-cli plan failures --token-file
+    ```
+*   **`randomize`**: Randomize scheduled plan times (useful for dev instance testing).
+    ```bash
+    ./looker-cli plan randomize --token-file
+    ```
+*   **`rm <plan_id>`**: Delete a scheduled plan.
+    ```bash
+    ./looker-cli plan rm 8 --token-file
+    ```
 
-Everyone interacting in the Gazer project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/looker-open-source/gzr/blob/master/CODE_OF_CONDUCT.md).
+---
 
-## Copyright
+### project
+Commands pertaining to LookML Projects.
 
-Copyright (c) 2018 Mike DeAngelo for Looker Data Sciences. See [MIT License](LICENSE.txt) for further details.
+*   **`ls`**: List all projects.
+    ```bash
+    ./looker-cli project ls --token-file
+    ```
+*   **`cat <project_id>`**: Output JSON information about a project.
+    ```bash
+    ./looker-cli project cat "my_project" --token-file
+    ```
+*   **`import <file>`**: Import a project from a file.
+    ```bash
+    ./looker-cli project import project.json --token-file
+    ```
+*   **`update <project_id> <file>`**: Update a project from a file definition.
+    ```bash
+    ./looker-cli project update "my_project" project_update.json --token-file
+    ```
+*   **`branch <project_id>`**: List the active Git branch or all branches of a project.
+    ```bash
+    ./looker-cli project branch "my_project" --token-file
+    ```
+*   **`checkout <project_id> <branch_name>`**: Checkout a specific Git branch for a project.
+    ```bash
+    ./looker-cli project checkout "my_project" "dev-feature" --token-file
+    ```
+*   **`deploy <project_id>`**: Deploy the active branch of a project to production.
+    ```bash
+    ./looker-cli project deploy "my_project" --token-file
+    ```
+*   **`deploy_key <project_id>`**: Generate/retrieve the Git deploy public key for the project.
+    ```bash
+    ./looker-cli project deploy_key "my_project" --token-file
+    ```
+
+#### Managing Project Files (`looker-cli project file`)
+Manage the files inside your Looker project using undocumented Looker API endpoints.
+
+*   **`ls <project_id>`**: List all files in a project:
+    ```bash
+    ./looker-cli project file ls "my_project" --token-file
+    ```
+*   **`cat <project_id> <file_path>`**: Retrieve and print the raw text content of a LookML project file:
+    ```bash
+    ./looker-cli project file cat "my_project" "my_model.model.lkml" --token-file
+    ```
+*   **`create <project_id> <file_path> <content_file_or_->`**: Create a new LookML file inside a project (accepts payload from a local file or `-` for stdin):
+    ```bash
+    ./looker-cli project file create "my_project" "views/new_view.view.lkml" new_view.lkml --token-file
+    ```
+*   **`update <project_id> <file_path> <content_file_or_->`**: Overwrite/update an existing LookML file inside a project:
+    ```bash
+    ./looker-cli project file update "my_project" "views/new_view.view.lkml" updated_view.lkml --token-file
+    ```
+*   **`rm <project_id> <file_path>`**: Delete a file from a project:
+    ```bash
+    ./looker-cli project file rm "my_project" "views/new_view.view.lkml" --token-file
+    ```
+
+#### Managing Project Directories (`looker-cli project directory`)
+Manage physical directories within your Looker LookML projects.
+
+*   **`ls <project_id>`**: List all subdirectories inside a project:
+    ```bash
+    ./looker-cli project directory ls "my_project" --token-file
+    ```
+*   **`create <project_id> <dir_path>`**: Create a new subdirectory inside a project:
+    ```bash
+    ./looker-cli project directory create "my_project" "views/marketing" --token-file
+    ```
+*   **`rm <project_id> <dir_path>`**: Delete a directory from a project:
+    ```bash
+    ./looker-cli project directory rm "my_project" "views/marketing" --token-file
+    ```
+
+---
+
+### query
+Commands to retrieve and run queries.
+
+*   **`runquery [QUERY_DEF]`**: Execute a query and return the results.
+    ```bash
+    # Run by ID
+    ./looker-cli query runquery 123 --token-file
+    
+    # Run by slug
+    ./looker-cli query runquery "abc123xyz" --token-file
+    
+    # Run using raw JSON query definition
+    ./looker-cli query runquery '{"model":"dev","view":"users","fields":["id"]}' --token-file
+
+    # Run using a local JSON query definition file
+    ./looker-cli query runquery --file query_definition.json --token-file
+    ```
+
+---
+
+### role
+Commands pertaining to Roles.
+
+*   **`ls`**: Display all roles.
+    ```bash
+    ./looker-cli role ls --token-file
+    ```
+*   **`cat <role_id>`**: Output the JSON representation of a role.
+    ```bash
+    ./looker-cli role cat 3 --token-file
+    ```
+*   **`create <name> <permission_set_id> <model_set_id>`**: Create a new role.
+    ```bash
+    ./looker-cli role create "Analyst" 4 2 --token-file
+    ```
+*   **`rm <role_id>`**: Delete a role.
+    ```bash
+    ./looker-cli role rm 3 --token-file
+    ```
+
+#### Managing Role Groups
+*   **`group_ls <role_id>`**: List the groups assigned to a role.
+    ```bash
+    ./looker-cli role group_ls 3 --token-file
+    ```
+*   **`group_add <role_id> <group_id1,group_id2...>`**: Add groups to a role.
+    ```bash
+    ./looker-cli role group_add 3 10,11 --token-file
+    ```
+*   **`group_rm <role_id> <group_id1,group_id2...>`**: Remove groups from a role.
+    ```bash
+    ./looker-cli role group_rm 3 10 --token-file
+    ```
+
+#### Managing Role Users
+*   **`user_ls <role_id>`**: List the users assigned to a role.
+    ```bash
+    ./looker-cli role user_ls 3 --token-file
+    ```
+*   **`user_add <role_id> <user_id1,user_id2...>`**: Add users to a role.
+    ```bash
+    ./looker-cli role user_add 3 45,46 --token-file
+    ```
+*   **`user_rm <role_id> <user_id1,user_id2...>`**: Remove users from a role.
+    ```bash
+    ./looker-cli role user_rm 3 45 --token-file
+    ```
+
+---
+
+### session
+Commands pertaining to API connections and workspace sessions.
+
+*   **`login`**: Create a persistent session.
+    ```bash
+    # Standard login using API keys (prompts/uses config)
+    ./looker-cli session login --host your-domain.com
+
+    # OAuth PKCE login
+    ./looker-cli session login --oauth --host your-domain.com --port 443
+    ```
+*   **`logout`**: End a persistent session and clear the local cached token.
+    ```bash
+    ./looker-cli session logout --host your-domain.com
+    ```
+*   **`get`**: Get data about your current Looker session.
+    ```bash
+    ./looker-cli session get --token-file --host your-domain.com
+    ```
+*   **`update <dev | production>`**: Change the workspace ID of your current session.
+    ```bash
+    ./looker-cli session update dev --token-file --host your-domain.com
+    ```
+
+---
+
+### space / folder
+Commands pertaining to spaces (now known as Folders in Looker). *Supports alias: `folder`.*
+
+*   **`top`**: Retrieve the top-level (root) folders.
+    ```bash
+    ./looker-cli space top --token-file
+    ```
+*   **`ls [space_id]`**: List the looks, dashboards, and folders in the given space (defaults to root/top spaces if omitted).
+    ```bash
+    ./looker-cli space ls 5 --token-file
+    ```
+*   **`cat <space_id>`**: Output JSON describing a folder.
+    ```bash
+    ./looker-cli space cat 5 --token-file
+    ```
+*   **`create <name> [parent_id]`**: Create a new subspace/folder under the specified parent.
+    ```bash
+    ./looker-cli space create "Marketing Folders" 1 --token-file
+    ```
+*   **`tree [space_id]`**: Display child spaces, dashboards, and looks in a tree format.
+    ```bash
+    ./looker-cli space tree 1 --token-file
+    ```
+*   **`export <space_id>`**: Recursively download all looks, dashboards, and folders inside a space to your local filesystem.
+    ```bash
+    ./looker-cli space export 5 --token-file
+    ```
+*   **`rm <space_id>`**: Delete a folder.
+    ```bash
+    ./looker-cli space rm 5 --token-file
+    ```
+
+---
+
+### user
+Commands pertaining to Users.
+
+*   **`me`**: Show information for your currently authenticated user.
+    ```bash
+    ./looker-cli user me --token-file --host your-domain.com
+    ```
+*   **`ls`**: List all users on the system.
+    ```bash
+    ./looker-cli user ls --token-file --host your-domain.com
+    ```
+*   **`ls --last-login`**: List users including their true most recent login timestamp, dynamically resolved across all auth types (SAML, LDAP, Google OAuth, OIDC, Email, etc.):
+    ```bash
+    ./looker-cli user ls --last-login --token-file --host your-domain.com
+    ```
+*   **`cat <user_id>`**: Output JSON details about a user.
+    ```bash
+    ./looker-cli user cat 45 --token-file > user_45.json
+    ```
+*   **`enable <user_id>`**: Enable a user.
+    ```bash
+    ./looker-cli user enable 45 --token-file
+    ```
+*   **`disable <user_id>`**: Disable a user.
+    ```bash
+    ./looker-cli user disable 45 --token-file
+    ```
+*   **`delete <user_id>`**: Delete a user.
+    ```bash
+    ./looker-cli user delete 45 --token-file
+    ```

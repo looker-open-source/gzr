@@ -1,0 +1,265 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  LOOKERSDK_BASE_URL: https://localhost:20000
+  LOOKERSDK_VERIFY_SSL: false
+  LOOKERSDK_CLIENT_ID: ${{ secrets.LOOKERSDK_CLIENT_ID }}
+  LOOKERSDK_CLIENT_SECRET: ${{ secrets.LOOKERSDK_CLIENT_SECRET }}
+
+jobs:
+  setup:
+    uses: looker-open-source/reusable-actions/.github/workflows/supported-versions.yml@main
+
+  test:
+    name: Test - Looker.${{ matrix.looker }} / Go.${{ matrix.go-version }}
+    runs-on:
+      group: large-ubuntu
+    needs: setup
+    strategy:
+      matrix:
+        looker: ${{ fromJson(needs.setup.outputs.matrix_json) }}
+        go-version: [1.26.2]
+
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.12.1
+        with:
+          access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_AR_READER_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          create_credentials_file: true
+          export_environment_variables: true
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Authenticate Artifact Repository
+        run: gcloud auth configure-docker us-west1-docker.pkg.dev --quiet
+
+      - name: Pull and run Looker docker image
+        run: |
+          docker pull --quiet us-west1-docker.pkg.dev/cloud-looker-sdk-codegen-cicd/looker/${{ matrix.looker }}
+          # set $LOOKER_OPTS to --no-ssl if we want to turn off ssl
+          docker run --name looker-sdk-codegen-ci -d -p 10000:9999 -p 20000:19999 us-west1-docker.pkg.dev/cloud-looker-sdk-codegen-cicd/looker/${{ matrix.looker }}
+          docker logs -f looker-sdk-codegen-ci --until=30s &
+
+      - name: Set up GO ${{ matrix.go-version }}
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Build the executable
+        run: go build -o looker-cli ./cmd/looker-cli
+
+      - name: Run unit tests
+        run: go run gotest.tools/gotestsum@latest --junitfile report.xml -- ./...
+
+      - name: Upload ts unit test results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-test-results-${{ matrix.looker }}
+          path: report.xml
+
+      - name: Check that Looker is ready
+        run: |
+          ${{ github.workspace }}/.github/scripts/wait_for_looker.sh
+
+      - name: Report Failure
+        run: |
+          curl --request POST \
+          --url https://api.github.com/repos/looker-open-source/sdk-codegen/check-runs \
+          --header "authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          --header "content-type: application/json" \
+          --header "Accept: application/vnd.github.v3+json" \
+          --data '{
+            "name": "CI Tests",
+            "head_sha": "${{ github.event.pull_request.head.sha || github.sha }}",
+            "conclusion": "failure"
+          }' \
+          --fail
+        if: failure()
+
+      - name: Login persistently
+        run: |
+          ./looker-cli session login
+
+      - name: Create Connection
+        run: |
+          cat > Connection_faa_mysql.json <<HERE
+          {
+            "name": "faa",
+            "host": "${{ secrets.FAA_MYSQL_HOSTNAME }}",
+            "port": "3306",
+            "database": "flightstats",
+            "db_timezone": "UTC",
+            "query_timezone": "UTC",
+            "schema": null,
+            "max_connections": 30,
+            "ssl": false,
+            "verify_ssl": false,
+            "tmp_db_name": "tmp",
+            "pool_timeout": 120,
+            "sql_runner_precache_tables": true,
+            "sql_writing_with_info_schema": true,
+            "uses_tns": false,
+            "pdt_concurrency": 1,
+            "dialect_name": "mysql",
+            "username": "${{ secrets.FAA_MYSQL_USERNAME }}",
+            "password": "${{ secrets.FAA_MYSQL_PASSWORD }}"
+          }
+          HERE
+          ./looker-cli connection import Connection_faa_mysql.json --token-file
+
+      - name: Test Connection
+        run: |
+          ./looker-cli connection test faa --token-file
+
+      - name: Change the session to dev mode
+        run: |
+          ./looker-cli session get --token-file
+          ./looker-cli session update dev --token-file
+
+      - name: Import the project
+        run: |
+          cat > Project_faa.json <<HERE
+          {
+            "name": "faa",
+            "uses_git": true
+          }
+          HERE
+          ./looker-cli project import Project_faa.json --token-file
+
+      - name: Create a deploy key and set it on the github repo for the project
+        run: |
+          DEPLOY_KEY=$(./looker-cli project deploy key faa --token-file)
+          echo $DEPLOY_KEY
+          SET_KEY_RESPONSE=$(
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.LOS_AUTO_BOT_MANAGE_FAA_DEPLOY_KEY }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/looker-open-source/faa/keys \
+            -d "{\"title\":\"test_key $(uuidgen)\",\"key\":\"$DEPLOY_KEY\",\"read_only\":false}"
+          )
+          echo $SET_KEY_RESPONSE
+          echo "KEY_ID=$(jq .id <<<$SET_KEY_RESPONSE)" >> $GITHUB_ENV
+
+      - name: Set the project github connection
+        run: |
+          cat > github_repo.json <<HERE
+          {
+            "git_remote_url": "git@github.com:looker-open-source/faa.git",
+            "git_service_name": "github"
+          }
+          HERE
+          ./looker-cli project update faa github_repo.json --token-file
+
+      - name: Check the project config
+        run: |
+          ./looker-cli project cat faa --trim --token-file
+
+      - name: Check available branches for faa project
+        run: |
+          ./looker-cli project branch faa --all --token-file
+
+      - name: Checkout a shared branch
+        run: |
+          ./looker-cli project checkout faa main --token-file
+
+      - name: Deploy to production
+        run: |
+          ./looker-cli project deploy faa --token-file
+
+      - name: Configure lookml model
+        run: |
+          cat > Model_faa.json <<HERE
+          {
+            "name": "aviation",
+            "project_name": "faa",
+            "unlimited_db_connections": false,
+            "allowed_db_connection_names": [
+              "faa"
+            ]
+          }
+          HERE
+          ./looker-cli model import Model_faa.json --token-file
+
+      - name: run a query against the model
+        run: |
+          cat > query.json <<HERE
+          {
+            "model": "aviation",
+            "view": "aircraft_types",
+            "fields": ["aircraft_types.description","aircraft_types.count"],
+            "pivots": null,
+            "fill_fields": null,
+            "filters": null,
+            "filter_expression": null,
+            "sorts": [
+              "aircraft_types.description"
+            ],
+            "limit": "500"
+          }
+          HERE
+          ./looker-cli query runquery "$(cat query.json)"
+
+      - name: Load a dashboard
+        run: |
+          me=$(./looker-cli user me --csv --plain)
+          echo $me
+          dest_folder=$(cut -d, -f5 <<< $me | sed 's/"//g')
+          ./looker-cli dashboard import examples/Dashboard_17_FAA_KPIs.json $dest_folder
+
+      - name: Remove the deploy key from the github repo
+        if: ${{ always() }}
+        run: |
+          curl -L \
+            -X DELETE \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.LOS_AUTO_BOT_MANAGE_FAA_DEPLOY_KEY }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/looker-open-source/faa/keys/$KEY_ID
+
+  publish-test-results:
+    permissions:
+      checks: write
+      pull-requests: write
+    needs: [test]
+    if: success() || failure()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          # Cosmetic issue with `check_name` being associated to the wrong
+          # workflow: https://github.com/EnricoMi/publish-unit-test-result-action/issues/12
+          check_name: CI Tests
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          report_individual_runs: true
+          check_run_annotations: 'none'
+          compare_to_earlier_commit: false
+          files: 'artifacts/**/*.xml'
