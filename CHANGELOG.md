@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.3](https://github.com/looker-open-source/looker-cli/compare/v0.4.2...v0.4.3) (2026-06-15)
+
+
+### Bug Fixes
+
+* More fixes for dashboard import ([#287](https://github.com/looker-open-source/looker-cli/issues/287)) ([9f731f1](https://github.com/looker-open-source/looker-cli/commit/9f731f1b0eea0f4735ed5e75d8437aea9c476d54))
+
 ## [0.4.2](https://github.com/looker-open-source/looker-cli/compare/v0.4.1...v0.4.2) (2026-06-15)
 
 
