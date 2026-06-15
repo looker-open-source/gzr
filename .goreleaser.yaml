@@ -22,9 +22,7 @@ release:
   mode: keep-existing
 
 archives:
-  - formats:
-      - tar.gz
+  - format: tar.gz
     format_overrides:
       - goos: windows
-        formats:
-          - zip
+        format: zip
