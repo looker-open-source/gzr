@@ -32,6 +32,7 @@ import (
 type mockDoer struct {
 	t              *testing.T
 	folder801Looks []v4.LookWithQuery
+	elementsCreated int
 }
 
 func (m *mockDoer) Do(result interface{}, method, ver, path string, reqPars map[string]interface{}, body interface{}, options *rtl.ApiSettings) error {
@@ -122,6 +123,34 @@ func (m *mockDoer) Do(result interface{}, method, ver, path string, reqPars map[
 	if method == "POST" && path == "/dashboards/lookml_dash_1/import/801" {
 		dash := v4.Dashboard{Id: ptr("new_udd_1"), Title: ptr("LookML Dash 1"), FolderId: ptr("801")}
 		b, _ := json.Marshal(dash)
+		return json.Unmarshal(b, result)
+	}
+	if method == "POST" && path == "/dashboards" {
+		dash := v4.Dashboard{Id: ptr("new_dash_1")}
+		b, _ := json.Marshal(dash)
+		return json.Unmarshal(b, result)
+	}
+	if method == "POST" && path == "/dashboard_layouts" {
+		layout := v4.DashboardLayout{Id: ptr("new_layout_1")}
+		b, _ := json.Marshal(layout)
+		return json.Unmarshal(b, result)
+	}
+	if method == "POST" && path == "/dashboard_elements" {
+		m.elementsCreated++
+		elem := v4.DashboardElement{Id: ptr("new_elem_1")}
+		b, _ := json.Marshal(elem)
+		return json.Unmarshal(b, result)
+	}
+	if method == "GET" && path == "/dashboard_layouts/new_layout_1/dashboard_layout_components" {
+		comps := []v4.DashboardLayoutComponent{
+			{Id: ptr("comp_1"), DashboardElementId: ptr("new_elem_1")},
+		}
+		b, _ := json.Marshal(comps)
+		return json.Unmarshal(b, result)
+	}
+	if method == "PATCH" && strings.HasPrefix(path, "/dashboard_layout_components/") {
+		comp := v4.DashboardLayoutComponent{Id: ptr("comp_1")}
+		b, _ := json.Marshal(comp)
 		return json.Unmarshal(b, result)
 	}
 	if method == "PATCH" && path == "/dashboards/lookml_dash_1/sync" {
@@ -1635,4 +1664,68 @@ func TestProjectValidateCommand(t *testing.T) {
 			t.Errorf("expected output to contain file path, got %q", out)
 		}
 	})
+}
+
+func TestDashboardImportCommand(t *testing.T) {
+	doer := &mockDoer{t: t}
+	MockSDK = v4.NewLookerSDK(doer)
+	defer func() { MockSDK = nil }()
+
+	dashJSON := `{
+  "title": "Test Dash",
+  "dashboard_elements": [
+    {
+      "id": "7523",
+      "type": "text",
+      "body_text": "hello"
+    }
+  ],
+  "dashboard_layouts": [
+    {
+      "id": "layout_1",
+      "active": true,
+      "dashboard_layout_components": [
+        {
+          "id": "comp_1",
+          "dashboard_element_id": "7523"
+        }
+      ]
+    }
+  ]
+}`
+
+	tmpFile, err := os.CreateTemp("", "dashboard_import_*.json")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	if _, err := tmpFile.Write([]byte(dashJSON)); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+	tmpFile.Close()
+
+	oldStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	RootCmd.SetArgs([]string{"dashboard", "import", tmpFile.Name(), "801", "--plain"})
+	err = RootCmd.Execute()
+	if err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	_ = w.Close()
+	os.Stdout = oldStdout
+	var buf bytes.Buffer
+	_, _ = io.Copy(&buf, r)
+	out := strings.TrimSpace(buf.String())
+
+	if out != "new_dash_1" {
+		t.Errorf("expected new_dash_1, got %s", out)
+	}
+
+	if doer.elementsCreated != 1 {
+		t.Errorf("expected 1 element created, got %d", doer.elementsCreated)
+	}
 }
