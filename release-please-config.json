@@ -3,7 +3,9 @@
     ".": {
       "release-type": "go",
       "package-name": "looker-cli",
-      "version-file": "internal/cmd/version.go",
+      "extra-files": [
+        "internal/cmd/version.go"
+      ],
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true
     }
