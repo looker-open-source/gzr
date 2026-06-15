@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/looker-open-source/looker-cli/compare/v0.4.1...v0.4.2) (2026-06-15)
+
+
+### Bug Fixes
+
+* correct archive format fields in GoReleaser config ([6b0cbca](https://github.com/looker-open-source/looker-cli/commit/6b0cbca97b692d185f5d5bc1729a4bea8d81a955))
+
 ## [0.4.1](https://github.com/looker-open-source/looker-cli/compare/v0.4.0...v0.4.1) (2026-06-15)
 
 
