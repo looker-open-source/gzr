@@ -44,7 +44,7 @@ func setupTempConfig(t *testing.T) string {
 
 func teardownTempConfig(t *testing.T, tmpDir string) {
 	t.Helper()
-	os.RemoveAll(tmpDir)
+	_ = os.RemoveAll(tmpDir)
 	config.ConfigPathOverride = ""
 }
 
@@ -96,7 +96,7 @@ func TestProfileCommands(t *testing.T) {
 	}
 
 	// 4. Add another profile
-	out, err = executeCommand("profile", "add", "test-prof2", "--host", "test2.looker.com", "--port", "20000")
+	_, err = executeCommand("profile", "add", "test-prof2", "--host", "test2.looker.com", "--port", "20000")
 	if err != nil {
 		t.Fatalf("profile add failed: %v", err)
 	}
