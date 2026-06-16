@@ -351,11 +351,17 @@ var dashboardImportCmd = &cobra.Command{
 		file := args[0]
 		folderID := args[1]
 
+		if cfgDebug {
+			fmt.Fprintf(os.Stderr, "Reading dashboard file %s\n", file)
+		}
 		b, err := util.ReadFileOrStdin(file)
 		if err != nil {
 			return fmt.Errorf("failed to read file %s: %w", file, err)
 		}
 
+		if cfgDebug {
+			fmt.Fprintf(os.Stderr, "Parsing dashboard JSON\n")
+		}
 		var m map[string]interface{}
 		if err := json.Unmarshal(b, &m); err != nil {
 			return fmt.Errorf("invalid json in %s: %w", file, err)
@@ -365,6 +371,9 @@ var dashboardImportCmd = &cobra.Command{
 			return fmt.Errorf("file contains no dashboard_elements! Is this a look?")
 		}
 
+		if cfgDebug {
+			fmt.Fprintf(os.Stderr, "Fetching authenticated user (Me)\n")
+		}
 		me, err := c.SDK.Me("id", nil)
 		if err != nil || me.Id == nil {
 			return fmt.Errorf("failed to get me: %v", err)
@@ -385,6 +394,10 @@ var dashboardImportCmd = &cobra.Command{
 		var conflictingFolder string
 
 		if slug != "" {
+			if cfgDebug {
+				fmt.Fprintf(os.Stderr, "Searching for existing dashboard by slug '%s'\n", slug)
+			}
+
 			dashes, _ := c.SDK.SearchDashboards(v4.RequestSearchDashboards{Slug: &slug}, nil)
 			if len(dashes) > 0 {
 				match := dashes[0]
@@ -400,6 +413,10 @@ var dashboardImportCmd = &cobra.Command{
 		}
 
 		if existingDash == nil && title != "" {
+			if cfgDebug {
+				fmt.Fprintf(os.Stderr, "Searching for existing dashboard by title '%s'\n", title)
+			}
+
 			dashes, _ := c.SDK.SearchDashboards(v4.RequestSearchDashboards{Title: &title, FolderId: &folderID}, nil)
 			if len(dashes) > 0 {
 				existingDash = &dashes[0]
@@ -422,6 +439,10 @@ var dashboardImportCmd = &cobra.Command{
 		var resultDash *v4.Dashboard
 
 		if existingDash != nil {
+			if cfgDebug {
+				fmt.Fprintf(os.Stderr, "Updating existing dashboard %s in folder %s\n", *existingDash.Id, folderID)
+			}
+
 			if !dashboardImportForce {
 				return fmt.Errorf("dashboard '%s' already exists in folder %s. Use --force to overwrite", title, folderID)
 			}
@@ -454,6 +475,10 @@ var dashboardImportCmd = &cobra.Command{
 				}
 			}
 		} else {
+			if cfgDebug {
+				fmt.Fprintf(os.Stderr, "Creating new dashboard in folder %s\n", folderID)
+			}
+
 			created, err := c.SDK.CreateDashboard(wd, nil)
 			if err != nil {
 				return fmt.Errorf("failed to create dashboard: %w", err)
@@ -463,7 +488,10 @@ var dashboardImportCmd = &cobra.Command{
 
 		resID := *resultDash.Id
 
-		if filtersVal, ok := m["dashboard_filters"].([]interface{}); ok {
+		if filtersVal, ok := m["dashboard_filters"].([]interface{}); ok && len(filtersVal) > 0 {
+			if cfgDebug {
+				fmt.Fprintf(os.Stderr, "Importing %d dashboard filters\n", len(filtersVal))
+			}
 			for _, fv := range filtersVal {
 				fb, _ := json.Marshal(fv)
 				var wdf v4.WriteCreateDashboardFilter
@@ -474,7 +502,10 @@ var dashboardImportCmd = &cobra.Command{
 		}
 
 		var activeLayoutID string
-		if layoutsVal, ok := m["dashboard_layouts"].([]interface{}); ok {
+		if layoutsVal, ok := m["dashboard_layouts"].([]interface{}); ok && len(layoutsVal) > 0 {
+			if cfgDebug {
+				fmt.Fprintf(os.Stderr, "Importing %d dashboard layouts\n", len(layoutsVal))
+			}
 			for _, lv := range layoutsVal {
 				lb, _ := json.Marshal(lv)
 				var wdl v4.WriteDashboardLayout
@@ -503,7 +534,10 @@ var dashboardImportCmd = &cobra.Command{
 				if layoutObj != nil && layoutObj.Id != nil {
 					activeLayoutID = *layoutObj.Id
 					if lm, ok := lv.(map[string]interface{}); ok {
-						if componentsVal, ok := lm["dashboard_layout_components"].([]interface{}); ok {
+						if componentsVal, ok := lm["dashboard_layout_components"].([]interface{}); ok && len(componentsVal) > 0 {
+							if cfgDebug {
+								fmt.Fprintf(os.Stderr, "Importing %d dashboard layout components\n", len(componentsVal))
+							}
 							matchedElems := make(map[int]bool)
 							for cIdx, cv := range componentsVal {
 								cb, _ := json.Marshal(cv)
@@ -556,13 +590,15 @@ var dashboardImportCmd = &cobra.Command{
 								}
 
 								if elemMap != nil {
+									if cfgDebug {
+										fmt.Fprintf(os.Stderr, "Creating dashboard element '%v'\n", elemMap["title"])
+									}
 									eb, _ := json.Marshal(elemMap)
 									var wde v4.WriteDashboardElement
 									_ = json.Unmarshal(eb, &wde)
 									wde.DashboardId = &resID
 
 									wde.ResultMakerId = nil
-									wde.ResultMaker = nil
 									wde.LookId = nil
 									wde.QueryId = nil
 									wde.MergeResultId = nil
@@ -574,6 +610,7 @@ var dashboardImportCmd = &cobra.Command{
 										lID, err := UpsertLookHelper(c, folderID, myID, lookVal, dashboardImportForce)
 										if err == nil && lID != "" {
 											wde.LookId = &lID
+											wde.ResultMaker = nil
 										} else if err != nil {
 											fmt.Fprintf(os.Stderr, "UpsertLookHelper failed: %v\n", err)
 										}
@@ -585,6 +622,10 @@ var dashboardImportCmd = &cobra.Command{
 										cq, err := c.SDK.CreateQuery(wq, "", nil)
 										if err == nil && cq.Id != nil {
 											wde.QueryId = cq.Id
+											if wde.ResultMaker != nil {
+												wde.ResultMaker.SqlQueryId = nil
+												wde.ResultMaker.Query = nil
+											}
 										} else if err != nil {
 											fmt.Fprintf(os.Stderr, "CreateQuery failed: %v\n", err)
 										}
@@ -595,6 +636,7 @@ var dashboardImportCmd = &cobra.Command{
 										cmq, err := c.SDK.CreateMergeQuery(wmq, "", nil)
 										if err == nil && cmq.Id != nil {
 											wde.MergeResultId = cmq.Id
+											wde.ResultMaker = nil
 										} else if err != nil {
 											fmt.Fprintf(os.Stderr, "CreateMergeQuery failed: %v\n", err)
 										}
@@ -636,6 +678,9 @@ var dashboardImportCmd = &cobra.Command{
 		}
 
 		if plansVal, ok := m["scheduled_plans"].([]interface{}); ok && len(plansVal) > 0 {
+			if cfgDebug {
+				fmt.Fprintf(os.Stderr, "Importing %d scheduled plans\n", len(plansVal))
+			}
 			existingPlans, _ := c.SDK.ScheduledPlansForDashboard(v4.RequestScheduledPlansForDashboard{DashboardId: resID, AllUsers: ptrBool(true)}, nil)
 
 			for _, pv := range plansVal {
