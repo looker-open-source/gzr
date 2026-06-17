@@ -589,7 +589,7 @@ Commands pertaining to LookML Projects.
     ```
 
 #### Managing Project Files (`looker-cli project file`)
-Manage the files inside your Looker project using undocumented Looker API endpoints.
+Manage the files inside your Looker project.
 
 *   **`ls <project_id>`**: List all files in a project:
     ```bash
@@ -637,10 +637,10 @@ Commands to retrieve and run queries.
     ```bash
     # Run by ID
     ./looker-cli query runquery 123 --token-file
-    
+
     # Run by slug
     ./looker-cli query runquery "abc123xyz" --token-file
-    
+
     # Run using raw JSON query definition
     ./looker-cli query runquery '{"model":"dev","view":"users","fields":["id"]}' --token-file
 
