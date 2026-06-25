@@ -21,9 +21,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/looker-open-source/looker-cli/internal/util"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 	"github.com/spf13/cobra"
-	"github.com/looker-open-source/looker-cli/internal/util"
 )
 
 var (
@@ -93,6 +93,51 @@ var dashboardCatCmd = &cobra.Command{
 					}
 				}
 			}
+		}
+		if elements, ok := m["dashboard_elements"].([]interface{}); ok {
+			for i, ev := range elements {
+				if em, ok := ev.(map[string]interface{}); ok {
+					if mergeResultIDVal, ok := em["merge_result_id"]; ok && mergeResultIDVal != nil {
+						mergeResultID := idToStr(mergeResultIDVal)
+						if mergeResultID != "" {
+							mq, err := c.SDK.MergeQuery(mergeResultID, "", nil)
+							if err == nil {
+								mqBytes, _ := json.Marshal(mq)
+								var mqMap map[string]interface{}
+								_ = json.Unmarshal(mqBytes, &mqMap)
+
+								if sourceQueries, ok := mqMap["source_queries"].([]interface{}); ok {
+									for j, sqv := range sourceQueries {
+										if sq, ok := sqv.(map[string]interface{}); ok {
+											if qIDVal, ok := sq["query_id"]; ok && qIDVal != nil {
+												qID := idToStr(qIDVal)
+												if qID != "" {
+													q, err := c.SDK.Query(qID, "", nil)
+													if err == nil {
+														qBytes, _ := json.Marshal(q)
+														var qMap map[string]interface{}
+														_ = json.Unmarshal(qBytes, &qMap)
+														sq["query"] = qMap
+														sourceQueries[j] = sq
+													} else {
+														fmt.Fprintf(os.Stderr, "failed to get query %s: %v\n", qID, err)
+													}
+												}
+											}
+										}
+									}
+									mqMap["source_queries"] = sourceQueries
+								}
+								em["merge_result"] = mqMap
+								elements[i] = em
+							} else {
+								fmt.Fprintf(os.Stderr, "failed to get merge query %s: %v\n", mergeResultID, err)
+							}
+						}
+					}
+				}
+			}
+			m["dashboard_elements"] = elements
 		}
 
 		if dashboardCatTrim {
@@ -398,7 +443,10 @@ var dashboardImportCmd = &cobra.Command{
 				fmt.Fprintf(os.Stderr, "Searching for existing dashboard by slug '%s'\n", slug)
 			}
 
-			dashes, _ := c.SDK.SearchDashboards(v4.RequestSearchDashboards{Slug: &slug}, nil)
+			dashes, err := c.SDK.SearchDashboards(v4.RequestSearchDashboards{Slug: &slug}, nil)
+			if err != nil {
+				return fmt.Errorf("failed to search dashboards by slug %s: %w", slug, err)
+			}
 			if len(dashes) > 0 {
 				match := dashes[0]
 				if match.FolderId != nil && *match.FolderId == folderID {
@@ -417,7 +465,10 @@ var dashboardImportCmd = &cobra.Command{
 				fmt.Fprintf(os.Stderr, "Searching for existing dashboard by title '%s'\n", title)
 			}
 
-			dashes, _ := c.SDK.SearchDashboards(v4.RequestSearchDashboards{Title: &title, FolderId: &folderID}, nil)
+			dashes, err := c.SDK.SearchDashboards(v4.RequestSearchDashboards{Title: &title, FolderId: &folderID}, nil)
+			if err != nil {
+				return fmt.Errorf("failed to search dashboards by title %q in folder %s: %w", title, folderID, err)
+			}
 			if len(dashes) > 0 {
 				existingDash = &dashes[0]
 			}
@@ -481,7 +532,16 @@ var dashboardImportCmd = &cobra.Command{
 
 			created, err := c.SDK.CreateDashboard(wd, nil)
 			if err != nil {
-				return fmt.Errorf("failed to create dashboard: %w", err)
+				if strings.Contains(err.Error(), "status=409") && wd.Slug != nil {
+					if !dashboardImportPlain {
+						fmt.Printf("Warning: Conflict occurred on create. Retrying without slug.\n")
+					}
+					wd.Slug = nil
+					created, err = c.SDK.CreateDashboard(wd, nil)
+				}
+				if err != nil {
+					return fmt.Errorf("failed to create dashboard: %w", err)
+				}
 			}
 			resultDash = &created
 		}
@@ -630,6 +690,27 @@ var dashboardImportCmd = &cobra.Command{
 											fmt.Fprintf(os.Stderr, "CreateQuery failed: %v\n", err)
 										}
 									} else if mVal, ok := elemMap["merge_result"].(map[string]interface{}); ok {
+										if sourceQueries, ok := mVal["source_queries"].([]interface{}); ok {
+											for sqIdx, sqv := range sourceQueries {
+												if sq, ok := sqv.(map[string]interface{}); ok {
+													if qVal, ok := sq["query"].(map[string]interface{}); ok {
+														qb, _ := json.Marshal(qVal)
+														var wq v4.WriteQuery
+														_ = json.Unmarshal(qb, &wq)
+														wq.ClientId = nil
+														cq, err := c.SDK.CreateQuery(wq, "", nil)
+														if err == nil && cq.Id != nil {
+															sq["query_id"] = cq.Id
+															delete(sq, "query")
+															sourceQueries[sqIdx] = sq
+														} else {
+															fmt.Fprintf(os.Stderr, "Failed to recreate source query: %v\n", err)
+														}
+													}
+												}
+											}
+											mVal["source_queries"] = sourceQueries
+										}
 										mb, _ := json.Marshal(mVal)
 										var wmq v4.WriteMergeQuery
 										_ = json.Unmarshal(mb, &wmq)

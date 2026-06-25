@@ -24,25 +24,137 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/looker-open-source/looker-cli/internal/util"
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
-	"github.com/looker-open-source/looker-cli/internal/util"
 )
 
+type statefulMockDoer struct {
+	t          *testing.T
+	dashboards map[string]v4.Dashboard
+}
+
+func (m *statefulMockDoer) Do(result interface{}, method, ver, path string, reqPars map[string]interface{}, body interface{}, options *rtl.ApiSettings) error {
+	if strings.HasPrefix(path, "/user") {
+		me := v4.User{
+			Id: ptr("1234"),
+		}
+		b, _ := json.Marshal(me)
+		return json.Unmarshal(b, result)
+	}
+	if method == "GET" && path == "/dashboards/search" {
+		var slug, title, folderID string
+		if s, ok := reqPars["slug"].(*string); ok && s != nil {
+			slug = *s
+		}
+		if t, ok := reqPars["title"].(*string); ok && t != nil {
+			title = *t
+		}
+		if f, ok := reqPars["folder_id"].(*string); ok && f != nil {
+			folderID = *f
+		}
+
+		var results []v4.Dashboard
+		for _, d := range m.dashboards {
+			match := true
+			if slug != "" && (d.Slug == nil || *d.Slug != slug) {
+				match = false
+			}
+			if title != "" && (d.Title == nil || *d.Title != title) {
+				match = false
+			}
+			if folderID != "" && (d.FolderId == nil || *d.FolderId != folderID) {
+				match = false
+			}
+			if match {
+				results = append(results, d)
+			}
+		}
+		b, _ := json.Marshal(results)
+		return json.Unmarshal(b, result)
+	}
+	if method == "POST" && path == "/dashboards" {
+		bodyBytes, _ := json.Marshal(body)
+		var wd v4.WriteDashboard
+		_ = json.Unmarshal(bodyBytes, &wd)
+
+		if wd.Slug != nil && *wd.Slug == "conflicting_hidden_slug" {
+			return fmt.Errorf("response error. status=409 Conflict. error={\"message\":\"The resource already exists.\"}")
+		}
+
+		if wd.Slug != nil && *wd.Slug != "" {
+			for _, d := range m.dashboards {
+				if d.Slug != nil && *d.Slug == *wd.Slug {
+					return fmt.Errorf("response error. status=409 Conflict. error={\"message\":\"The resource already exists.\"}")
+				}
+			}
+		}
+
+		id := fmt.Sprintf("new_dash_%d", len(m.dashboards)+1)
+		dash := v4.Dashboard{
+			Id:       &id,
+			Title:    wd.Title,
+			Slug:     wd.Slug,
+			FolderId: wd.FolderId,
+		}
+		if m.dashboards == nil {
+			m.dashboards = make(map[string]v4.Dashboard)
+		}
+		m.dashboards[id] = dash
+		b, _ := json.Marshal(dash)
+		return json.Unmarshal(b, result)
+	}
+	if method == "PATCH" && strings.HasPrefix(path, "/dashboards/") {
+		id := strings.TrimPrefix(path, "/dashboards/")
+		bodyBytes, _ := json.Marshal(body)
+		var wd v4.WriteDashboard
+		_ = json.Unmarshal(bodyBytes, &wd)
+
+		if d, ok := m.dashboards[id]; ok {
+			if wd.Title != nil {
+				d.Title = wd.Title
+			}
+			if wd.Slug != nil {
+				d.Slug = wd.Slug
+			}
+			m.dashboards[id] = d
+			b, _ := json.Marshal(d)
+			return json.Unmarshal(b, result)
+		}
+		return fmt.Errorf("dashboard %s not found", id)
+	}
+	if method == "POST" && path == "/dashboard_layouts" {
+		layout := v4.DashboardLayout{Id: ptr("new_layout_1")}
+		b, _ := json.Marshal(layout)
+		return json.Unmarshal(b, result)
+	}
+	if method == "POST" && path == "/dashboard_elements" {
+		elem := v4.DashboardElement{Id: ptr("new_elem_1")}
+		b, _ := json.Marshal(elem)
+		return json.Unmarshal(b, result)
+	}
+	if method == "GET" && strings.HasSuffix(path, "/dashboard_layout_components") {
+		comps := []v4.DashboardLayoutComponent{}
+		b, _ := json.Marshal(comps)
+		return json.Unmarshal(b, result)
+	}
+	return nil
+}
+
 type mockDoer struct {
-	t              *testing.T
-	folder801Looks []v4.LookWithQuery
+	t               *testing.T
+	folder801Looks  []v4.LookWithQuery
 	elementsCreated int
 }
 
 func (m *mockDoer) Do(result interface{}, method, ver, path string, reqPars map[string]interface{}, body interface{}, options *rtl.ApiSettings) error {
 	if strings.HasPrefix(path, "/user") {
 		me := v4.User{
-			Id:        ptr("1234"),
-			Email:     ptr("jsmith@mycompany.com"),
-			FirstName: ptr("John"),
-			LastName:  ptr("Smith"),
-			HomeFolderId: ptr("709"),
+			Id:               ptr("1234"),
+			Email:            ptr("jsmith@mycompany.com"),
+			FirstName:        ptr("John"),
+			LastName:         ptr("Smith"),
+			HomeFolderId:     ptr("709"),
 			PersonalFolderId: ptr("1132"),
 		}
 		b, _ := json.Marshal(me)
@@ -71,9 +183,9 @@ func (m *mockDoer) Do(result interface{}, method, ver, path string, reqPars map[
 	}
 	if method == "GET" && path == "/connections/my_conn" {
 		conn := v4.DBConnection{
-			Name: ptr("my_conn"),
+			Name:        ptr("my_conn"),
 			DialectName: ptr("mysql"),
-			Host: ptr("localhost"),
+			Host:        ptr("localhost"),
 		}
 		b, _ := json.Marshal(conn)
 		return json.Unmarshal(b, result)
@@ -83,7 +195,7 @@ func (m *mockDoer) Do(result interface{}, method, ver, path string, reqPars map[
 	}
 	if method == "POST" && path == "/connections" {
 		conn := v4.DBConnection{
-			Name: ptr("my_new_conn"),
+			Name:        ptr("my_new_conn"),
 			DialectName: ptr("postgres"),
 		}
 		b, _ := json.Marshal(conn)
@@ -103,6 +215,43 @@ func (m *mockDoer) Do(result interface{}, method, ver, path string, reqPars map[
 	if method == "GET" && path == "/dashboards/192" {
 		dash := v4.Dashboard{Id: ptr("192"), Title: ptr("Daily Profit Dashboard")}
 		b, _ := json.Marshal(dash)
+		return json.Unmarshal(b, result)
+	}
+	if method == "GET" && path == "/dashboards/3188" {
+		dash := v4.Dashboard{
+			Id:    ptr("3188"),
+			Title: ptr("Merge Query Test Dashboard"),
+			DashboardElements: &[]v4.DashboardElement{
+				{
+					Id:            ptr("elem_1"),
+					MergeResultId: ptr("merge_123"),
+				},
+			},
+		}
+		b, _ := json.Marshal(dash)
+		return json.Unmarshal(b, result)
+	}
+	if method == "GET" && path == "/merge_queries/merge_123" {
+		mq := v4.MergeQuery{
+			Id: ptr("merge_123"),
+			SourceQueries: &[]v4.MergeQuerySourceQuery{
+				{
+					QueryId: ptr("query_456"),
+					Name:    ptr("source_query_1"),
+				},
+			},
+		}
+		b, _ := json.Marshal(mq)
+		return json.Unmarshal(b, result)
+	}
+	if method == "GET" && path == "/queries/query_456" {
+		q := v4.Query{
+			Id:     ptr("query_456"),
+			Model:  "test_model",
+			View:   "test_view",
+			Fields: &[]string{"field1", "field2"},
+		}
+		b, _ := json.Marshal(q)
 		return json.Unmarshal(b, result)
 	}
 	if method == "GET" && path == "/dashboards/lookml_dash_1" {
@@ -139,6 +288,31 @@ func (m *mockDoer) Do(result interface{}, method, ver, path string, reqPars map[
 		m.elementsCreated++
 		elem := v4.DashboardElement{Id: ptr("new_elem_1")}
 		b, _ := json.Marshal(elem)
+		return json.Unmarshal(b, result)
+	}
+	if method == "POST" && path == "/queries" {
+		q := v4.Query{
+			Id: ptr("new_query_456"),
+		}
+		b, _ := json.Marshal(q)
+		return json.Unmarshal(b, result)
+	}
+	if method == "POST" && path == "/merge_queries" {
+		bodyBytes, _ := json.Marshal(body)
+		var wmq v4.WriteMergeQuery
+		_ = json.Unmarshal(bodyBytes, &wmq)
+		if wmq.SourceQueries != nil && len(*wmq.SourceQueries) > 0 {
+			sq := (*wmq.SourceQueries)[0]
+			if sq.QueryId != nil && *sq.QueryId != "new_query_456" {
+				m.t.Errorf("Expected query_id to be 'new_query_456', got '%s'", *sq.QueryId)
+			}
+		} else {
+			m.t.Errorf("Expected source_queries to be present in WriteMergeQuery")
+		}
+		mq := v4.MergeQuery{
+			Id: ptr("new_merge_123"),
+		}
+		b, _ := json.Marshal(mq)
 		return json.Unmarshal(b, result)
 	}
 	if method == "GET" && path == "/dashboard_layouts/new_layout_1/dashboard_layout_components" {
@@ -245,8 +419,8 @@ func (m *mockDoer) Do(result interface{}, method, ver, path string, reqPars map[
 		}
 		if id == "1" {
 			role := v4.Role{
-				Id:            ptr("1"),
-				Name:          ptr("my_role"),
+				Id:   ptr("1"),
+				Name: ptr("my_role"),
 				PermissionSet: &v4.PermissionSet{
 					Id:          ptr("2"),
 					Name:        ptr("my_perm_set"),
@@ -258,12 +432,12 @@ func (m *mockDoer) Do(result interface{}, method, ver, path string, reqPars map[
 					Models: &[]string{"my_model"},
 				},
 			}
-			
+
 			var fields string
 			if fieldsPtr, ok := reqPars["fields"].(*string); ok && fieldsPtr != nil {
 				fields = *fieldsPtr
 			}
-			
+
 			if fields != "" {
 				filteredRole := v4.Role{}
 				if strings.Contains(fields, "name") {
@@ -282,7 +456,7 @@ func (m *mockDoer) Do(result interface{}, method, ver, path string, reqPars map[
 				b, _ := json.Marshal(roles)
 				return json.Unmarshal(b, result)
 			}
-			
+
 			roles := []v4.Role{role}
 			b, _ := json.Marshal(roles)
 			return json.Unmarshal(b, result)
@@ -338,8 +512,8 @@ func (m *mockDoer) Do(result interface{}, method, ver, path string, reqPars map[
 	if method == "GET" && path == "/roles" {
 		roles := []v4.Role{
 			{
-				Id:            ptr("1"),
-				Name:          ptr("my_role"),
+				Id:   ptr("1"),
+				Name: ptr("my_role"),
 				PermissionSet: &v4.PermissionSet{
 					Id:          ptr("2"),
 					Name:        ptr("my_perm_set"),
@@ -358,9 +532,9 @@ func (m *mockDoer) Do(result interface{}, method, ver, path string, reqPars map[
 	if method == "GET" && path == "/connections" {
 		conns := []v4.DBConnection{
 			{
-				Name: ptr("my_conn"),
+				Name:    ptr("my_conn"),
 				Dialect: &v4.Dialect{Name: ptr("mysql")},
-				Host: ptr("localhost"),
+				Host:    ptr("localhost"),
 			},
 		}
 		b, _ := json.Marshal(conns)
@@ -728,7 +902,6 @@ func TestDashboardSyncLookmlCommand(t *testing.T) {
 		t.Errorf("expected synced dashboard ids 101 and 102, got %s", out)
 	}
 }
-
 
 func TestLookMvCommand(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
@@ -1199,7 +1372,7 @@ func TestInitClient_EnvVars(t *testing.T) {
 	_ = RootCmd.PersistentFlags().Set("host", "localhost")
 	_ = RootCmd.PersistentFlags().Set("port", "19999")
 	_ = RootCmd.PersistentFlags().Set("verify-ssl", "true")
-	
+
 	// Reset flag "changed" statuses to false by creating a fresh Command instance or modifying manually
 	// Cobra doesn't let us easily reset "Changed" without clearing flags, but we can check the behavior
 	// by parsing a clean argument list or just executing in isolation.
@@ -1792,5 +1965,247 @@ func TestDashboardImportFallbackCommand(t *testing.T) {
 
 	if doer.elementsCreated != 1 {
 		t.Errorf("expected 1 element created via fallback, got %d", doer.elementsCreated)
+	}
+}
+
+func TestDashboardCatCommand(t *testing.T) {
+	MockSDK = v4.NewLookerSDK(&mockDoer{t: t})
+	defer func() { MockSDK = nil }()
+
+	oldStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	RootCmd.SetArgs([]string{"dashboard", "cat", "3188"})
+	err := RootCmd.Execute()
+	if err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	_ = w.Close()
+	os.Stdout = oldStdout
+	var buf bytes.Buffer
+	_, _ = io.Copy(&buf, r)
+	out := buf.String()
+
+	// Verify that merge_result is present and contains the source query with its definition
+	var m map[string]interface{}
+	if err := json.Unmarshal([]byte(out), &m); err != nil {
+		t.Fatalf("Failed to unmarshal output: %v\nOutput was: %s", err, out)
+	}
+
+	elements, ok := m["dashboard_elements"].([]interface{})
+	if !ok || len(elements) == 0 {
+		t.Fatalf("No dashboard elements found in output: %s", out)
+	}
+
+	elem := elements[0].(map[string]interface{})
+	mergeResult, ok := elem["merge_result"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("merge_result missing from dashboard element: %s", out)
+	}
+
+	sourceQueries, ok := mergeResult["source_queries"].([]interface{})
+	if !ok || len(sourceQueries) == 0 {
+		t.Fatalf("source_queries missing or empty in merge_result: %s", out)
+	}
+
+	sq := sourceQueries[0].(map[string]interface{})
+	query, ok := sq["query"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("query definition missing from source query: %s", out)
+	}
+
+	if query["model"] != "test_model" || query["view"] != "test_view" {
+		t.Errorf("Unexpected query definition: %v", query)
+	}
+}
+
+func TestDashboardImportWithMergeQueryCommand(t *testing.T) {
+	doer := &mockDoer{t: t}
+	MockSDK = v4.NewLookerSDK(doer)
+	defer func() { MockSDK = nil }()
+
+	dashJSON := `{
+  "title": "Import Merge Query Dash",
+  "dashboard_elements": [
+    {
+      "title": "Merge Element",
+      "type": "vis",
+      "merge_result_id": "old_merge_123",
+      "merge_result": {
+        "source_queries": [
+          {
+            "query_id": "old_query_456",
+            "name": "source_query_1",
+            "query": {
+              "model": "test_model",
+              "view": "test_view",
+              "fields": ["field1", "field2"]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "dashboard_layouts": [
+    {
+      "id": "layout_1",
+      "active": true,
+      "dashboard_layout_components": [
+        {
+          "id": "comp_1",
+          "dashboard_element_id": "elem_1",
+          "element_title": "Merge Element"
+        }
+      ]
+    }
+  ]
+}`
+
+	tmpFile, err := os.CreateTemp("", "dashboard_import_merge_*.json")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
+
+	if _, err := tmpFile.Write([]byte(dashJSON)); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+	_ = tmpFile.Close()
+
+	oldStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	RootCmd.SetArgs([]string{"dashboard", "import", tmpFile.Name(), "801", "--plain"})
+	err = RootCmd.Execute()
+	if err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	_ = w.Close()
+	os.Stdout = oldStdout
+	var buf bytes.Buffer
+	_, _ = io.Copy(&buf, r)
+	out := strings.TrimSpace(buf.String())
+
+	if out != "new_dash_1" {
+		t.Errorf("expected new_dash_1, got %s", out)
+	}
+}
+
+func TestDashboardImportForce(t *testing.T) {
+	doer := &statefulMockDoer{
+		t:          t,
+		dashboards: make(map[string]v4.Dashboard),
+	}
+	MockSDK = v4.NewLookerSDK(doer)
+	defer func() { MockSDK = nil }()
+
+	dashJSON := `{
+  "title": "Force Test Dash",
+  "slug": "force_test_slug",
+  "dashboard_elements": []
+}`
+
+	tmpFile, err := os.CreateTemp("", "dashboard_import_force_*.json")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
+
+	if _, err := tmpFile.Write([]byte(dashJSON)); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+	_ = tmpFile.Close()
+
+	// First import (create)
+	RootCmd.SetArgs([]string{"dashboard", "import", tmpFile.Name(), "801", "--plain"})
+	err = RootCmd.Execute()
+	if err != nil {
+		t.Fatalf("First import failed: %v", err)
+	}
+
+	if len(doer.dashboards) != 1 {
+		t.Errorf("Expected 1 dashboard, got %d", len(doer.dashboards))
+	}
+
+	// Second import without force (should fail)
+	// We need to reset flags or command state if needed, but Cobra might retain state if we don't.
+	// Actually, SetArgs overrides args.
+	// But --force flag is a package variable in dashboard.go?
+	// Let's check dashboard.go:
+	// var dashboardImportForce bool
+	// Yes, it is a package variable.
+	// Cobra binding:
+	// dashboardImportCmd.Flags().BoolVar(&dashboardImportForce, "force", false, "Overwrite existing dashboard")
+	// If we run Execute again, Cobra should reset it if we use a new command, or if we reset it manually.
+	// Since we reuse RootCmd, the flag value might persist if we don't reset it.
+	// Actually, Cobra parses flags every time, but if it's not present, it might keep the previous value?
+	// Usually Cobra resets flags to default values before parsing if we use ParseFlags, but Execute might not reset global variables.
+	// Actually, BoolVar binds to a pointer. Cobra will set it to true if flag is present, but if it is NOT present, does it set it to false?
+	// Yes, Cobra default value is applied if not present, but it might not reset the variable if it was already set.
+	// Wait, Cobra's default value is applied by setting the variable.
+	// Let's reset it manually in test to be safe.
+	dashboardImportForce = false
+
+	RootCmd.SetArgs([]string{"dashboard", "import", tmpFile.Name(), "801", "--plain"})
+	err = RootCmd.Execute()
+	if err == nil {
+		t.Errorf("Expected second import without force to fail, but it succeeded")
+	}
+
+	// Second import with force (should succeed and update)
+	RootCmd.SetArgs([]string{"dashboard", "import", tmpFile.Name(), "801", "--plain", "--force"})
+	err = RootCmd.Execute()
+	if err != nil {
+		t.Errorf("Second import with force failed: %v", err)
+	}
+
+	if len(doer.dashboards) != 1 {
+		t.Errorf("Expected still 1 dashboard after force import, got %d", len(doer.dashboards))
+	}
+}
+
+func TestDashboardImportHiddenSlugConflict(t *testing.T) {
+	doer := &statefulMockDoer{
+		t:          t,
+		dashboards: make(map[string]v4.Dashboard),
+	}
+	MockSDK = v4.NewLookerSDK(doer)
+	defer func() { MockSDK = nil }()
+
+	dashJSON := `{
+  "title": "Hidden Conflict Dash",
+  "slug": "conflicting_hidden_slug",
+  "dashboard_elements": []
+}`
+
+	tmpFile, err := os.CreateTemp("", "dashboard_import_hidden_*.json")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
+
+	if _, err := tmpFile.Write([]byte(dashJSON)); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+	_ = tmpFile.Close()
+
+	RootCmd.SetArgs([]string{"dashboard", "import", tmpFile.Name(), "801", "--plain"})
+	err = RootCmd.Execute()
+	if err != nil {
+		t.Fatalf("Import failed: %v", err)
+	}
+
+	if len(doer.dashboards) != 1 {
+		t.Errorf("Expected 1 dashboard, got %d", len(doer.dashboards))
+	}
+
+	for _, d := range doer.dashboards {
+		if d.Slug != nil {
+			t.Errorf("Expected slug to be nil (generated), got %s", *d.Slug)
+		}
 	}
 }
