@@ -2024,7 +2024,10 @@ func TestDashboardCatCommand(t *testing.T) {
 func TestDashboardImportWithMergeQueryCommand(t *testing.T) {
 	doer := &mockDoer{t: t}
 	MockSDK = v4.NewLookerSDK(doer)
-	defer func() { MockSDK = nil }()
+	defer func() {
+		MockSDK = nil
+		dashboardImportPlain = false
+	}()
 
 	dashJSON := `{
   "title": "Import Merge Query Dash",
@@ -2101,7 +2104,11 @@ func TestDashboardImportForce(t *testing.T) {
 		dashboards: make(map[string]v4.Dashboard),
 	}
 	MockSDK = v4.NewLookerSDK(doer)
-	defer func() { MockSDK = nil }()
+	defer func() {
+		MockSDK = nil
+		dashboardImportForce = false
+		dashboardImportPlain = false
+	}()
 
 	dashJSON := `{
   "title": "Force Test Dash",
@@ -2174,7 +2181,10 @@ func TestDashboardImportHiddenSlugConflict(t *testing.T) {
 		dashboards: make(map[string]v4.Dashboard),
 	}
 	MockSDK = v4.NewLookerSDK(doer)
-	defer func() { MockSDK = nil }()
+	defer func() {
+		MockSDK = nil
+		dashboardImportPlain = false
+	}()
 
 	dashJSON := `{
   "title": "Hidden Conflict Dash",

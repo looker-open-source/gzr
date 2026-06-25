@@ -705,6 +705,8 @@ var dashboardImportCmd = &cobra.Command{
 															sourceQueries[sqIdx] = sq
 														} else {
 															fmt.Fprintf(os.Stderr, "Failed to recreate source query: %v\n", err)
+															delete(sq, "query_id")
+															sourceQueries[sqIdx] = sq
 														}
 													}
 												}
