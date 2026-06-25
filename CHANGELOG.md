@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.6](https://github.com/looker-open-source/looker-cli/compare/v0.4.5...v0.4.6) (2026-06-25)
+
+
+### Bug Fixes
+
+* fixed dashboard cat and dashboard import to handle merge results properly ([#295](https://github.com/looker-open-source/looker-cli/issues/295)) ([d840385](https://github.com/looker-open-source/looker-cli/commit/d840385f6a618f19f6dd5906d9a73d9a638115e8))
+
 ## [0.4.5](https://github.com/looker-open-source/looker-cli/compare/v0.4.4...v0.4.5) (2026-06-16)
 
 
