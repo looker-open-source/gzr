@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.7](https://github.com/looker-open-source/looker-cli/compare/v0.4.6...v0.4.7) (2026-06-26)
+
+
+### Bug Fixes
+
+* track ssl flag in profile ([#298](https://github.com/looker-open-source/looker-cli/issues/298)) ([443385b](https://github.com/looker-open-source/looker-cli/commit/443385bd1a283a13770af802588226aabc6eec14))
+
 ## [0.4.6](https://github.com/looker-open-source/looker-cli/compare/v0.4.5...v0.4.6) (2026-06-25)
 
 
