@@ -1,4 +1,11 @@
-# Looker CLI (looker-cli) Go Implementation
+**This is not an officially supported Google product. This is community supported
+on a best-effort basis. Use at your own risk. This project is not eligible for the
+[Google Open Source Software Vulnerability Rewards
+Program](https://bughunters.google.com/open-source-security).**
+
+---
+
+# Looker CLI (looker-cli)
 
 Looker CLI (`looker-cli`) is a robust, fast command-line interface (CLI) tool designed to navigate, manage, and automate Looker resources (Folders/Spaces, Looks, Dashboards, Users, and more) via the Looker API 4.0.
 
