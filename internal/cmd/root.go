@@ -20,10 +20,10 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/spf13/cobra"
-	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 	"github.com/looker-open-source/looker-cli/internal/client"
 	"github.com/looker-open-source/looker-cli/internal/config"
+	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -140,6 +140,13 @@ func initClient(ctx context.Context, oauth bool) (*client.ClientWrapper, error) 
 		token = cfgToken
 	}
 
+	ssl := cfgSSL
+	if flag := RootCmd.PersistentFlags().Lookup("ssl"); flag != nil && !flag.Changed {
+		if prof.SSL != nil {
+			ssl = *prof.SSL
+		}
+	}
+
 	verifySSL := cfgVerifySSL
 	if !RootCmd.PersistentFlags().Lookup("verify-ssl").Changed {
 		if prof.VerifySSL != nil {
@@ -157,7 +164,7 @@ func initClient(ctx context.Context, oauth bool) (*client.ClientWrapper, error) 
 		clientSecret,
 		token,
 		cfgSuUser,
-		cfgSSL,
+		ssl,
 		verifySSL,
 		oauth,
 		cfgTokenFile,

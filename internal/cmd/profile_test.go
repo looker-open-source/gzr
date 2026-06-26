@@ -95,10 +95,18 @@ func TestProfileCommands(t *testing.T) {
 		t.Errorf("expected '* test-prof (test.looker.com:19999)', got %q", out)
 	}
 
-	// 4. Add another profile
-	_, err = executeCommand("profile", "add", "test-prof2", "--host", "test2.looker.com", "--port", "20000")
+	// 4. Add another profile with --ssl=false
+	_, err = executeCommand("profile", "add", "test-prof2", "--host", "test2.looker.com", "--port", "20000", "--ssl=false")
 	if err != nil {
 		t.Fatalf("profile add failed: %v", err)
+	}
+
+	cfgCheck, err := config.Load()
+	if err != nil {
+		t.Fatalf("failed to load config: %v", err)
+	}
+	if cfgCheck.Profiles["test-prof2"].SSL == nil || *cfgCheck.Profiles["test-prof2"].SSL != false {
+		t.Errorf("expected test-prof2 SSL to be false, got %v", cfgCheck.Profiles["test-prof2"].SSL)
 	}
 
 	// 5. List profiles (check default marker)
@@ -176,11 +184,13 @@ func TestInitClient_Profile(t *testing.T) {
 	_ = RootCmd.PersistentFlags().Set("port", "19999")
 	_ = RootCmd.PersistentFlags().Set("client-id", "")
 	_ = RootCmd.PersistentFlags().Set("client-secret", "")
+	_ = RootCmd.PersistentFlags().Set("ssl", "true")
 	_ = RootCmd.PersistentFlags().Set("verify-ssl", "true")
 	RootCmd.PersistentFlags().Lookup("host").Changed = false
 	RootCmd.PersistentFlags().Lookup("port").Changed = false
 	RootCmd.PersistentFlags().Lookup("client-id").Changed = false
 	RootCmd.PersistentFlags().Lookup("client-secret").Changed = false
+	RootCmd.PersistentFlags().Lookup("ssl").Changed = false
 	RootCmd.PersistentFlags().Lookup("verify-ssl").Changed = false
 	cfgProfile = ""
 
@@ -305,6 +315,74 @@ func TestInitClient_Profile(t *testing.T) {
 
 		if !wrapper.Session.Config.VerifySsl {
 			t.Errorf("expected verifySSL to be true from flag, got false")
+		}
+	})
+
+	t.Run("Profile ssl is used when flag is omitted", func(t *testing.T) {
+		cfg, _ := config.Load()
+		falseVal := false
+		cfg.Profiles["prof-no-https"] = config.Profile{
+			Host:         "profile-host.com",
+			Port:         "1234",
+			ClientID:     "prof-id",
+			ClientSecret: "prof-sec",
+			SSL:          &falseVal,
+		}
+		_ = cfg.Save()
+		_ = RootCmd.PersistentFlags().Set("profile", "prof-no-https")
+		_ = RootCmd.PersistentFlags().Set("ssl", "true")
+		RootCmd.PersistentFlags().Lookup("ssl").Changed = false
+		defer func() {
+			_ = RootCmd.PersistentFlags().Set("profile", "")
+			cfgProfile = ""
+			_ = RootCmd.PersistentFlags().Set("ssl", "true")
+			if flag := RootCmd.PersistentFlags().Lookup("ssl"); flag != nil {
+				flag.Changed = false
+			}
+		}()
+
+		wrapper, err := initClient(context.Background(), false)
+		if err != nil {
+			t.Fatalf("initClient failed: %v", err)
+		}
+
+		if wrapper.Session.Config.BaseUrl != "http://profile-host.com:1234" {
+			t.Errorf("expected base URL 'http://profile-host.com:1234', got '%s'", wrapper.Session.Config.BaseUrl)
+		}
+	})
+
+	t.Run("Explicit ssl flag overrides profile value", func(t *testing.T) {
+		cfg, _ := config.Load()
+		falseVal := false
+		cfg.Profiles["prof-no-https"] = config.Profile{
+			Host:         "profile-host.com",
+			Port:         "1234",
+			ClientID:     "prof-id",
+			ClientSecret: "prof-sec",
+			SSL:          &falseVal,
+		}
+		_ = cfg.Save()
+		_ = RootCmd.PersistentFlags().Set("profile", "prof-no-https")
+		_ = RootCmd.PersistentFlags().Set("ssl", "true")
+		RootCmd.PersistentFlags().Lookup("ssl").Changed = true
+		defer func() {
+			_ = RootCmd.PersistentFlags().Set("profile", "")
+			cfgProfile = ""
+			_ = RootCmd.PersistentFlags().Set("ssl", "true")
+			RootCmd.PersistentFlags().Lookup("ssl").Changed = false
+			_ = RootCmd.PersistentFlags().Set("ssl", "true")
+			if flag := RootCmd.PersistentFlags().Lookup("ssl"); flag != nil {
+				flag.Changed = false
+			}
+		}()
+
+		wrapper, err := initClient(context.Background(), false)
+		if err != nil {
+			t.Fatalf("initClient failed: %v", err)
+		}
+
+		if wrapper.Session.Config.BaseUrl != "https://profile-host.com:1234" {
+			t.Errorf("expected base URL 'https://profile-host.com:1234', got '%s'", wrapper.Session.Config.BaseUrl)
 		}
 	})
 }

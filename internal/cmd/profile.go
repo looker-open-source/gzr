@@ -93,6 +93,12 @@ var profileAddCmd = &cobra.Command{
 			return fmt.Errorf("profile %q already exists", name)
 		}
 
+		var ssl *bool
+		if flag := cmd.Flags().Lookup("ssl"); flag != nil && flag.Changed {
+			val, _ := cmd.Flags().GetBool("ssl")
+			ssl = &val
+		}
+
 		var verifySSL *bool
 		if flag := cmd.Flags().Lookup("verify-ssl"); flag != nil && flag.Changed {
 			val, _ := cmd.Flags().GetBool("verify-ssl")
@@ -106,6 +112,7 @@ var profileAddCmd = &cobra.Command{
 			ClientSecret: profClientSecret,
 			AccessToken:  profToken,
 			RefreshToken: profRefreshToken,
+			SSL:          ssl,
 			VerifySSL:    verifySSL,
 		}
 
